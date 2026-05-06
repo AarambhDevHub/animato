@@ -1,0 +1,1557 @@
+# Motus — Full Project Architecture
+
+> *Latin: mōtus — motion, movement, impulse.*
+>
+> A professional-grade, renderer-agnostic animation library for Rust.  
+> Zero mandatory dependencies. `no_std`-ready. Built as a clean Cargo workspace.
+> Designed for TUIs, Web (WASM), Bevy, embedded targets, and everything in between.
+
+---
+
+## Table of Contents
+
+1. [Project Vision](#1-project-vision)
+2. [Why a Workspace — Not a Single Crate](#2-why-a-workspace-not-a-single-crate)
+3. [Workspace Layout](#3-workspace-layout)
+4. [Crate-by-Crate Specification](#4-crate-by-crate-specification)
+   - 4.1 [motus-core](#41-motus-core)
+   - 4.2 [motus-tween](#42-motus-tween)
+   - 4.3 [motus-timeline](#43-motus-timeline)
+   - 4.4 [motus-spring](#44-motus-spring)
+   - 4.5 [motus-path](#45-motus-path)
+   - 4.6 [motus-physics](#46-motus-physics)
+   - 4.7 [motus-color](#47-motus-color)
+   - 4.8 [motus-driver](#48-motus-driver)
+   - 4.9 [motus-gpu](#49-motus-gpu)
+   - 4.10 [motus-bevy](#410-motus-bevy)
+   - 4.11 [motus-wasm](#411-motus-wasm)
+   - 4.12 [motus (facade)](#412-motus-facade)
+5. [Data Flow & Runtime Loop](#5-data-flow--runtime-loop)
+6. [Type System Design](#6-type-system-design)
+7. [Feature Flag Strategy](#7-feature-flag-strategy)
+8. [Error Handling Strategy](#8-error-handling-strategy)
+9. [Testing Strategy](#9-testing-strategy)
+10. [Performance Guidelines](#10-performance-guidelines)
+11. [Integration Targets](#11-integration-targets)
+12. [CI / CD Pipeline](#12-ci--cd-pipeline)
+13. [Publishing Checklist](#13-publishing-checklist)
+14. [Naming & Style Conventions](#14-naming--style-conventions)
+
+---
+
+## 1. Project Vision
+
+Motus is built around one principle: **any value that can be linearly interpolated can be animated.**
+
+Everything else — easing curves, keyframe tracks, timelines, spring physics, motion paths, GPU batching — is layered cleanly on top of that single primitive. Each layer lives in its own crate, carries its own `Cargo.toml`, and can be used standalone or composed with others.
+
+### Design Goals
+
+| Goal | Decision |
+|------|----------|
+| Zero mandatory dependencies | Core is pure Rust math with no external crates |
+| `no_std` support | `motus-core`, `motus-tween`, `motus-spring` are fully `no_std` |
+| Clean crate boundaries | Each concern lives in its own crate — not one giant `src/` |
+| Composable, not monolithic | Use only the crates you need |
+| Ergonomic public API | Builder pattern on every complex type |
+| Type-safe animation targets | Generic over `T: Animatable` throughout |
+| Testable without a real clock | `Clock` trait with `MockClock` for deterministic tests |
+| Serializable state | Optional `serde` feature, never forced |
+| Discoverable | One facade crate (`motus`) re-exports everything |
+
+### Non-Goals
+
+- Motus does **NOT** render anything. It computes values; the caller renders.
+- Motus does **NOT** own a game loop. It accepts a `dt` tick; the caller drives it.
+- Motus does **NOT** manage scene graphs or entity hierarchies (Bevy handles that).
+
+---
+
+## 2. Why a Workspace — Not a Single Crate
+
+Spanda grew into a flat `src/` with 25+ files and no clear internal boundaries.
+Motus solves this with a Cargo workspace from day one.
+
+**Benefits:**
+
+- **Compile-time isolation.** Changes to `motus-path` do not recompile `motus-core`.
+- **Clear ownership.** Each crate has one job. A contributor opening `motus-spring` only needs to understand springs.
+- **Granular dependencies.** A user who only needs tweening adds `motus-tween`. They never download wgpu or bevy.
+- **Parallel compilation.** Cargo compiles independent crates in parallel across CPU cores.
+- **Separate versioning.** `motus-gpu` can be `0.1.0` while `motus-core` reaches `1.0.0`.
+
+---
+
+## 3. Workspace Layout
+
+```
+motus/
+├── Cargo.toml                          ← workspace root (no [lib] here)
+├── README.md
+├── ARCHITECTURE.md                     ← this file
+├── ROADMAP.md
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+├── LICENSE-MIT
+├── LICENSE-APACHE
+│
+├── .github/
+│   ├── workflows/
+│   │   ├── ci.yml                      ← lint, test, no_std check, WASM build
+│   │   └── publish.yml                 ← cargo publish on version tag
+│   └── ISSUE_TEMPLATE/
+│       ├── bug_report.md
+│       └── feature_request.md
+│
+├── crates/
+│   ├── motus-core/                     ← traits, easing, interpolation (no_std)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── traits.rs               ← Interpolate, Animatable, Update
+│   │       └── easing.rs               ← Easing enum + 38+ functions
+│   │
+│   ├── motus-tween/                    ← Tween<T>, KeyframeTrack<T>, Loop
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── tween.rs
+│   │       ├── builder.rs              ← TweenBuilder<T>
+│   │       └── keyframe.rs             ← KeyframeTrack<T>, Keyframe<T>
+│   │
+│   ├── motus-timeline/                 ← Timeline, Sequence, At, stagger
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── timeline.rs
+│   │       ├── sequence.rs
+│   │       └── stagger.rs
+│   │
+│   ├── motus-spring/                   ← Spring, SpringN<T>, SpringConfig (no_std)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── spring.rs
+│   │       └── config.rs
+│   │
+│   ├── motus-path/                     ← motion paths, Bezier, SVG, morphing
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── bezier.rs               ← quadratic, cubic Bezier + CatmullRom
+│   │       ├── motion.rs               ← MotionPath, MotionPathTween
+│   │       ├── poly.rs                 ← PolyPath, CompoundPath (arc-length param)
+│   │       ├── morph.rs                ← MorphPath + auto-resample
+│   │       └── svg.rs                  ← SvgPathParser (d-attribute)
+│   │
+│   ├── motus-physics/                  ← Inertia, DragState, GestureRecognizer
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── inertia.rs
+│   │       ├── drag.rs
+│   │       └── gesture.rs
+│   │
+│   ├── motus-color/                    ← perceptual color interpolation
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       └── spaces.rs               ← InLab, InOklch, InLinear wrappers
+│   │
+│   ├── motus-driver/                   ← AnimationDriver, Clock, ScrollDriver
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── driver.rs
+│   │       ├── clock.rs
+│   │       └── scroll.rs
+│   │
+│   ├── motus-gpu/                      ← GpuAnimationBatch via wgpu
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── batch.rs
+│   │       └── shaders/
+│   │           └── tween.wgsl
+│   │
+│   ├── motus-bevy/                     ← SpandaPlugin → MotusPlugin for Bevy
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── plugin.rs
+│   │       └── systems.rs
+│   │
+│   ├── motus-wasm/                     ← WASM + DOM integrations
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── raf.rs                  ← requestAnimationFrame driver
+│   │       ├── flip.rs                 ← FLIP layout transitions
+│   │       ├── split_text.rs
+│   │       ├── scroll_smoother.rs
+│   │       ├── draggable.rs
+│   │       └── observer.rs
+│   │
+│   └── motus/                          ← facade crate — the one users add to Cargo.toml
+│       ├── Cargo.toml
+│       └── src/
+│           └── lib.rs                  ← pub use everything from every sub-crate
+│
+├── examples/
+│   ├── basic_tween.rs
+│   ├── spring_demo.rs
+│   ├── keyframe_track.rs
+│   ├── timeline_sequence.rs
+│   ├── motion_path.rs
+│   ├── color_animation.rs
+│   ├── tui_progress.rs
+│   ├── tui_spinner.rs
+│   └── wasm_counter/                   ← wasm-pack example project
+│       ├── src/lib.rs
+│       └── www/index.html
+│
+├── benches/
+│   ├── easing_bench.rs
+│   ├── tween_update_bench.rs
+│   └── spring_bench.rs
+│
+└── tests/
+    ├── tween_lifecycle.rs
+    ├── spring_settles.rs
+    ├── keyframe_looping.rs
+    └── timeline_sequence.rs
+```
+
+### Root `Cargo.toml`
+
+```toml
+[workspace]
+resolver = "2"
+members = [
+    "crates/motus-core",
+    "crates/motus-tween",
+    "crates/motus-timeline",
+    "crates/motus-spring",
+    "crates/motus-path",
+    "crates/motus-physics",
+    "crates/motus-color",
+    "crates/motus-driver",
+    "crates/motus-gpu",
+    "crates/motus-bevy",
+    "crates/motus-wasm",
+    "crates/motus",
+]
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2024"
+license      = "MIT OR Apache-2.0"
+repository   = "https://github.com/AarambhDevHub/motus"
+authors      = ["Aarambh Dev Hub"]
+rust-version = "1.85"
+
+[workspace.dependencies]
+# internal crates — version pinned to workspace
+motus-core     = { path = "crates/motus-core",     version = "0.1" }
+motus-tween    = { path = "crates/motus-tween",    version = "0.1" }
+motus-timeline = { path = "crates/motus-timeline", version = "0.1" }
+motus-spring   = { path = "crates/motus-spring",   version = "0.1" }
+motus-path     = { path = "crates/motus-path",     version = "0.1" }
+motus-physics  = { path = "crates/motus-physics",  version = "0.1" }
+motus-color    = { path = "crates/motus-color",    version = "0.1" }
+motus-driver   = { path = "crates/motus-driver",   version = "0.1" }
+motus-gpu      = { path = "crates/motus-gpu",      version = "0.1" }
+
+# external crates — shared version pins
+serde        = { version = "1",    features = ["derive"] }
+palette      = { version = "0.7" }
+wasm-bindgen = { version = "0.2" }
+js-sys       = { version = "0.3" }
+web-sys      = { version = "0.3" }
+wgpu         = { version = "24" }
+bytemuck     = { version = "1",    features = ["derive"] }
+pollster     = { version = "0.4" }
+tokio        = { version = "1",    features = ["sync"] }
+bevy_app     = { version = "0.15" }
+bevy_ecs     = { version = "0.15" }
+bevy_time    = { version = "0.15" }
+approx       = { version = "0.5" }
+criterion    = { version = "0.5",  features = ["html_reports"] }
+```
+
+---
+
+## 4. Crate-by-Crate Specification
+
+---
+
+### 4.1 `motus-core`
+
+**Responsibility:** Core traits and the easing system. This is the foundation every other crate builds on. Must compile in `no_std` environments with zero external dependencies.
+
+**Dependency rule:** This crate depends on NOTHING except `libcore`.
+
+#### `src/traits.rs`
+
+```rust
+// The only thing a user-defined type needs:
+pub trait Interpolate: Sized {
+    fn lerp(&self, other: &Self, t: f32) -> Self;
+}
+
+// Blanket impl — never implement this manually:
+pub trait Animatable: Interpolate + Clone + 'static {}
+impl<T: Interpolate + Clone + 'static> Animatable for T {}
+
+// Implemented by Tween, Timeline, Spring, KeyframeTrack — the driver calls this:
+pub trait Update {
+    /// Advance the animation by `dt` seconds.
+    /// Returns `true` while still running, `false` when complete.
+    fn update(&mut self, dt: f32) -> bool;
+}
+```
+
+**Blanket `Interpolate` implementations shipped in `motus-core`:**
+
+| Type | Behavior |
+|------|----------|
+| `f32` | Direct lerp |
+| `f64` | Casts `t` to `f64`, full precision lerp |
+| `[f32; 2]` | Per-component lerp |
+| `[f32; 3]` | Per-component lerp |
+| `[f32; 4]` | Per-component lerp |
+| `i32` | Lerps as `f32`, rounds to nearest |
+| `u8` | Lerps as `f32`, clamps to `[0, 255]` |
+
+#### `src/easing.rs`
+
+All 43 easing functions exposed as:
+1. `Easing` enum with `.apply(t: f32) -> f32` — storable, passable, optionally serializable
+2. Free `#[inline] pub fn ease_out_cubic(t: f32) -> f32` — zero-overhead direct calls
+
+```rust
+#[derive(Clone, Debug, PartialEq)]
+pub enum Easing {
+    // Linear
+    Linear,
+
+    // Polynomial (Quad, Cubic, Quart, Quint — 12 variants)
+    EaseInQuad, EaseOutQuad, EaseInOutQuad,
+    EaseInCubic, EaseOutCubic, EaseInOutCubic,
+    EaseInQuart, EaseOutQuart, EaseInOutQuart,
+    EaseInQuint, EaseOutQuint, EaseInOutQuint,
+
+    // Sinusoidal (3 variants)
+    EaseInSine, EaseOutSine, EaseInOutSine,
+
+    // Exponential (3 variants)
+    EaseInExpo, EaseOutExpo, EaseInOutExpo,
+
+    // Circular (3 variants)
+    EaseInCirc, EaseOutCirc, EaseInOutCirc,
+
+    // Back — overshoot (3 variants)
+    EaseInBack, EaseOutBack, EaseInOutBack,
+
+    // Elastic — spring-like oscillation (3 variants)
+    EaseInElastic, EaseOutElastic, EaseInOutElastic,
+
+    // Bounce — ball bouncing to rest (3 variants)
+    EaseInBounce, EaseOutBounce, EaseInOutBounce,
+
+    // CSS-compatible
+    CubicBezier(f32, f32, f32, f32),   // (x1, y1, x2, y2)
+    Steps(u32),                        // CSS steps()
+
+    // Advanced parameterized
+    RoughEase { strength: f32, points: u32 },
+    SlowMo { linear_ratio: f32, power: f32 },
+    Wiggle { wiggles: u32 },
+    CustomBounce { strength: f32 },
+
+    // Escape hatch — function pointer (serde-skipped)
+    Custom(fn(f32) -> f32),
+}
+
+impl Easing {
+    pub fn apply(&self, t: f32) -> f32 { /* match dispatch */ }
+    pub fn all_named() -> &'static [Easing] { /* for picker UIs / test sweeps */ }
+}
+```
+
+**Invariants enforced in the test suite:**
+- `apply(0.0) == 0.0` for all named variants
+- `apply(1.0) == 1.0` for all named variants
+- `apply(t)` with `t` outside `[0, 1]` does not panic — `t` is clamped internally
+
+#### `Cargo.toml`
+
+```toml
+[package]
+name        = "motus-core"
+description = "Core traits and easing system for the Motus animation library."
+# inherits workspace.package fields
+
+[features]
+default = []
+std     = []
+serde   = ["dep:serde"]
+
+[dependencies]
+serde = { workspace = true, optional = true }
+```
+
+---
+
+### 4.2 `motus-tween`
+
+**Responsibility:** `Tween<T>` (single-value animation) and `KeyframeTrack<T>` (multi-stop animation). The bread-and-butter of the library.
+
+**Depends on:** `motus-core`
+
+#### `src/tween.rs`
+
+```rust
+pub struct Tween<T: Animatable> {
+    pub start:    T,
+    pub end:      T,
+    pub duration: f32,       // seconds
+    pub easing:   Easing,
+    pub delay:    f32,       // pre-animation hold in seconds
+    pub time_scale: f32,     // 1.0 = normal, 2.0 = double speed, 0.5 = half
+    pub looping:  Loop,
+    elapsed:      f32,       // private — managed by Update::update()
+    state:        TweenState,
+    loop_count:   u32,       // tracks current loop iteration
+    #[cfg(feature = "std")]
+    callbacks:    TweenCallbacks<T>,
+}
+
+pub enum TweenState {
+    Idle,        // not yet started (delay period)
+    Running,
+    Paused,
+    Completed,
+}
+
+pub enum Loop {
+    Once,
+    Times(u32),
+    Forever,
+    PingPong,    // plays forward then backward, repeatedly
+}
+```
+
+**Builder — the primary construction API:**
+
+```rust
+// Users never call Tween { .. } directly — always via TweenBuilder:
+let tween = Tween::new(0.0_f32, 100.0)
+    .duration(1.5)
+    .easing(Easing::EaseOutCubic)
+    .delay(0.2)
+    .time_scale(1.0)
+    .looping(Loop::PingPong)
+    .build();
+```
+
+**Key methods:**
+
+```rust
+impl<T: Animatable> Tween<T> {
+    pub fn value(&self) -> T;            // current interpolated value
+    pub fn progress(&self) -> f32;       // 0.0..=1.0 raw progress (before easing)
+    pub fn eased_progress(&self) -> f32; // 0.0..=1.0 after easing applied
+    pub fn is_complete(&self) -> bool;
+    pub fn reset(&mut self);
+    pub fn seek(&mut self, t: f32);      // jump to normalized time t ∈ [0, 1]
+    pub fn reverse(&mut self);           // swap start/end in place
+    pub fn pause(&mut self);
+    pub fn resume(&mut self);
+
+    // std feature only:
+    pub fn on_start(self, f: impl FnMut() + 'static) -> Self;
+    pub fn on_update(self, f: impl FnMut(&T) + 'static) -> Self;
+    pub fn on_complete(self, f: impl FnMut() + 'static) -> Self;
+}
+```
+
+**`Update` implementation:**
+
+```rust
+impl<T: Animatable> Update for Tween<T> {
+    fn update(&mut self, dt: f32) -> bool {
+        // 1. Apply time_scale to dt
+        // 2. Drain delay bucket if in Idle state
+        // 3. Advance elapsed by scaled_dt
+        // 4. Handle loop boundary — reset or reverse on overflow
+        // 5. Clamp elapsed to duration for Once
+        // 6. Transition to Completed when loop_count is exhausted
+        // 7. Fire callbacks (std only)
+        // 8. Return state != Completed
+    }
+}
+```
+
+**Value computation (hot path — keep simple):**
+
+```rust
+pub fn value(&self) -> T {
+    let raw_t    = (self.elapsed / self.duration).clamp(0.0, 1.0);
+    let curved_t = self.easing.apply(raw_t);
+    self.start.lerp(&self.end, curved_t)
+}
+```
+
+**Value modifiers (free functions, not methods, to keep Tween<T> small):**
+
+```rust
+pub fn snap_to<T: Animatable + Into<f32> + From<f32>>(value: T, grid: f32) -> T;
+pub fn round_to<T: Animatable + Into<f32> + From<f32>>(value: T, decimals: u32) -> T;
+```
+
+#### `src/keyframe.rs`
+
+```rust
+pub struct Keyframe<T: Animatable> {
+    pub time:   f32,      // seconds from track start
+    pub value:  T,
+    pub easing: Easing,   // easing used from THIS keyframe to the NEXT
+}
+
+pub struct KeyframeTrack<T: Animatable> {
+    frames:      Vec<Keyframe<T>>,   // sorted by time — invariant maintained by push
+    elapsed:     f32,
+    pub looping: Loop,
+    loop_count:  u32,
+}
+
+impl<T: Animatable> KeyframeTrack<T> {
+    pub fn new() -> Self;
+    pub fn push(self, time: f32, value: T) -> Self;
+    pub fn push_eased(self, time: f32, value: T, easing: Easing) -> Self;
+    pub fn looping(self, mode: Loop) -> Self;
+
+    pub fn value_at(&self, t: f32) -> T;   // evaluate at any time — pure, no state
+    pub fn value(&self) -> T;              // current value based on elapsed
+    pub fn duration(&self) -> f32;         // time of the last keyframe
+    pub fn is_complete(&self) -> bool;
+}
+```
+
+**Interpolation algorithm:**
+
+```
+1. Binary-search frames for the last frame where frame.time <= t
+2. If t >= last frame time → return last frame value (clamped at end)
+3. local_t = (t − frames[i].time) / (frames[i+1].time − frames[i].time)
+4. curved_t = frames[i].easing.apply(local_t)
+5. return frames[i].value.lerp(&frames[i+1].value, curved_t)
+```
+
+**PingPong loop:**
+
+```
+total   = duration()
+cycle_t = elapsed % (2.0 * total)
+t = if cycle_t <= total { cycle_t } else { 2.0 * total - cycle_t }
+```
+
+---
+
+### 4.3 `motus-timeline`
+
+**Responsibility:** Composing animations into concurrent or sequential groups. The `Timeline` is the mixer; `Sequence` is sugar for chaining.
+
+**Depends on:** `motus-core`, `motus-tween`
+
+#### `src/timeline.rs`
+
+```rust
+pub struct Timeline {
+    entries:    Vec<TimelineEntry>,
+    elapsed:    f32,
+    state:      TimelineState,
+    pub looping: Loop,
+    time_scale: f32,
+    #[cfg(feature = "std")]
+    on_complete: Option<Box<dyn FnMut()>>,
+}
+
+struct TimelineEntry {
+    label:      String,
+    animation:  Box<dyn Update + Send>,
+    start_at:   f32,           // absolute offset from timeline start in seconds
+    duration:   f32,           // for progress computation
+}
+
+pub enum TimelineState {
+    Idle,
+    Playing,
+    Paused,
+    Completed,
+}
+```
+
+**Relative positioning — the `At` enum:**
+
+```rust
+pub enum At {
+    Absolute(f32),         // explicit time offset
+    Start,                 // t = 0.0 (same as Absolute(0.0))
+    End,                   // immediately after the last entry ends
+    Label(&'static str),   // same start time as a named entry
+    Offset(f32),           // relative to timeline's current end
+}
+```
+
+**Builder API:**
+
+```rust
+let mut tl = Timeline::new()
+    // start "fade" at t=0.0
+    .add("fade", fade_tween, At::Absolute(0.0))
+    // start "slide" right after "fade" ends
+    .add("slide", slide_tween, At::End)
+    // start "glow" at the same time "fade" started (concurrent)
+    .add("glow", glow_tween, At::Label("fade"))
+    // start "pop" 0.1s after the timeline's current end
+    .add("pop", pop_tween, At::Offset(0.1))
+    .looping(Loop::Once);
+
+tl.play();
+```
+
+**Playback control:**
+
+```rust
+impl Timeline {
+    pub fn play(&mut self);
+    pub fn pause(&mut self);
+    pub fn resume(&mut self);
+    pub fn seek(&mut self, t: f32);     // jump to normalized time ∈ [0, 1]
+    pub fn seek_abs(&mut self, secs: f32); // jump to absolute time in seconds
+    pub fn reset(&mut self);
+
+    pub fn duration(&self) -> f32;      // end time of the last-finishing entry
+    pub fn progress(&self) -> f32;      // 0.0..=1.0
+    pub fn is_complete(&self) -> bool;
+
+    // std feature:
+    pub fn on_entry_complete(self, label: &str, f: impl FnMut() + 'static) -> Self;
+    pub fn on_complete(self, f: impl FnMut() + 'static) -> Self;
+
+    // tokio feature:
+    pub async fn wait(&self);           // resolves on completion
+}
+```
+
+#### `src/sequence.rs`
+
+`Sequence` is a builder that auto-calculates `start_at` by accumulating durations and gaps. It produces a `Timeline`.
+
+```rust
+pub struct Sequence { inner: Timeline, cursor: f32 }
+
+impl Sequence {
+    pub fn new() -> Self;
+    pub fn then(self, label: &str, anim: impl Update + Send + 'static, duration: f32) -> Self;
+    pub fn gap(self, seconds: f32) -> Self;    // pause between steps
+    pub fn build(self) -> Timeline;
+}
+```
+
+#### `src/stagger.rs`
+
+```rust
+/// Create a timeline where N animations each start `delay` seconds
+/// after the previous one.
+pub fn stagger(
+    animations: Vec<(impl Update + Send + 'static, f32)>,
+    delay: f32,
+) -> Timeline;
+```
+
+---
+
+### 4.4 `motus-spring`
+
+**Responsibility:** Physics-based animation using a damped harmonic oscillator. `no_std`-compatible — no heap allocation needed for `Spring` itself.
+
+**Depends on:** `motus-core`
+
+#### `src/spring.rs`
+
+```rust
+pub struct Spring {
+    pub config:   SpringConfig,
+    position:     f32,
+    velocity:     f32,
+    target:       f32,
+    integrator:   Integrator,
+}
+
+pub enum Integrator {
+    SemiImplicitEuler,   // default — fast, stable for animation
+    RungeKutta4,         // optional — more accurate for high-stiffness springs
+}
+
+impl Spring {
+    pub fn new(config: SpringConfig) -> Self;
+    pub fn set_target(&mut self, target: f32);
+    pub fn position(&self) -> f32;
+    pub fn velocity(&self) -> f32;
+    pub fn is_settled(&self) -> bool;
+    pub fn snap_to(&mut self, pos: f32);    // teleport with no animation
+    pub fn use_rk4(mut self, yes: bool) -> Self;
+}
+
+impl Update for Spring {
+    fn update(&mut self, dt: f32) -> bool {
+        if self.is_settled() { return false; }
+        match self.integrator {
+            Integrator::SemiImplicitEuler => self.step_euler(dt),
+            Integrator::RungeKutta4 => self.step_rk4(dt),
+        }
+        !self.is_settled()
+    }
+}
+```
+
+**Semi-implicit Euler (default integration):**
+
+```
+displacement = position − target
+acceleration = (−stiffness × displacement − damping × velocity) / mass
+velocity    += acceleration × dt
+position    += velocity × dt
+```
+
+**Settle detection:**
+
+```
+is_settled = |position − target| < epsilon && |velocity| < epsilon
+```
+
+#### `src/config.rs`
+
+```rust
+#[derive(Clone, Debug)]
+pub struct SpringConfig {
+    pub stiffness: f32,    // default: 100.0
+    pub damping:   f32,    // default: 10.0
+    pub mass:      f32,    // default: 1.0
+    pub epsilon:   f32,    // settle threshold, default: 0.001
+}
+
+impl SpringConfig {
+    pub fn gentle() -> Self   { /* stiffness: 60,  damping: 14, mass: 1.0 */ }
+    pub fn wobbly() -> Self   { /* stiffness: 180, damping: 12, mass: 1.0 */ }
+    pub fn stiff() -> Self    { /* stiffness: 210, damping: 20, mass: 1.0 */ }
+    pub fn slow() -> Self     { /* stiffness: 37,  damping: 14, mass: 1.0 */ }
+    pub fn snappy() -> Self   { /* stiffness: 300, damping: 30, mass: 1.0 */ }
+}
+```
+
+**Multi-dimensional spring (`SpringN<T>`):**
+
+Uses one `Spring` per component, reconstructed into `T` each frame.
+
+```rust
+pub struct SpringN<T: Animatable> {
+    components: Vec<Spring>,      // length = number of lerp dimensions of T
+    _marker:    PhantomData<T>,
+}
+
+impl<T: Animatable> SpringN<T> {
+    pub fn new(config: SpringConfig, initial: T) -> Self;
+    pub fn set_target(&mut self, target: T);
+    pub fn position(&self) -> T;
+    pub fn is_settled(&self) -> bool;
+}
+```
+
+---
+
+### 4.5 `motus-path`
+
+**Responsibility:** All motion-path related types — Bezier curves, CatmullRom splines, arc-length parameterization, SVG path parsing, shape morphing, and the `MotionPathTween`.
+
+**Depends on:** `motus-core`, `motus-tween`
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `bezier.rs` | `QuadBezier`, `CubicBezier`, `CatmullRomSpline`, `PathEvaluate` trait |
+| `motion.rs` | `MotionPath`, `MotionPathTween`, auto-rotate, start/end offsets |
+| `poly.rs` | `PolyPath`, `CompoundPath`, `PathCommand` — arc-length parameterized |
+| `morph.rs` | `MorphPath` — point-by-point morph with auto-resampling |
+| `svg.rs` | `SvgPathParser` — parses SVG `d` attribute into `PathCommand` list |
+
+#### Key types
+
+```rust
+// bezier.rs
+pub trait PathEvaluate {
+    fn position(&self, t: f32) -> [f32; 2];
+    fn tangent(&self, t: f32) -> [f32; 2];
+    fn rotation_deg(&self, t: f32) -> f32;
+    fn arc_length(&self) -> f32;
+}
+
+// motion.rs — the main motion path driver
+pub struct MotionPathTween {
+    path:       Box<dyn PathEvaluate>,
+    tween:      Tween<f32>,        // drives t ∈ [0, 1] along the path
+    auto_rotate: bool,
+    start_offset: f32,
+    end_offset:   f32,
+}
+
+impl MotionPathTween {
+    pub fn value(&self) -> [f32; 2];      // current (x, y) position
+    pub fn rotation_deg(&self) -> f32;    // auto-rotate heading
+}
+```
+
+---
+
+### 4.6 `motus-physics`
+
+**Responsibility:** Input-driven physics — inertia (friction deceleration), drag tracking with velocity, and gesture recognition.
+
+**Depends on:** `motus-core`
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `inertia.rs` | `Inertia`, `InertiaN<T>`, `InertiaConfig`, presets |
+| `drag.rs` | `DragState`, `DragConstraints`, `DragAxis`, `PointerData` |
+| `gesture.rs` | `GestureRecognizer`, `Gesture` enum, `GestureConfig` |
+
+```rust
+// gesture.rs
+pub enum Gesture {
+    Tap { position: [f32; 2] },
+    DoubleTap { position: [f32; 2] },
+    LongPress { position: [f32; 2], duration: f32 },
+    Swipe { direction: SwipeDirection, velocity: f32, distance: f32 },
+    Pinch { scale: f32, center: [f32; 2] },
+    Rotation { angle_delta: f32, center: [f32; 2] },
+}
+```
+
+---
+
+### 4.7 `motus-color`
+
+**Responsibility:** Perceptual color interpolation by wrapping the `palette` crate. Only meaningful with `features = ["palette"]`.
+
+**Depends on:** `motus-core`, `palette`
+
+```rust
+// spaces.rs — wrapper types that impl Interpolate using the correct color space
+pub struct InLab<C>(pub C);      // CIE L*a*b* — perceptually uniform
+pub struct InOklch<C>(pub C);    // Oklch — modern perceptual space
+pub struct InLinear<C>(pub C);   // linear light (gamma-correct sRGB lerp)
+
+// Example: interpolating in Lab space
+impl<C: palette::Mix + Clone + 'static> Interpolate for InLab<C> {
+    fn lerp(&self, other: &Self, t: f32) -> Self {
+        // convert both to Lab, lerp, convert back
+    }
+}
+```
+
+---
+
+### 4.8 `motus-driver`
+
+**Responsibility:** The runtime — `AnimationDriver` manages many animations, `Clock` abstracts time, `ScrollDriver` links scroll position to animation progress.
+
+**Depends on:** `motus-core` (+ `std` for `AnimationDriver`)
+
+#### `src/driver.rs`
+
+```rust
+pub struct AnimationDriver {
+    slots:   Vec<Slot>,
+    next_id: u64,
+}
+
+struct Slot {
+    id:        AnimationId,
+    animation: Box<dyn Update + Send>,
+    removed:   bool,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+pub struct AnimationId(u64);
+
+impl AnimationDriver {
+    pub fn new() -> Self;
+    pub fn add<A: Update + Send + 'static>(&mut self, anim: A) -> AnimationId;
+    pub fn tick(&mut self, dt: f32);       // tick all, auto-remove completed
+    pub fn cancel(&mut self, id: AnimationId);
+    pub fn cancel_all(&mut self);
+    pub fn active_count(&self) -> usize;
+    pub fn is_active(&self, id: AnimationId) -> bool;
+}
+```
+
+#### `src/clock.rs`
+
+```rust
+pub trait Clock {
+    fn delta(&mut self) -> f32;    // seconds since last call
+}
+
+// Requires "std" feature:
+pub struct WallClock { last: std::time::Instant }
+
+// Manual — caller calls .advance(dt) then .delta() returns it:
+pub struct ManualClock { pending: f32 }
+impl ManualClock {
+    pub fn advance(&mut self, dt: f32);
+}
+
+// Fixed-step mock for deterministic tests:
+pub struct MockClock { step: f32 }
+impl MockClock {
+    pub fn new(step_seconds: f32) -> Self;
+}
+```
+
+#### `src/scroll.rs`
+
+```rust
+pub struct ScrollDriver {
+    min_scroll: f32,
+    max_scroll: f32,
+    animations: Vec<Box<dyn Update + Send>>,
+    position:   f32,
+}
+
+impl ScrollDriver {
+    pub fn new(min: f32, max: f32) -> Self;
+    pub fn add<A: Update + Send + 'static>(&mut self, anim: A);
+    pub fn set_position(&mut self, pos: f32);  // drives all animations by normalized pos
+}
+```
+
+---
+
+### 4.9 `motus-gpu`
+
+**Responsibility:** Batch-evaluate 10,000+ tweens per frame on the GPU using `wgpu` compute shaders. Falls back to CPU if GPU unavailable.
+
+**Depends on:** `motus-core`, `motus-tween`, `wgpu`, `bytemuck`, `pollster`
+
+```rust
+pub struct GpuAnimationBatch {
+    device:     wgpu::Device,
+    queue:      wgpu::Queue,
+    pipeline:   wgpu::ComputePipeline,
+    input_buf:  wgpu::Buffer,
+    output_buf: wgpu::Buffer,
+    readback:   wgpu::Buffer,
+    count:      usize,
+}
+
+impl GpuAnimationBatch {
+    pub fn new(device: wgpu::Device, queue: wgpu::Queue) -> Self;
+    pub fn new_auto() -> Self;             // tries GPU, falls back to CPU mode
+    pub fn push(&mut self, tween: Tween<f32>);
+    pub fn tick(&mut self, dt: f32);
+    pub fn read_back(&self) -> &[f32];     // current values after tick
+}
+```
+
+**WGSL shader (`shaders/tween.wgsl`):**
+
+The shader receives a buffer of tween state structs `{start, end, duration, elapsed, easing_id}` and writes the output float value for each. The entire easing function table is implemented in WGSL. One dispatch covers all tweens in a single GPU pass.
+
+---
+
+### 4.10 `motus-bevy`
+
+**Responsibility:** Bevy plugin integrating Motus into the Bevy ECS. Component registration, system scheduling, and event types.
+
+**Depends on:** `motus-core`, `motus-tween`, `motus-spring`, `bevy_app`, `bevy_ecs`, `bevy_time`
+
+#### `src/plugin.rs`
+
+```rust
+pub struct MotusPlugin;
+
+impl bevy_app::Plugin for MotusPlugin {
+    fn build(&self, app: &mut bevy_app::App) {
+        app
+            .add_event::<TweenCompleted>()
+            .add_event::<SpringSettled>()
+            .add_systems(bevy_app::Update, tick_tweens)
+            .add_systems(bevy_app::Update, tick_springs);
+    }
+}
+
+#[derive(Event)]
+pub struct TweenCompleted { pub entity: bevy_ecs::entity::Entity }
+
+#[derive(Event)]
+pub struct SpringSettled { pub entity: bevy_ecs::entity::Entity }
+```
+
+#### `src/systems.rs`
+
+```rust
+fn tick_tweens(
+    time: Res<Time>,
+    mut query: Query<(Entity, &mut Tween<f32>)>,
+    mut events: EventWriter<TweenCompleted>,
+) {
+    for (entity, mut tween) in &mut query {
+        let still_running = tween.update(time.delta_seconds());
+        if !still_running {
+            events.send(TweenCompleted { entity });
+        }
+    }
+}
+```
+
+---
+
+### 4.11 `motus-wasm`
+
+**Responsibility:** Browser-specific integrations. `requestAnimationFrame` driver, FLIP layout transitions, SplitText, ScrollSmoother, Draggable, Observer.
+
+**Depends on:** `motus-core`, `motus-driver`, `wasm-bindgen`, `js-sys`, `web-sys`
+
+#### `src/raf.rs`
+
+```rust
+pub struct RafDriver {
+    driver:     AnimationDriver,
+    last_ts:    f64,
+    time_scale: f32,
+    paused:     bool,
+}
+
+impl RafDriver {
+    pub fn new() -> Self;
+    pub fn tick(&mut self, timestamp_ms: f64);   // call from rAF callback
+    pub fn pause(&mut self);
+    pub fn resume(&mut self);
+    pub fn set_time_scale(&mut self, scale: f32);
+}
+```
+
+---
+
+### 4.12 `motus` (facade)
+
+**Responsibility:** The one crate users put in their `Cargo.toml`. Feature flags on this crate activate the matching sub-crates and re-export their public APIs.
+
+```toml
+[features]
+default  = ["std", "tween", "timeline", "spring", "driver"]
+std      = ["motus-core/std", "motus-driver/std"]
+tween    = ["dep:motus-tween"]
+timeline = ["dep:motus-timeline"]
+spring   = ["dep:motus-spring"]
+path     = ["dep:motus-path"]
+physics  = ["dep:motus-physics"]
+color    = ["dep:motus-color", "dep:palette"]
+driver   = ["dep:motus-driver"]
+gpu      = ["dep:motus-gpu"]
+bevy     = ["dep:motus-bevy"]
+wasm     = ["dep:motus-wasm"]
+serde    = ["motus-core/serde", "motus-tween/serde", "motus-spring/serde"]
+tokio    = ["motus-timeline/tokio"]
+no_std   = []
+```
+
+`src/lib.rs` re-exports everything behind `#[cfg(feature = ...)]` guards.
+
+---
+
+## 5. Data Flow & Runtime Loop
+
+### Standard Application (non-Bevy, non-WASM)
+
+```
+Application loop (60fps)
+       │
+       ▼
+  WallClock::delta()         → dt: f32 (seconds since last frame)
+       │
+       ▼
+  AnimationDriver::tick(dt)
+       │
+       ├── Tween::update(dt)              → advance elapsed, compute value()
+       ├── KeyframeTrack::update(dt)      → advance elapsed, binary-search, lerp
+       ├── Timeline::update(dt)           → tick entries in time window, callbacks
+       ├── Spring::update(dt)             → integrate velocity + position
+       └── MotionPathTween::update(dt)    → advance path tween, evaluate position
+       │
+       ▼
+  Application reads .value() or .position()
+  from each animation, then renders.
+```
+
+### Bevy ECS Loop
+
+```
+Bevy scheduler (Update stage)
+       │
+       ▼
+  tick_tweens system
+  tick_springs system
+       │
+       ▼
+  Query<(Entity, &mut Tween<f32>)>
+  Query<(Entity, &mut SpringN<Vec3>)>
+       │
+       ▼
+  .update(time.delta_seconds())
+       │
+       ▼
+  TweenCompleted / SpringSettled events fired
+       │
+       ▼
+  User systems react to events and apply values
+```
+
+### WASM / Browser Loop
+
+```
+Browser
+       │
+       ▼
+  requestAnimationFrame(timestamp_ms)
+       │
+       ▼
+  RafDriver::tick(timestamp_ms)
+       │
+       ▼
+  AnimationDriver::tick(dt)
+       │
+       ▼
+  Write values to DOM via wasm-bindgen JS closures
+```
+
+---
+
+## 6. Type System Design
+
+### The `Animatable` hierarchy
+
+```
+Interpolate
+  └── .lerp(&self, other: &Self, t: f32) -> Self
+
+         │ blanket impl: Interpolate + Clone + 'static
+
+Animatable   ← all generic bounds use this
+  ├── Tween<T: Animatable>
+  ├── KeyframeTrack<T: Animatable>
+  └── SpringN<T: Animatable>
+```
+
+### Why `t: f32` everywhere
+
+The progress parameter is always `f32`. This is intentional:
+- Animation timing is a display-frequency concern — `f32` precision (24-bit mantissa) is imperceptible at 60fps.
+- A second generic `<P>` for the time parameter would double the API surface for no real-world benefit.
+- Types like `f64` world coordinates still get full `f64` precision in their `Interpolate` impl — only the incoming `t` is cast.
+
+### Builder pattern everywhere
+
+Every type with more than two fields uses a consuming builder:
+
+```rust
+// Every optional field has a sane default.
+// No positional argument confusion.
+// The compiler enforces T is Animatable before .build().
+let t = Tween::new(0.0_f32, 100.0)
+    .duration(1.0)
+    .easing(Easing::EaseOutBack)
+    .delay(0.1)
+    .looping(Loop::PingPong)
+    .build();
+```
+
+### `no_std` strategy
+
+```
+With default features:    Uses std heap allocation, wall clock, callbacks
+With no_std:              Stack-only. Vec requires `extern crate alloc`.
+
+Available in no_std:
+  motus-core  → Easing, Interpolate, Animatable, Update
+  motus-tween → Tween<T> (stack allocated), Loop, TweenState
+  motus-spring → Spring (stack allocated), SpringConfig
+
+NOT available in no_std (require allocation):
+  KeyframeTrack<T>, Timeline, Sequence, AnimationDriver,
+  WallClock, callbacks, MotusPlugin, RafDriver
+```
+
+---
+
+## 7. Feature Flag Strategy
+
+| Feature | What it enables | Required crates |
+|---------|----------------|-----------------|
+| `default` | `std` + `tween` + `timeline` + `spring` + `driver` | All core crates |
+| `std` | Wall clock, callbacks, heap allocation | OS |
+| `tween` | `Tween<T>`, `KeyframeTrack<T>` | `motus-tween` |
+| `timeline` | `Timeline`, `Sequence`, `stagger` | `motus-timeline` |
+| `spring` | `Spring`, `SpringN<T>` | `motus-spring` |
+| `path` | Bezier, MotionPath, SVG parser | `motus-path` |
+| `physics` | Inertia, DragState, Gesture | `motus-physics` |
+| `color` | Perceptual color interpolation | `motus-color`, `palette` |
+| `driver` | `AnimationDriver`, Clocks, ScrollDriver | `motus-driver` |
+| `gpu` | `GpuAnimationBatch` via wgpu | `motus-gpu`, `wgpu` |
+| `bevy` | `MotusPlugin` | `motus-bevy`, bevy crates |
+| `wasm` | `RafDriver` + WASM binding | `motus-wasm`, `wasm-bindgen` |
+| `serde` | `Serialize`/`Deserialize` on all public types | `serde` |
+| `tokio` | `.wait().await` on timelines | `tokio` |
+
+**User decision guide:**
+
+| You are building... | `Cargo.toml` features |
+|---------------------|----------------------|
+| TUI / CLI app | `default` |
+| Bevy game | `bevy` |
+| WASM web app | `wasm` |
+| GPU particle system | `gpu` |
+| Embedded / no_std | `default-features = false` |
+| Everything | `default,path,physics,color,gpu,serde,tokio` |
+
+---
+
+## 8. Error Handling Strategy
+
+Motus uses **no `Result` in hot paths**. Animation update functions never fail. They clamp, saturate, or silently correct invalid input.
+
+| Situation | Behavior |
+|-----------|----------|
+| `t` outside `[0, 1]` in easing | Clamped to `[0, 1]` silently |
+| `duration = 0.0` | Immediately complete, returns `end` value |
+| `duration < 0.0` | Treated as `0.0` — immediately complete |
+| `dt < 0.0` | Treated as `0.0` — no backward time |
+| `KeyframeTrack` with 0 frames | Returns `T::default()` (where available) |
+| `KeyframeTrack` with 1 frame | Returns that frame's value always |
+| Spring with `stiffness = 0.0` | Returns `target` immediately |
+| `seek()` with `t > 1.0` | Clamped to `1.0` |
+
+`Result` is only returned by builders that validate user-provided data at construction time (e.g. if `duration < 0.0` is given, `TweenBuilder::build()` can return `Err(MotusError::InvalidDuration)`).
+
+---
+
+## 9. Testing Strategy
+
+### Unit tests — inline in each source file
+
+Every module has `#[cfg(test)]` at the bottom. Required tests:
+
+| Crate / Module | Required tests |
+|----------------|----------------|
+| `motus-core / traits.rs` | `f32` lerp endpoints, midpoint, `[f32; 4]` independence |
+| `motus-core / easing.rs` | Every variant: `apply(0)=0`, `apply(1)=1`, no panic on out-of-range `t` |
+| `motus-tween / tween.rs` | Start value, end value, complete flag, delay, seek, reverse, large-dt safety, PingPong reversal |
+| `motus-tween / keyframe.rs` | Single frame, two frames, multi-frame, looping, PingPong, out-of-range query |
+| `motus-timeline / timeline.rs` | Concurrent play, sequential play, seek, pause/resume, loop, callback fires |
+| `motus-spring / spring.rs` | Settles to target, stiff settles fast, damping=0 oscillates, SpringN for `[f32; 3]` |
+| `motus-driver / driver.rs` | Completed removed automatically, cancel mid-animation, `active_count`, thread-safe add |
+| `motus-driver / clock.rs` | MockClock returns correct fixed dt, ManualClock advance+delta |
+| `motus-path / bezier.rs` | position(0)=start, position(1)=end, arc-length monotonicity |
+
+### Integration tests — `tests/` at workspace root
+
+```
+tests/
+├── tween_lifecycle.rs         — full tween lifecycle using MockClock
+├── spring_settles.rs          — spring reaches target within N steps, all presets
+├── keyframe_looping.rs        — long-running looping track stays in bounds
+└── timeline_sequence.rs       — multi-step sequence completes in correct order
+```
+
+### Benchmark suite — `benches/`
+
+```
+benches/
+├── easing_bench.rs            — all 43 easing variants via criterion
+├── tween_update_bench.rs      — update() throughput, 1 and 10,000 tweens
+└── spring_bench.rs            — spring settle time across all presets
+```
+
+Run with: `cargo bench`
+
+### CI matrix (`.github/workflows/ci.yml`)
+
+```yaml
+- cargo test --workspace                          # all tests
+- cargo test --workspace --no-default-features    # no_std compile check
+- cargo clippy --workspace --all-features         # linting
+- cargo doc --workspace --all-features            # docs build
+- cargo bench --workspace --no-run               # benches compile
+- wasm-pack test --headless --chrome              # wasm feature
+```
+
+---
+
+## 10. Performance Guidelines
+
+### Zero-cost in the common case
+
+- All easing functions are `#[inline]` — compiled to 2–5 float operations at call site.
+- `Tween<T>` is stack-allocated; its `update()` is a handful of float multiplications.
+- `Interpolate` blanket impls on primitives compile to a scalar multiply-add.
+- `Easing::apply()` is a match on a local enum — branch predictor handles it well after the first few frames.
+- `KeyframeTrack::update()` binary-searches a `Vec` — fast for any reasonable number of keyframes (< 1000).
+
+### When allocation happens
+
+| Type | When | Cost |
+|------|------|------|
+| `KeyframeTrack<T>` | `.push()` at build time | One Vec realloc |
+| `Timeline` | `.add()` at build time | One Vec realloc |
+| `AnimationDriver` | `.add()` at runtime | One Box allocation |
+| Callbacks | `on_complete()` at build time | One Box allocation |
+
+No allocation happens during `.update()` or `.value()` calls in the normal path.
+
+### Avoiding dynamic dispatch in tight loops
+
+If you are updating thousands of values per frame (particles, procedural effects), skip `AnimationDriver` and keep a `Vec<Tween<f32>>` directly:
+
+```rust
+// Monomorphized — no vtable, compiler can vectorize:
+for tween in tweens.iter_mut() {
+    tween.update(dt);
+}
+```
+
+### GPU batch for extreme scale
+
+For 10,000+ concurrent tweens, use `motus-gpu`. The WGSL compute shader evaluates all tweens in one GPU dispatch with no CPU-side loops at update time.
+
+---
+
+## 11. Integration Targets
+
+### TUI / CLI (ratatui)
+
+```rust
+use motus::{Tween, Easing, WallClock, Update};
+
+struct App { progress: Tween<f32> }
+
+fn main() {
+    let mut app = App {
+        progress: Tween::new(0.0_f32, 1.0)
+            .duration(2.0)
+            .easing(Easing::EaseInOutCubic)
+            .build(),
+    };
+    let mut clock = WallClock::new();
+
+    loop {
+        app.progress.update(clock.delta());
+        terminal.draw(|f| {
+            let pct = (app.progress.value() * 100.0) as u16;
+            f.render_widget(Gauge::default().percent(pct), area);
+        })?;
+        if app.progress.is_complete() { break; }
+    }
+}
+```
+
+**Example files to ship:**
+- `examples/tui_progress.rs` — animated Gauge widget
+- `examples/tui_spinner.rs` — braille spinner via `KeyframeTrack<&str>`
+- `examples/tui_bounce.rs` — bouncing element via `Spring`
+
+### Web / WASM
+
+Build with `wasm-pack build --target web --features wasm`.
+
+```rust
+use wasm_bindgen::prelude::*;
+use motus::{Tween, Easing};
+use motus_wasm::RafDriver;
+
+#[wasm_bindgen]
+pub struct App {
+    tween:  Tween<f32>,
+    driver: RafDriver,
+}
+
+#[wasm_bindgen]
+impl App {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> Self {
+        Self {
+            tween: Tween::new(0.0_f32, 500.0)
+                .duration(1.5)
+                .easing(Easing::EaseOutBounce)
+                .build(),
+            driver: RafDriver::new(),
+        }
+    }
+    pub fn tick(&mut self, ts: f64) { self.driver.tick(ts); }
+    pub fn value(&self) -> f32 { self.tween.value() }
+}
+```
+
+### Bevy
+
+```rust
+use bevy::prelude::*;
+use motus_bevy::{MotusPlugin, TweenCompleted};
+use motus::Tween;
+
+fn main() {
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .add_plugins(MotusPlugin)
+        .add_systems(Startup, spawn)
+        .add_systems(Update, on_done)
+        .run();
+}
+
+fn spawn(mut commands: Commands) {
+    commands.spawn((
+        SpriteBundle::default(),
+        Tween::new([0.0_f32, 0.0], [200.0, 0.0])
+            .duration(0.8)
+            .easing(Easing::EaseOutBack)
+            .build(),
+    ));
+}
+
+fn on_done(mut events: EventReader<TweenCompleted>) {
+    for ev in events.read() {
+        println!("Entity {:?} finished animating", ev.entity);
+    }
+}
+```
+
+### `no_std` / Embedded
+
+```toml
+[dependencies]
+motus-core  = { version = "0.1", default-features = false }
+motus-tween = { version = "0.1", default-features = false }
+motus-spring = { version = "0.1", default-features = false }
+```
+
+Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, all `Interpolate` blanket impls.
+
+---
+
+## 12. CI / CD Pipeline
+
+### `ci.yml` — runs on every PR and push to main
+
+```
+Jobs:
+  test:
+    matrix: [stable, beta, nightly]
+    steps:
+      - cargo test --workspace --all-features
+      - cargo test --workspace --no-default-features
+      - cargo clippy --workspace --all-features -- -D warnings
+      - cargo fmt --check
+
+  docs:
+    - cargo doc --workspace --all-features --no-deps
+
+  wasm:
+    - wasm-pack test --headless --chrome --features wasm
+
+  bench:
+    - cargo bench --workspace --no-run
+```
+
+### `publish.yml` — runs on version tags (`v*`)
+
+```
+Steps:
+  - Verify tag matches version in each Cargo.toml
+  - cargo publish -p motus-core
+  - cargo publish -p motus-tween
+  - ... (in dependency order)
+  - cargo publish -p motus
+```
+
+---
+
+## 13. Publishing Checklist
+
+Before `cargo publish` for any crate:
+
+- [ ] All `pub` items have `///` doc comments with at least one example
+- [ ] `README.md` has a quick-start example that compiles with `cargo test --doc`
+- [ ] `CHANGELOG.md` has an entry for this version
+- [ ] `LICENSE-MIT` and `LICENSE-APACHE` are present at workspace root
+- [ ] `cargo test --workspace` passes — zero warnings
+- [ ] `cargo test --workspace --no-default-features` passes
+- [ ] `cargo test --workspace --all-features` passes
+- [ ] `cargo clippy --workspace --all-features -- -D warnings` is clean
+- [ ] `cargo doc --workspace --all-features --open` renders correctly
+- [ ] `cargo bench --workspace --no-run` compiles without errors
+- [ ] Version in `Cargo.toml` matches git tag and `CHANGELOG.md` entry
+- [ ] `cargo publish --dry-run` succeeds for the crate being released
+
+### Publish order (dependency chain)
+
+```
+motus-core → motus-tween → motus-spring → motus-path → motus-physics
+          → motus-color → motus-driver → motus-timeline
+          → motus-gpu → motus-bevy → motus-wasm → motus
+```
+
+---
+
+## 14. Naming & Style Conventions
+
+### Crate naming
+
+`motus-{concern}` — Latin prefix, lowercase, hyphen-separated.  
+The facade crate is simply `motus`.
+
+### Type naming
+
+| Type | Convention | Example |
+|------|------------|---------|
+| Structs | `PascalCase`, generic over `T` where needed | `Tween<T>`, `SpringN<T>` |
+| Enums | `PascalCase` | `Easing`, `Loop`, `TweenState` |
+| Traits | `PascalCase`, verb-like for behavior traits | `Interpolate`, `Update` |
+| Config structs | `{Type}Config` | `SpringConfig`, `GestureConfig` |
+| ID newtypes | `{Type}Id` over `u64` | `AnimationId` |
+| State enums | `{Type}State` | `TweenState`, `TimelineState` |
+| Events (Bevy) | Past tense `PascalCase` | `TweenCompleted`, `SpringSettled` |
+
+### Public vs private fields
+
+| Field type | Visibility |
+|------------|------------|
+| Configuration (`duration`, `easing`, `stiffness`) | `pub` — users may inspect and mutate |
+| Internal state (`elapsed`, `velocity`, `loop_count`) | Private — managed exclusively by `Update` |
+
+### Module-level documentation
+
+Every `lib.rs` must have a crate-level `//!` doc block with:
+1. One-sentence summary
+2. Quick-start example (compiles as a `cargo test --doc`)
+3. Feature flags table
+4. Link to the `motus` facade crate
+
+---
+
+*Document version: 0.1.0 — covers architecture through Motus 1.0.0*  
+*Project: Aarambh Dev Hub — github.com/AarambhDevHub/motus*

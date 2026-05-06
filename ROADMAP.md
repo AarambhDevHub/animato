@@ -1,0 +1,470 @@
+# Motus — Project Roadmap
+
+> Latin: mōtus — motion, movement, impulse.  
+> A professional-grade, renderer-agnostic animation library for Rust.
+
+This roadmap tracks every planned release from `v0.1.0` through `v1.0.0`.  
+Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
+
+---
+
+## Status Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅ | Complete |
+| 🔄 | In progress |
+| 📋 | Planned |
+| 🔮 | Future / post-1.0 |
+
+---
+
+## Release Overview
+
+| Version | Name | Focus | Status |
+|---------|------|-------|--------|
+| `v0.1.0` | Foundation | Core traits, easing, tween, spring, driver | 📋 |
+| `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | 📋 |
+| `v0.3.0` | Control | Looping, time scale, callbacks, value modifiers | 📋 |
+| `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | 📋 |
+| `v0.5.0` | Physics | Inertia, drag, gesture recognition | 📋 |
+| `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | 📋 |
+| `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | 📋 |
+| `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | 📋 |
+| `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | 📋 |
+| `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | 📋 |
+
+---
+
+## v0.1.0 — Foundation
+
+**Goal:** The smallest useful version of Motus. A developer can animate a single value from A to B, drive it with a clock, and use it in any Rust project.
+
+### Crates shipped
+
+- `motus-core` `v0.1.0`
+- `motus-tween` `v0.1.0`
+- `motus-spring` `v0.1.0`
+- `motus-driver` `v0.1.0`
+- `motus` `v0.1.0` (facade — default features only)
+
+### Deliverables
+
+**`motus-core`**
+- [ ] `Interpolate` trait with blanket impls for `f32`, `f64`, `[f32; 2]`, `[f32; 3]`, `[f32; 4]`, `i32`, `u8`
+- [ ] `Animatable` blanket impl (auto-derived from `Interpolate + Clone + 'static`)
+- [ ] `Update` trait (`fn update(&mut self, dt: f32) -> bool`)
+- [ ] `Easing` enum — all 31 classic variants (Linear, Polynomial × 12, Sine × 3, Expo × 3, Circ × 3, Back × 3, Elastic × 3, Bounce × 3)
+- [ ] `Easing::apply(t: f32) -> f32` with internal `t` clamping
+- [ ] Free easing functions (`ease_out_cubic(t: f32) -> f32`, etc.) for zero-overhead use
+- [ ] `Easing::all_named() -> &'static [Easing]`
+- [ ] `no_std` compile gate (`#![cfg_attr(not(feature = "std"), no_std)]`)
+- [ ] Full doc comments on every public item
+- [ ] Test: every variant satisfies `apply(0.0) == 0.0` and `apply(1.0) == 1.0`
+- [ ] Test: no panic on `t` outside `[0, 1]`
+
+**`motus-tween`**
+- [ ] `Tween<T: Animatable>` struct (stack-allocated)
+- [ ] `TweenBuilder<T>` with consuming builder pattern
+- [ ] `TweenState` enum (`Idle`, `Running`, `Paused`, `Completed`)
+- [ ] `Update for Tween<T>` — delay handling, elapsed advancement, completion detection
+- [ ] `.value() -> T` — hot path, no allocation
+- [ ] `.progress() -> f32` and `.eased_progress() -> f32`
+- [ ] `.is_complete()`, `.reset()`, `.seek(t: f32)`, `.reverse()`
+- [ ] `.pause()` and `.resume()`
+- [ ] `Loop` enum (`Once`, `Times(u32)`, `Forever`, `PingPong`)
+- [ ] Time scale support (`.time_scale(f32)`)
+- [ ] `snap_to(value, grid)` and `round_to(value, decimals)` free functions
+- [ ] `no_std` compatible — no heap allocation
+- [ ] Tests: start/end values, delay, seek, reverse, large-dt, PingPong direction
+
+**`motus-spring`**
+- [ ] `Spring` struct (stack-allocated, `no_std`)
+- [ ] `SpringConfig` with `stiffness`, `damping`, `mass`, `epsilon`
+- [ ] Presets: `gentle()`, `wobbly()`, `stiff()`, `slow()`, `snappy()`
+- [ ] Semi-implicit Euler integration
+- [ ] RK4 integration behind `.use_rk4(true)` flag
+- [ ] `is_settled()` with epsilon-based detection
+- [ ] `snap_to(pos)` — teleport without animation
+- [ ] `SpringN<T: Animatable>` — multi-dimensional spring via component decomposition
+- [ ] `Update for Spring` and `Update for SpringN<T>`
+- [ ] Tests: settles to target for all presets, damping=0 oscillates, SpringN for `[f32; 3]`
+
+**`motus-driver`**
+- [ ] `AnimationDriver` — owns `Vec<Box<dyn Update + Send>>`
+- [ ] `AnimationId` newtype over `u64`
+- [ ] `.add()` returns `AnimationId`
+- [ ] `.tick(dt)` — ticks all, auto-removes completed
+- [ ] `.cancel(id)`, `.cancel_all()`, `.active_count()`, `.is_active(id)`
+- [ ] `Clock` trait (`fn delta(&mut self) -> f32`)
+- [ ] `WallClock` (requires `std`)
+- [ ] `ManualClock` — caller provides dt via `.advance(dt)`
+- [ ] `MockClock` — fixed-step for deterministic tests
+- [ ] Tests: auto-removal, cancel, active_count, MockClock correctness
+
+**`motus` facade**
+- [ ] Feature flags: `default`, `std`, `tween`, `spring`, `driver`, `serde`
+- [ ] Re-exports all public APIs behind `#[cfg(feature)]` guards
+- [ ] Facade-level `lib.rs` doc with quick-start example
+
+**Documentation & Infrastructure**
+- [ ] `README.md` with installation, quick-start, feature table
+- [ ] `ARCHITECTURE.md` (done)
+- [ ] `ROADMAP.md` (this file)
+- [ ] `CONTRIBUTING.md`
+- [ ] `CHANGELOG.md` with `## [0.1.0]` entry
+- [ ] `LICENSE-MIT` and `LICENSE-APACHE`
+- [ ] `.github/workflows/ci.yml` — test, clippy, fmt, no_std check
+- [ ] `examples/basic_tween.rs`
+- [ ] `examples/spring_demo.rs`
+- [ ] `benches/easing_bench.rs`
+- [ ] `tests/tween_lifecycle.rs`, `tests/spring_settles.rs`
+- [ ] `cargo publish --dry-run` passes for all crates
+
+---
+
+## v0.2.0 — Composition
+
+**Goal:** Compose multiple animations. A developer can build a timeline of concurrent tweens or a sequence where each step plays after the previous one.
+
+### Crates shipped
+
+- `motus-timeline` `v0.2.0` (new)
+- All previous crates bumped to `v0.2.0`
+
+### Deliverables
+
+**`motus-timeline`**
+- [ ] `Timeline` struct with `Vec<TimelineEntry>` internally
+- [ ] `TimelineState` enum (`Idle`, `Playing`, `Paused`, `Completed`)
+- [ ] `.add(label, anim, At)` builder method
+- [ ] `At` enum: `Absolute(f32)`, `Start`, `End`, `Label(&str)`, `Offset(f32)`
+- [ ] `.play()`, `.pause()`, `.resume()`, `.reset()`
+- [ ] `.seek(t: f32)` — normalized seek
+- [ ] `.seek_abs(secs: f32)` — absolute time seek
+- [ ] `.duration() -> f32`, `.progress() -> f32`, `.is_complete() -> bool`
+- [ ] `Loop` support on `Timeline`
+- [ ] `Sequence` builder: `.then(label, anim, duration)`, `.gap(secs)`, `.build() -> Timeline`
+- [ ] `stagger(animations, delay) -> Timeline`
+- [ ] `Update for Timeline` — only tick entries within their time window
+- [ ] Tests: concurrent play, sequential play, seek, pause, loop, stagger order
+
+**`motus` facade**
+- [ ] Add `timeline` feature flag
+- [ ] Re-export `Timeline`, `Sequence`, `At`, `stagger`
+- [ ] `examples/timeline_sequence.rs`
+- [ ] `examples/keyframe_track.rs`
+
+---
+
+## v0.3.0 — Control
+
+**Goal:** Fine-grained runtime control and ergonomics. Time scale, callbacks, keyframe tracks.
+
+### Deliverables
+
+**`motus-tween`**
+- [ ] `KeyframeTrack<T: Animatable>` with sorted `Vec<Keyframe<T>>`
+- [ ] `Keyframe<T>` struct (`time: f32`, `value: T`, `easing: Easing`)
+- [ ] `.push()` and `.push_eased()` builder methods
+- [ ] Binary-search interpolation in `.value_at(t: f32)`
+- [ ] PingPong loop logic in `KeyframeTrack`
+- [ ] Tests: single frame, two frames, multi-frame, looping, PingPong
+
+**`motus-timeline`**
+- [ ] Callbacks (`std` feature): `.on_entry_complete(label, f)`, `.on_complete(f)`
+- [ ] `tokio` feature: `.wait().await` resolves when timeline completes
+- [ ] Time scale on `Timeline` (`.time_scale(f32)`)
+
+**`motus-core`**
+- [ ] `CubicBezier(f32, f32, f32, f32)` easing variant (CSS-compatible)
+- [ ] `Steps(u32)` easing variant
+- [ ] Tests for new easing variants
+
+**`motus` facade**
+- [ ] `serde` feature exports `Serialize`/`Deserialize` on core types
+- [ ] `tokio` feature passes through to `motus-timeline`
+- [ ] `examples/keyframe_track.rs` with looping + PingPong demo
+
+---
+
+## v0.4.0 — Paths
+
+**Goal:** Animate along curves. A developer can move an object along a quadratic Bezier, a CatmullRom spline, or a path parsed from an SVG `d` attribute.
+
+### Crates shipped
+
+- `motus-path` `v0.4.0` (new)
+
+### Deliverables
+
+**`motus-path`**
+
+*`bezier.rs`*
+- [ ] `QuadBezier` — quadratic Bezier curve with `position(t)` and `tangent(t)`
+- [ ] `CubicBezier` — cubic Bezier curve
+- [ ] `CatmullRomSpline` — smooth interpolating spline through control points
+- [ ] `PathEvaluate` trait: `position(t)`, `tangent(t)`, `rotation_deg(t)`, `arc_length()`
+- [ ] Arc-length parameterization via numerical integration (uniform `t` → uniform distance)
+
+*`motion.rs`*
+- [ ] `MotionPath` — chain of `PathEvaluate` segments into one unified path
+- [ ] `MotionPathTween` — drives `t ∈ [0, 1]` via an internal `Tween<f32>`, returns `[f32; 2]`
+- [ ] Auto-rotate: `.auto_rotate(true)` aligns the object's heading to the path tangent
+- [ ] Start/end offsets: `.start_offset(0.1).end_offset(0.9)` trims the path
+
+*`poly.rs`*
+- [ ] `PolyPath` — smooth path through arbitrary points via CatmullRom + arc-length param
+- [ ] `CompoundPath` — sequence of heterogeneous segments (line, quad, cubic, arc)
+- [ ] `PathCommand` enum used internally by `SvgPathParser` and `CompoundPath`
+
+*`svg.rs`*
+- [ ] `SvgPathParser::parse(d: &str) -> Vec<PathCommand>`
+- [ ] Support for `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z` commands
+- [ ] Support for relative (lowercase) variants of all commands
+
+**`motus` facade**
+- [ ] `path` feature flag
+- [ ] `examples/motion_path.rs` — object moves along a Bezier curve
+- [ ] `tests/path_arc_length.rs` — arc-length monotonicity and endpoint tests
+
+---
+
+## v0.5.0 — Physics
+
+**Goal:** Input-driven physics. Inertia (friction deceleration after a drag), drag tracking with velocity estimation, and gesture recognition.
+
+### Crates shipped
+
+- `motus-physics` `v0.5.0` (new)
+
+### Deliverables
+
+**`motus-physics`**
+
+*`inertia.rs`*
+- [ ] `InertiaConfig` with `friction`, `min_velocity`, and optional `bounds`
+- [ ] Presets: `smooth()`, `snappy()`, `heavy()`
+- [ ] `Inertia` — 1D friction deceleration from an initial velocity
+- [ ] `InertiaN<T: Animatable>` — multi-dimensional inertia
+- [ ] `.kick(velocity)` — start inertia from a velocity value
+- [ ] `.is_settled() -> bool`
+
+*`drag.rs`*
+- [ ] `PointerData` struct (`x`, `y`, `pressure`, `pointer_id`)
+- [ ] `DragAxis` enum (`Both`, `X`, `Y`)
+- [ ] `DragConstraints` struct (`min_x`, `max_x`, `min_y`, `max_y`, optional `grid_snap`)
+- [ ] `DragState` — tracks pointer position, velocity EMA, axis lock, constraints
+- [ ] `.on_pointer_down(data)`, `.on_pointer_move(data, dt)`, `.on_pointer_up(data)` → `Option<InertiaN<[f32; 2]>>`
+
+*`gesture.rs`*
+- [ ] `GestureConfig` struct (`tap_max_distance`, `tap_max_duration`, `swipe_min_distance`, `long_press_duration`)
+- [ ] `Gesture` enum: `Tap`, `DoubleTap`, `LongPress`, `Swipe`, `Pinch`, `Rotation`
+- [ ] `SwipeDirection` enum: `Up`, `Down`, `Left`, `Right`
+- [ ] `GestureRecognizer` — feeds pointer events, emits `Gesture` on pointer-up
+
+**`motus` facade**
+- [ ] `physics` feature flag
+
+---
+
+## v0.6.0 — Color
+
+**Goal:** Animate colors in perceptually uniform spaces so gradients look correct to the human eye, not just mathematically correct.
+
+### Crates shipped
+
+- `motus-color` `v0.6.0` (new)
+
+### Deliverables
+
+**`motus-color`**
+- [ ] `InLab<C>` wrapper — interpolates in CIE L\*a\*b\* space
+- [ ] `InOklch<C>` wrapper — interpolates in Oklch (modern perceptual space)
+- [ ] `InLinear<C>` wrapper — interpolates in linear light (gamma-correct sRGB lerp)
+- [ ] `Interpolate` implemented for each wrapper via the `palette` crate
+- [ ] Tests: `InLab` red-to-blue midpoint is not a muddy brown
+- [ ] Tests: `InLinear` vs `InLab` produce different midpoints (proof the wrapper matters)
+
+**`motus` facade**
+- [ ] `color` feature flag (enables `dep:motus-color`, `dep:palette`)
+- [ ] `examples/color_animation.rs` — animate background color in Lab space
+
+---
+
+## v0.7.0 — Integrations
+
+**Goal:** First-class support for Bevy, WASM browsers, and ratatui TUIs. A developer can drop `MotusPlugin` into Bevy or call `RafDriver::tick()` from a `requestAnimationFrame` callback.
+
+### Crates shipped
+
+- `motus-bevy` `v0.7.0` (new)
+- `motus-wasm` `v0.7.0` (new)
+
+### Deliverables
+
+**`motus-bevy`**
+- [ ] `MotusPlugin` — registers all systems and events
+- [ ] `tick_tweens` system — runs in `Update`, calls `.update(time.delta_seconds())`
+- [ ] `tick_springs` system — same pattern for `SpringN<T>`
+- [ ] `TweenCompleted` event — fired when a `Tween` component finishes
+- [ ] `SpringSettled` event — fired when a `SpringN` component settles
+- [ ] `AnimationLabel` component — optional label for identifying animations in events
+- [ ] Tests: Bevy integration test with `App::new()` + plugin, asserts event fires
+
+**`motus-wasm`**
+- [ ] `RafDriver` — wraps `AnimationDriver`, converts `timestamp_ms: f64` to `dt: f32`
+- [ ] `.pause()`, `.resume()`, `.set_time_scale(f32)`
+- [ ] `FlipState` and `FlipAnimation` — FLIP layout transition helpers (`wasm-dom` sub-feature)
+- [ ] `SplitText` — splits a DOM text node into character/word spans for individual animation
+- [ ] `ScrollSmoother` — momentum scrolling overlay
+- [ ] `Draggable` — DOM element drag binding, emits pointer events to `DragState`
+- [ ] `Observer` — unified pointer/touch/wheel event abstraction
+- [ ] `examples/wasm_counter/` — wasm-pack example with rAF loop
+
+**`motus` facade**
+- [ ] `bevy` feature flag
+- [ ] `wasm` feature flag (enables `motus-wasm` core)
+- [ ] `wasm-dom` sub-feature (enables DOM plugin types)
+- [ ] `examples/tui_progress.rs` — ratatui animated progress bar
+- [ ] `examples/tui_spinner.rs` — braille spinner via KeyframeTrack
+
+---
+
+## v0.8.0 — Advanced
+
+**Goal:** GSAP-class features — shape morphing, scroll-linked animation, advanced easing, and FLIP layout transitions.
+
+### Deliverables
+
+**`motus-path`**
+- [ ] `MorphPath` — point-by-point shape morph with auto-resampling
+- [ ] `resample(points: &[[f32; 2]], count: usize) -> Vec<[f32; 2]>` — uniform resampling
+- [ ] `DrawSvg` trait — `draw_on(progress: f32) -> f32` and `draw_on_reverse(progress: f32) -> f32` for `stroke-dashoffset` animation
+
+**`motus-driver`**
+- [ ] `ScrollDriver` — drives animations from scroll position instead of time
+- [ ] `ScrollClock` — `Clock` implementation backed by scroll position
+
+**`motus-core`**
+- [ ] Advanced easing variants:
+  - [ ] `RoughEase { strength: f32, points: u32 }`
+  - [ ] `SlowMo { linear_ratio: f32, power: f32 }`
+  - [ ] `Wiggle { wiggles: u32 }`
+  - [ ] `CustomBounce { strength: f32 }`
+  - [ ] `ExpoScale { start: f32, end: f32 }`
+
+**`motus-wasm`**
+- [ ] `LayoutAnimator` — FLIP-style layout transitions with `compute_transitions()` and `css_transform()`
+- [ ] `SharedElementTransition` — animate an element between two layout positions
+
+**`motus` facade**
+- [ ] `examples/scroll_linked.rs` — scroll-driven animation
+- [ ] `examples/morph_path.rs` — shape morphing between two polygons
+
+---
+
+## v0.9.0 — Performance
+
+**Goal:** GPU batch compute for extreme-scale animations, hardened `no_std` support, comprehensive benchmark suite.
+
+### Crates shipped
+
+- `motus-gpu` `v0.9.0` (new)
+
+### Deliverables
+
+**`motus-gpu`**
+- [ ] `GpuAnimationBatch` — uploads tween state to GPU, dispatches WGSL compute shader, reads back results
+- [ ] `shaders/tween.wgsl` — evaluates all 31 classic easings on GPU
+- [ ] CPU fallback mode when GPU is unavailable (`new_auto()`)
+- [ ] Benchmark: 10,000 tweens per frame on GPU vs CPU
+
+**`motus-core` / `motus-tween` / `motus-spring`**
+- [ ] Audit every type for `no_std` correctness
+- [ ] `cargo test --workspace --no-default-features` passes with zero warnings
+- [ ] Binary size measurement: `no_std` build of core + tween + spring < 10 KB `.text`
+
+**Benchmarks**
+- [ ] `benches/easing_bench.rs` — all 43 variants via criterion
+- [ ] `benches/tween_update_bench.rs` — 1, 100, 10,000 tweens per tick
+- [ ] `benches/spring_bench.rs` — settle time for all presets
+- [ ] `benches/timeline_bench.rs` — 10-entry timeline tick throughput
+- [ ] Benchmark results published to `docs/benchmarks.md`
+
+**`motus` facade**
+- [ ] `gpu` feature flag
+- [ ] `examples/gpu_particles.rs` — 10,000 particle tweens on GPU
+
+---
+
+## v1.0.0 — Stable
+
+**Goal:** API freeze. Every public item is documented, every example compiles, every feature has integration tests, CI is fully green on stable + beta + nightly.
+
+### Deliverables
+
+**API Stability**
+- [ ] Review every `pub` item — deprecate or stabilize
+- [ ] `#[deprecated]` on anything being removed before 1.0
+- [ ] No `pub` item without a `///` doc comment and a runnable example
+
+**Documentation**
+- [ ] `docs/` folder with:
+  - [ ] `getting-started.md` — 5-minute guide from `cargo add` to first animation
+  - [ ] `concepts.md` — explains Interpolate, Animatable, Update, Clock
+  - [ ] `easing-guide.md` — visual descriptions of every easing variant
+  - [ ] `migration.md` — guide for anyone migrating from Spanda or other libs
+  - [ ] `benchmarks.md` — current benchmark results
+- [ ] `cargo doc --all-features` renders zero warnings
+- [ ] All examples compile and run with `cargo run --example {name}`
+
+**Testing**
+- [ ] ≥ 90% test coverage measured via `cargo-llvm-cov`
+- [ ] Integration test for every major integration target (ratatui, WASM, Bevy)
+- [ ] Fuzz testing on `SvgPathParser` via `cargo-fuzz`
+
+**CI**
+- [ ] `stable`, `beta`, `nightly` all green
+- [ ] WASM build (`wasm-pack test --headless --chrome`) green
+- [ ] `no_std` compile check green
+- [ ] Clippy `--all-features -- -D warnings` green
+- [ ] `cargo fmt --check` green
+- [ ] Benchmark regression check — fail if easing perf drops > 10%
+
+**Release**
+- [ ] `CHANGELOG.md` complete — every change from 0.1.0 → 1.0.0 documented
+- [ ] GitHub Release with prebuilt WASM example hosted on GitHub Pages
+- [ ] Announcement post on r/rust and Dev.to
+
+---
+
+## Post-1.0 Ideas (Future / `v1.x`)
+
+These are not committed — they are ideas to revisit after the stable release.
+
+| Idea | Notes |
+|------|-------|
+| `motus-egui` | `EguiMotusPlugin` for egui animation helpers |
+| `motus-tauri` | Tauri IPC bridge for driving Motus from the JS frontend |
+| `motus-dioxus` | Dioxus signal integration for reactive animations |
+| `motus-leptos` | Leptos signal/resource integration |
+| Declarative animation DSL | A `motus!{ }` proc macro for GSAP-style chaining |
+| Spring from velocity | Start a spring with an initial velocity, not just a target |
+| Animation recording | Record and replay animation sequences as data |
+| `f64` time precision | Optional `dt: f64` for high-precision simulation targets |
+| Waveform generators | Sine, sawtooth, square wave as `KeyframeTrack` presets |
+| Interpolation extensions | Quaternion slerp, matrix lerp for 3D work |
+
+---
+
+## Contributing to Motus
+
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
+
+The best way to contribute right now is to pick any unchecked item from `v0.1.0` above and open a PR.
+
+---
+
+*Roadmap version: 0.1.0 — last updated May 2026*  
+*Project: Aarambh Dev Hub — github.com/AarambhDevHub/motus*
