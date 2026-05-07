@@ -1,7 +1,7 @@
 //! Core [`Tween<T>`] type and [`TweenState`] enum.
 
 use crate::loop_mode::Loop;
-use animato_core::{Animatable, Easing, Update};
+use animato_core::{Animatable, Easing, Playable, Update};
 
 /// The current execution state of a [`Tween`].
 #[derive(Clone, Debug, PartialEq)]
@@ -215,6 +215,15 @@ impl<T: Animatable> Tween<T> {
             self.state = TweenState::Running;
         }
     }
+
+    #[inline]
+    fn playback_duration(&self) -> f32 {
+        match self.looping {
+            Loop::Once => self.delay + self.duration,
+            Loop::Times(n) => self.delay + self.duration * n.max(1) as f32,
+            Loop::Forever | Loop::PingPong => f32::INFINITY,
+        }
+    }
 }
 
 impl<T: Animatable> Update for Tween<T> {
@@ -278,6 +287,102 @@ impl<T: Animatable> Update for Tween<T> {
         }
 
         true
+    }
+}
+
+impl<T: Animatable> Playable for Tween<T> {
+    fn duration(&self) -> f32 {
+        self.playback_duration()
+    }
+
+    fn reset(&mut self) {
+        Tween::reset(self);
+    }
+
+    fn seek_to(&mut self, progress: f32) {
+        let progress = progress.clamp(0.0, 1.0);
+        let total = self.playback_duration();
+        let finite_total = if total.is_finite() {
+            total
+        } else {
+            self.delay + self.duration
+        };
+
+        Tween::reset(self);
+
+        if finite_total == 0.0 {
+            self.elapsed = self.duration;
+            self.state = TweenState::Completed;
+            return;
+        }
+
+        let secs = finite_total * progress;
+        if secs < self.delay {
+            self.delay_elapsed = secs;
+            self.state = if self.delay > 0.0 {
+                TweenState::Idle
+            } else {
+                TweenState::Running
+            };
+            return;
+        }
+
+        let anim_secs = (secs - self.delay).max(0.0);
+        if self.duration == 0.0 {
+            self.elapsed = 0.0;
+            self.state = TweenState::Completed;
+            return;
+        }
+
+        match self.looping {
+            Loop::Once => {
+                self.elapsed = anim_secs.min(self.duration);
+                self.state = if progress >= 1.0 {
+                    TweenState::Completed
+                } else {
+                    TweenState::Running
+                };
+            }
+            Loop::Times(n) => {
+                let plays = n.max(1);
+                let total_anim = self.duration * plays as f32;
+                if anim_secs >= total_anim || progress >= 1.0 {
+                    self.loop_count = plays;
+                    self.elapsed = self.duration;
+                    self.state = TweenState::Completed;
+                } else {
+                    self.loop_count = (anim_secs / self.duration) as u32;
+                    self.elapsed = anim_secs - self.duration * self.loop_count as f32;
+                    self.state = TweenState::Running;
+                }
+            }
+            Loop::Forever => {
+                self.elapsed = anim_secs % self.duration;
+                self.state = TweenState::Running;
+            }
+            Loop::PingPong => {
+                let cycle = anim_secs % (self.duration * 2.0);
+                self.ping_pong_reverse = cycle >= self.duration;
+                self.elapsed = if self.ping_pong_reverse {
+                    cycle - self.duration
+                } else {
+                    cycle
+                };
+                self.state = TweenState::Running;
+            }
+        }
+    }
+
+    fn is_complete(&self) -> bool {
+        Tween::is_complete(self)
+    }
+
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
     }
 }
 

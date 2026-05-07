@@ -6,7 +6,7 @@
 [![Docs.rs](https://docs.rs/animato/badge.svg)](https://docs.rs/animato)
 [![CI](https://github.com/AarambhDevHub/animato/actions/workflows/ci.yml/badge.svg)](https://github.com/AarambhDevHub/animato/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
-![v0.1.0 ✅](https://img.shields.io/badge/v0.1.0-Foundation%20shipped-brightgreen)
+![v0.2.0](https://img.shields.io/badge/v0.2.0-Composition%20shipped-brightgreen)
 
 A professional-grade, renderer-agnostic animation library for Rust.
 
@@ -30,12 +30,13 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.1.0:**
+**Shipped in v0.2.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
-| [`animato-core`](./crates/animato-core) | Traits (`Interpolate`, `Animatable`, `Update`) + 31 easing functions | ✅ |
-| [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `Loop`, `TweenState`, `TweenBuilder` | ✅ |
+| [`animato-core`](./crates/animato-core) | Traits (`Interpolate`, `Animatable`, `Update`, `Playable`) + 31 easing functions | yes |
+| [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState`, `TweenBuilder` | partial |
+| [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, `At` positioning | alloc |
 | [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
 | [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
@@ -44,7 +45,6 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 | Crate | Version | Description |
 |-------|---------|-------------|
-| `animato-timeline` | v0.2.0 | `Timeline`, `Sequence`, `stagger`, `At` positioning |
 | `animato-path` | v0.4.0 | Bezier, CatmullRom, SVG path parser, shape morph |
 | `animato-physics` | v0.5.0 | Inertia, `DragState`, `GestureRecognizer` |
 | `animato-color` | v0.6.0 | Perceptual color interpolation (Lab, Oklch, Linear) |
@@ -56,7 +56,7 @@ Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.1"
+animato = "0.2"
 ```
 
 ---
@@ -144,22 +144,53 @@ while !spring.is_settled() {
 let [x, y, z] = spring.position();
 ```
 
+### Keyframe tracks
+
+```rust
+use animato::{Easing, KeyframeTrack, Update};
+
+let mut track = KeyframeTrack::new()
+    .push_eased(0.0, 0.0_f32, Easing::EaseOutCubic)
+    .push(1.0, 100.0);
+
+track.update(0.5);
+assert!(track.value().unwrap() > 50.0);
+```
+
+### Timeline composition
+
+```rust
+use animato::{At, Timeline, Tween, Update};
+
+let fade = Tween::new(0.0_f32, 1.0).duration(1.0).build();
+let slide = Tween::new(0.0_f32, 100.0).duration(1.0).build();
+
+let mut timeline = Timeline::new()
+    .add("fade", fade, At::Start)
+    .add("slide", slide, At::Label("fade"));
+
+timeline.play();
+timeline.update(0.5);
+assert_eq!(timeline.get::<Tween<f32>>("slide").unwrap().value(), 50.0);
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.1", features = ["serde"] }
+animato = { version = "0.2", features = ["serde"] }
 ```
 
-**v0.1.0 features:**
+**v0.2.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
-| `default` | `std` + `tween` + `spring` + `driver` |
-| `std` | Wall clock, heap-backed `SpringN<T>` |
-| `tween` | `Tween<T>`, `Loop`, `TweenState` |
+| `default` | `std` + `tween` + `timeline` + `spring` + `driver` |
+| `std` | Wall clock, heap-backed composition types |
+| `tween` | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState` |
+| `timeline` | `Timeline`, `Sequence`, `stagger` |
 | `spring` | `Spring`, `SpringN<T>`, all presets |
 | `driver` | `AnimationDriver`, `Clock` variants |
 | `serde` | `Serialize`/`Deserialize` on all public types |
@@ -168,7 +199,6 @@ animato = { version = "0.1", features = ["serde"] }
 
 | Feature | Version | What it adds |
 |---------|---------|--------------|
-| `timeline` | v0.2.0 | `Timeline`, `Sequence`, `stagger` |
 | `path` | v0.4.0 | Bezier, MotionPath, SVG parser |
 | `physics` | v0.5.0 | Inertia, DragState, GestureRecognizer |
 | `color` | v0.6.0 | Perceptual color interpolation via `palette` |
@@ -181,12 +211,12 @@ animato = { version = "0.1", features = ["serde"] }
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.1", default-features = false }
-animato-tween  = { version = "0.1", default-features = false }
-animato-spring = { version = "0.1", default-features = false }
+animato-core   = { version = "0.2", default-features = false }
+animato-tween  = { version = "0.2", default-features = false }
+animato-spring = { version = "0.2", default-features = false }
 ```
 
-Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, `SpringN<T>`, all `Interpolate` blanket impls.
+Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, and `SpringN<T>` require allocation.
 
 ---
 
@@ -249,7 +279,7 @@ fn on_tween_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato = { version = "0.1", features = ["wasm"] }
+animato = { version = "0.2", features = ["wasm"] }
 ```
 
 ```rust
@@ -285,19 +315,19 @@ Build: `wasm-pack build --target web --features wasm`
 
 ## Architecture
 
-Animato is a Cargo workspace of 12 focused crates. See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full design document — crate boundaries, module specifications, type system design, data flow diagrams, and performance guidelines.
+Animato is a focused Cargo workspace with additional planned crates through v1.0. See [ARCHITECTURE.md](./ARCHITECTURE.md) for the full design document — crate boundaries, module specifications, type system design, data flow diagrams, and performance guidelines.
 
 ---
 
 ## Examples
 
 ```sh
-# v0.1.0 examples (available now):
 cargo run --example basic_tween
 cargo run --example spring_demo
+cargo run --example keyframe_track
+cargo run --example timeline_sequence
 
 # Coming in future versions:
-# cargo run --example timeline_sequence   # v0.2.0
 # cargo run --example motion_path         # v0.4.0
 # cargo run --example color_animation     # v0.6.0
 # cargo run --example tui_progress        # v0.7.0
@@ -327,11 +357,10 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.1.0 — Foundation` ✅ shipped**
+**Current status: `v0.2.0 — Composition` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.2.0` | Composition — `Timeline`, `Sequence`, `KeyframeTrack`, `stagger` |
 | `v0.3.0` | Control — callbacks, time scale, `CubicBezier`/`Steps` easing |
 | `v0.4.0` | Paths — Bezier, SVG, motion paths |
 

@@ -45,4 +45,4 @@ pub mod traits;
 
 // Flatten the most important items to the crate root for convenience.
 pub use easing::Easing;
-pub use traits::{Animatable, Interpolate, Update};
+pub use traits::{Animatable, Interpolate, Playable, Update};

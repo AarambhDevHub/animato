@@ -6,6 +6,7 @@
 //! - [`Update`] — anything that advances through time when given a `dt`
 
 use crate::math::round;
+use core::any::Any;
 
 /// A value that supports linear interpolation between two instances.
 ///
@@ -97,6 +98,61 @@ pub trait Update {
     ///
     /// Returns `true` while still running, `false` when complete.
     fn update(&mut self, dt: f32) -> bool;
+}
+
+/// Object-safe animation interface used by composition containers.
+///
+/// [`Update`] is intentionally tiny: it only advances an animation. `Playable`
+/// adds the small amount of control a timeline needs to reset and seek children
+/// without knowing their concrete type.
+///
+/// Implementations should interpret [`seek_to`](Self::seek_to) as normalized
+/// progress through their finite duration, clamped to `[0.0, 1.0]`.
+///
+/// # Example
+///
+/// ```rust
+/// use animato_core::{Playable, Update};
+///
+/// #[derive(Default)]
+/// struct Clip { elapsed: f32 }
+///
+/// impl Update for Clip {
+///     fn update(&mut self, dt: f32) -> bool {
+///         self.elapsed = (self.elapsed + dt.max(0.0)).min(1.0);
+///         !self.is_complete()
+///     }
+/// }
+///
+/// impl Playable for Clip {
+///     fn duration(&self) -> f32 { 1.0 }
+///     fn reset(&mut self) { self.elapsed = 0.0; }
+///     fn seek_to(&mut self, progress: f32) {
+///         self.elapsed = progress.clamp(0.0, 1.0);
+///     }
+///     fn is_complete(&self) -> bool { self.elapsed >= 1.0 }
+///     fn as_any(&self) -> &dyn core::any::Any { self }
+///     fn as_any_mut(&mut self) -> &mut dyn core::any::Any { self }
+/// }
+/// ```
+pub trait Playable: Update + Any {
+    /// Total finite duration in seconds.
+    fn duration(&self) -> f32;
+
+    /// Reset the animation to its initial state.
+    fn reset(&mut self);
+
+    /// Seek to normalized progress through the animation.
+    fn seek_to(&mut self, progress: f32);
+
+    /// `true` when the animation has reached its terminal state.
+    fn is_complete(&self) -> bool;
+
+    /// Return a type-erased shared reference for downcasting.
+    fn as_any(&self) -> &dyn Any;
+
+    /// Return a type-erased mutable reference for downcasting.
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 // ──────────────────────────────────────────────────────────────────────────────

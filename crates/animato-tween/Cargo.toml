@@ -13,7 +13,8 @@ categories  = ["no-std", "game-development"]
 
 [features]
 default = []
-std     = ["animato-core/std"]
+std     = ["animato-core/std", "alloc"]
+alloc   = []
 serde   = ["dep:serde", "animato-core/serde"]
 
 [dependencies]

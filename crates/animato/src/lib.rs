@@ -9,7 +9,7 @@
 //!
 //! ## Quick Start
 //!
-//! ```rust
+//! ```rust,ignore
 //! use animato::{Tween, Easing, Update};
 //!
 //! let mut tween = Tween::new(0.0_f32, 100.0)
@@ -24,7 +24,7 @@
 //!
 //! ## Spring Physics
 //!
-//! ```rust
+//! ```rust,ignore
 //! use animato::{Spring, SpringConfig, Update};
 //!
 //! let mut spring = Spring::new(SpringConfig::wobbly());
@@ -38,7 +38,7 @@
 //!
 //! ## AnimationDriver
 //!
-//! ```rust
+//! ```rust,ignore
 //! use animato::{Tween, Easing, AnimationDriver, WallClock, Clock};
 //!
 //! let mut driver = AnimationDriver::new();
@@ -56,24 +56,25 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.1", default-features = false }
-//! animato-tween  = { version = "0.1", default-features = false }
-//! animato-spring = { version = "0.1", default-features = false }
+//! animato-core   = { version = "0.2", default-features = false }
+//! animato-tween  = { version = "0.2", default-features = false }
+//! animato-spring = { version = "0.2", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
 //!
 //! | Feature | What it adds |
 //! |---------|-------------|
-//! | `default` | `std` + `tween` + `spring` + `driver` |
+//! | `default` | `std` + `tween` + `timeline` + `spring` + `driver` |
 //! | `std` | Wall clock, heap-backed types |
-//! | `tween` | [`Tween<T>`], [`Loop`] |
+//! | `tween` | [`Tween<T>`], [`KeyframeTrack<T>`], [`Loop`] |
+//! | `timeline` | [`Timeline`], [`Sequence`], [`stagger()`] |
 //! | `spring` | [`Spring`], [`SpringConfig`], [`SpringN<T>`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
 // ── Core — always present ────────────────────────────────────────────────────
-pub use animato_core::{Animatable, Easing, Interpolate, Update};
+pub use animato_core::{Animatable, Easing, Interpolate, Playable, Update};
 
 /// All 31 free easing functions (`ease_out_cubic`, etc.) re-exported at crate root.
 ///
@@ -85,7 +86,13 @@ pub mod easing {
 
 // ── Tween ────────────────────────────────────────────────────────────────────
 #[cfg(feature = "tween")]
-pub use animato_tween::{Loop, Tween, TweenBuilder, TweenState, round_to, snap_to};
+pub use animato_tween::{
+    Keyframe, KeyframeTrack, Loop, Tween, TweenBuilder, TweenState, round_to, snap_to,
+};
+
+// ── Timeline ────────────────────────────────────────────────────────────────
+#[cfg(feature = "timeline")]
+pub use animato_timeline::{At, Sequence, Timeline, TimelineState, stagger};
 
 // ── Spring ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "spring")]

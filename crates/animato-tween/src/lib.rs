@@ -36,12 +36,19 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+#[cfg(any(feature = "std", feature = "alloc"))]
+extern crate alloc;
+
 pub mod builder;
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub mod keyframe;
 pub mod loop_mode;
 pub mod modifiers;
 pub mod tween;
 
 pub use builder::TweenBuilder;
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub use keyframe::{Keyframe, KeyframeTrack};
 pub use loop_mode::Loop;
 pub use modifiers::{round_to, snap_to};
 pub use tween::{Tween, TweenState};

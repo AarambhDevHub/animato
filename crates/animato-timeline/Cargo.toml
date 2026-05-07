@@ -1,0 +1,22 @@
+[package]
+name        = "animato-timeline"
+description = "Timeline, sequence, and stagger composition for the Animato animation library."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "timeline", "sequence", "tween", "composition"]
+categories  = ["game-development", "graphics"]
+
+[features]
+default = ["std"]
+std     = ["animato-core/std", "animato-tween/std"]
+serde   = ["dep:serde", "animato-core/serde", "animato-tween/serde"]
+
+[dependencies]
+animato-core  = { workspace = true }
+animato-tween = { workspace = true }
+serde         = { workspace = true, optional = true }

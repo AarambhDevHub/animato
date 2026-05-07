@@ -309,6 +309,16 @@ pub trait Update {
     /// Returns `true` while still running, `false` when complete.
     fn update(&mut self, dt: f32) -> bool;
 }
+
+// Used by Timeline and other composition containers:
+pub trait Playable: Update + core::any::Any {
+    fn duration(&self) -> f32;
+    fn reset(&mut self);
+    fn seek_to(&mut self, progress: f32);
+    fn is_complete(&self) -> bool;
+    fn as_any(&self) -> &dyn core::any::Any;
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any;
+}
 ```
 
 **Blanket `Interpolate` implementations shipped in `animato-core`:**
@@ -532,8 +542,8 @@ impl<T: Animatable> KeyframeTrack<T> {
     pub fn push_eased(self, time: f32, value: T, easing: Easing) -> Self;
     pub fn looping(self, mode: Loop) -> Self;
 
-    pub fn value_at(&self, t: f32) -> T;   // evaluate at any time — pure, no state
-    pub fn value(&self) -> T;              // current value based on elapsed
+    pub fn value_at(&self, t: f32) -> Option<T>; // None when there are no frames
+    pub fn value(&self) -> Option<T>;      // current value based on elapsed
     pub fn duration(&self) -> f32;         // time of the last keyframe
     pub fn is_complete(&self) -> bool;
 }
@@ -573,14 +583,11 @@ pub struct Timeline {
     elapsed:    f32,
     state:      TimelineState,
     pub looping: Loop,
-    time_scale: f32,
-    #[cfg(feature = "std")]
-    on_complete: Option<Box<dyn FnMut()>>,
 }
 
 struct TimelineEntry {
     label:      String,
-    animation:  Box<dyn Update + Send>,
+    animation:  Box<dyn Playable + Send>,
     start_at:   f32,           // absolute offset from timeline start in seconds
     duration:   f32,           // for progress computation
 }
@@ -636,13 +643,8 @@ impl Timeline {
     pub fn duration(&self) -> f32;      // end time of the last-finishing entry
     pub fn progress(&self) -> f32;      // 0.0..=1.0
     pub fn is_complete(&self) -> bool;
-
-    // std feature:
-    pub fn on_entry_complete(self, label: &str, f: impl FnMut() + 'static) -> Self;
-    pub fn on_complete(self, f: impl FnMut() + 'static) -> Self;
-
-    // tokio feature:
-    pub async fn wait(&self);           // resolves on completion
+    pub fn get<T: Playable + 'static>(&self, label: &str) -> Option<&T>;
+    pub fn get_mut<T: Playable + 'static>(&mut self, label: &str) -> Option<&mut T>;
 }
 ```
 
@@ -655,7 +657,8 @@ pub struct Sequence { inner: Timeline, cursor: f32 }
 
 impl Sequence {
     pub fn new() -> Self;
-    pub fn then(self, label: &str, anim: impl Update + Send + 'static, duration: f32) -> Self;
+    pub fn then(self, label: &str, anim: impl Playable + Send + 'static) -> Self;
+    pub fn then_for(self, label: &str, anim: impl Playable + Send + 'static, duration: f32) -> Self;
     pub fn gap(self, seconds: f32) -> Self;    // pause between steps
     pub fn build(self) -> Timeline;
 }
@@ -667,7 +670,7 @@ impl Sequence {
 /// Create a timeline where N animations each start `delay` seconds
 /// after the previous one.
 pub fn stagger(
-    animations: Vec<(impl Update + Send + 'static, f32)>,
+    animations: Vec<impl Playable + Send + 'static>,
     delay: f32,
 ) -> Timeline;
 ```
@@ -1091,7 +1094,7 @@ Application loop (60fps)
        │
        ├── Tween::update(dt)              → advance elapsed, compute value()
        ├── KeyframeTrack::update(dt)      → advance elapsed, binary-search, lerp
-       ├── Timeline::update(dt)           → tick entries in time window, callbacks
+       ├── Timeline::update(dt)           → tick entries in time window
        ├── Spring::update(dt)             → integrate velocity + position
        └── MotionPathTween::update(dt)    → advance path tween, evaluate position
        │
@@ -1242,7 +1245,7 @@ Animato uses **no `Result` in hot paths**. Animation update functions never fail
 | `duration = 0.0` | Immediately complete, returns `end` value |
 | `duration < 0.0` | Treated as `0.0` — immediately complete |
 | `dt < 0.0` | Treated as `0.0` — no backward time |
-| `KeyframeTrack` with 0 frames | Returns `T::default()` (where available) |
+| `KeyframeTrack` with 0 frames | Returns `None` |
 | `KeyframeTrack` with 1 frame | Returns that frame's value always |
 | Spring with `stiffness = 0.0` | Returns `target` immediately |
 | `seek()` with `t > 1.0` | Clamped to `1.0` |
@@ -1553,5 +1556,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.1.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.2.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

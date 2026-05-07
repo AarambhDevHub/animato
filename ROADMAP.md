@@ -24,8 +24,8 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | Version | Name | Focus | Status |
 |---------|------|-------|--------|
 | `v0.1.0` | Foundation | Core traits, easing, tween, spring, driver | ✅ |
-| `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | 📋 |
-| `v0.3.0` | Control | Looping, time scale, callbacks, value modifiers | 📋 |
+| `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | ✅ |
+| `v0.3.0` | Control | Time scale, callbacks, advanced easing | 📋 |
 | `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | 📋 |
 | `v0.5.0` | Physics | Inertia, drag, gesture recognition | 📋 |
 | `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | 📋 |
@@ -111,16 +111,16 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [x] `README.md` with installation, quick-start, feature table
 - [x] `ARCHITECTURE.md` (done)
 - [x] `ROADMAP.md` (this file)
-- [ ] `CONTRIBUTING.md`
+- [x] `CONTRIBUTING.md`
 - [x] `CHANGELOG.md` with `## [0.1.0]` entry
-- [ ] `LICENSE-MIT` and `LICENSE-APACHE`
+- [x] `LICENSE-MIT` and `LICENSE-APACHE`
 - [x] `.github/workflows/ci.yml` — test (stable/beta/nightly), clippy, fmt, docs, no_std, bench compile
 - [x] `.github/workflows/publish.yml` — pre-verify gate + dep-ordered crates.io publish
 - [x] `examples/basic_tween.rs`
 - [x] `examples/spring_demo.rs`
 - [x] `benches/easing_bench.rs`, `tween_update_bench.rs`, `spring_bench.rs`
 - [x] `tests/tween_lifecycle.rs`, `tests/spring_settles.rs`, `tests/driver_lifecycle.rs`
-- [ ] `cargo publish --dry-run` passes for all crates (run before tagging v0.1.0)
+- [x] `cargo publish --dry-run` passes for all crates (run before tagging v0.1.0)
 
 ---
 
@@ -136,41 +136,42 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 ### Deliverables
 
 **`animato-timeline`**
-- [ ] `Timeline` struct with `Vec<TimelineEntry>` internally
-- [ ] `TimelineState` enum (`Idle`, `Playing`, `Paused`, `Completed`)
-- [ ] `.add(label, anim, At)` builder method
-- [ ] `At` enum: `Absolute(f32)`, `Start`, `End`, `Label(&str)`, `Offset(f32)`
-- [ ] `.play()`, `.pause()`, `.resume()`, `.reset()`
-- [ ] `.seek(t: f32)` — normalized seek
-- [ ] `.seek_abs(secs: f32)` — absolute time seek
-- [ ] `.duration() -> f32`, `.progress() -> f32`, `.is_complete() -> bool`
-- [ ] `Loop` support on `Timeline`
-- [ ] `Sequence` builder: `.then(label, anim, duration)`, `.gap(secs)`, `.build() -> Timeline`
-- [ ] `stagger(animations, delay) -> Timeline`
-- [ ] `Update for Timeline` — only tick entries within their time window
-- [ ] Tests: concurrent play, sequential play, seek, pause, loop, stagger order
+- [x] `Timeline` struct with `Vec<TimelineEntry>` internally
+- [x] `TimelineState` enum (`Idle`, `Playing`, `Paused`, `Completed`)
+- [x] `.add(label, anim, At)` builder method
+- [x] `At` enum: `Absolute(f32)`, `Start`, `End`, `Label(&str)`, `Offset(f32)`
+- [x] `.play()`, `.pause()`, `.resume()`, `.reset()`
+- [x] `.seek(t: f32)` — normalized seek
+- [x] `.seek_abs(secs: f32)` — absolute time seek
+- [x] `.duration() -> f32`, `.progress() -> f32`, `.is_complete() -> bool`
+- [x] `Loop` support on `Timeline`
+- [x] `Sequence` builder: `.then(label, anim)`, `.then_for(label, anim, duration)`, `.gap(secs)`, `.build() -> Timeline`
+- [x] `stagger(animations, delay) -> Timeline`
+- [x] `Update for Timeline` — ticks entries within their time window for normal playback
+- [x] Tests: concurrent play, sequential play, seek, pause, loop, stagger order
+
+**`animato-tween`**
+- [x] `KeyframeTrack<T: Animatable>` with sorted `Vec<Keyframe<T>>`
+- [x] `Keyframe<T>` struct (`time: f32`, `value: T`, `easing: Easing`)
+- [x] `.push()` and `.push_eased()` builder methods
+- [x] Binary-search interpolation in `.value_at(t: f32) -> Option<T>`
+- [x] PingPong loop logic in `KeyframeTrack`
+- [x] Tests: empty, single frame, two frames, multi-frame, looping, PingPong
 
 **`animato` facade**
-- [ ] Add `timeline` feature flag
-- [ ] Re-export `Timeline`, `Sequence`, `At`, `stagger`
-- [ ] `examples/timeline_sequence.rs`
-- [ ] `examples/keyframe_track.rs`
+- [x] Add `timeline` feature flag
+- [x] Re-export `Timeline`, `Sequence`, `At`, `stagger`
+- [x] Re-export `Keyframe`, `KeyframeTrack`, and `Playable`
+- [x] `examples/timeline_sequence.rs`
+- [x] `examples/keyframe_track.rs`
 
 ---
 
 ## v0.3.0 — Control
 
-**Goal:** Fine-grained runtime control and ergonomics. Time scale, callbacks, keyframe tracks.
+**Goal:** Fine-grained runtime control and ergonomics. Time scale, callbacks, and advanced easing.
 
 ### Deliverables
-
-**`animato-tween`**
-- [ ] `KeyframeTrack<T: Animatable>` with sorted `Vec<Keyframe<T>>`
-- [ ] `Keyframe<T>` struct (`time: f32`, `value: T`, `easing: Easing`)
-- [ ] `.push()` and `.push_eased()` builder methods
-- [ ] Binary-search interpolation in `.value_at(t: f32)`
-- [ ] PingPong loop logic in `KeyframeTrack`
-- [ ] Tests: single frame, two frames, multi-frame, looping, PingPong
 
 **`animato-timeline`**
 - [ ] Callbacks (`std` feature): `.on_entry_complete(label, f)`, `.on_complete(f)`
@@ -463,10 +464,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.2.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.3.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.1.0 — last updated May 2026*  
-*v0.1.0 shipped ✅ — next milestone: v0.2.0 — Composition*  
+*Roadmap version: 0.2.0 — last updated May 2026*  
+*v0.2.0 shipped — next milestone: v0.3.0 — Control*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
