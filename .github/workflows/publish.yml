@@ -53,6 +53,7 @@ jobs:
   # The 30s sleep gives the registry index time to propagate.
   #
   # v0.3.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato-timeline → animato
+  # (no new crates in v0.3.0 — features added to existing crates)
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
