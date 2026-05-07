@@ -5,6 +5,8 @@
 //! - [`Animatable`] — blanket marker for any `Interpolate + Clone + 'static` type
 //! - [`Update`] — anything that advances through time when given a `dt`
 
+use crate::math::round;
+
 /// A value that supports linear interpolation between two instances.
 ///
 /// Implement this trait for any type you want to animate with Motus.
@@ -160,7 +162,7 @@ impl Interpolate for i32 {
     fn lerp(&self, other: &Self, t: f32) -> Self {
         let a = *self as f32;
         let b = *other as f32;
-        (a + (b - a) * t).round() as i32
+        (round(a + (b - a) * t)) as i32
     }
 }
 
@@ -170,7 +172,7 @@ impl Interpolate for u8 {
     fn lerp(&self, other: &Self, t: f32) -> Self {
         let a = *self as f32;
         let b = *other as f32;
-        (a + (b - a) * t).round().clamp(0.0, 255.0) as u8
+        round(a + (b - a) * t).clamp(0.0, 255.0) as u8
     }
 }
 
