@@ -1,4 +1,6 @@
-# Animato
+<div align="center">
+  <img src="./assets/animato_logo.svg" alt="Animato logo" width="500">
+</div>
 
 > *Italian: animato — animated, lively, with life and movement.*
 
