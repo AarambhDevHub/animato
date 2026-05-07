@@ -1,0 +1,43 @@
+# Rust build output
+/target
+**/target/
+
+# Cargo lock — committed at workspace root, ignored in sub-crates
+# (do NOT add Cargo.lock here — we want it tracked at root)
+
+# Generated docs
+/doc
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# VS Code settings (keep launch.json / tasks.json if you use them,
+# but ignore editor-specific state)
+.vscode/settings.json
+.vscode/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Benchmarks output
+criterion/
+
+# Coverage reports
+lcov.info
+*.profraw
+*.profdata
+coverage/
+
+# wasm-pack output
+pkg/
+wasm-pack.log
+
+# npm (for wasm examples)
+node_modules/
+
+# Environment / secrets
+.env
+.env.local

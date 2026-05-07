@@ -1,0 +1,20 @@
+[package]
+name        = "motus-tween"
+description = "Tween<T> single-value animation for the Motus animation library."
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "tween", "easing", "interpolation", "no_std"]
+categories  = ["no-std", "game-development"]
+
+[features]
+default = []
+std     = ["motus-core/std"]
+serde   = ["dep:serde", "motus-core/serde"]
+
+[dependencies]
+motus-core = { workspace = true }
+serde      = { workspace = true, optional = true }

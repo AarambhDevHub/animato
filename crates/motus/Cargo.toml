@@ -1,0 +1,76 @@
+[package]
+name        = "motus"
+description = "Professional-grade, renderer-agnostic animation library for Rust. Zero mandatory dependencies. no_std-ready."
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "tween", "spring", "easing", "game-development"]
+categories  = ["game-development", "graphics", "no-std"]
+
+# For no_std targets, depend on motus-core / motus-tween / motus-spring directly.
+# The facade crate always enables std features.
+[features]
+default = ["std", "tween", "spring", "driver"]
+std     = ["motus-core/std", "dep:motus-driver"]
+tween   = ["dep:motus-tween"]
+spring  = ["dep:motus-spring", "motus-spring?/alloc"]
+driver  = ["dep:motus-driver"]
+serde   = [
+    "motus-core/serde",
+    "motus-tween?/serde",
+    "motus-spring?/serde",
+]
+
+[dependencies]
+motus-core   = { workspace = true }
+motus-tween  = { workspace = true, optional = true }
+motus-spring = { workspace = true, optional = true }
+motus-driver = { workspace = true, optional = true }
+
+[dev-dependencies]
+criterion    = { workspace = true }
+motus-core   = { workspace = true }
+motus-tween  = { workspace = true }
+motus-spring = { workspace = true, features = ["alloc"] }
+motus-driver = { workspace = true }
+
+# ── Integration tests ────────────────────────────────────────────────────────
+[[test]]
+name = "tween_lifecycle"
+path = "../../tests/tween_lifecycle.rs"
+
+[[test]]
+name = "spring_settles"
+path = "../../tests/spring_settles.rs"
+
+[[test]]
+name = "driver_lifecycle"
+path = "../../tests/driver_lifecycle.rs"
+
+# ── Benchmarks ───────────────────────────────────────────────────────────────
+[[bench]]
+name    = "easing_bench"
+path    = "../../benches/easing_bench.rs"
+harness = false
+
+[[bench]]
+name    = "tween_update_bench"
+path    = "../../benches/tween_update_bench.rs"
+harness = false
+
+[[bench]]
+name    = "spring_bench"
+path    = "../../benches/spring_bench.rs"
+harness = false
+
+# ── Examples ─────────────────────────────────────────────────────────────────
+[[example]]
+name = "basic_tween"
+path = "../../examples/basic_tween.rs"
+
+[[example]]
+name = "spring_demo"
+path = "../../examples/spring_demo.rs"

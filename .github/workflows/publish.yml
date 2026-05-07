@@ -1,0 +1,103 @@
+name: Publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ── Pre-publish gate ─────────────────────────────────────────────────────────
+  verify:
+    name: Pre-publish verification
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Run full test suite
+        run: cargo test --workspace --all-features
+
+      - name: Run no_std check
+        run: cargo test --workspace --no-default-features
+
+      - name: Clippy
+        run: cargo clippy --workspace --all-features -- -D warnings
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Build docs
+        run: cargo doc --workspace --all-features --no-deps
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+  # ── Publish in dependency order ───────────────────────────────────────────────
+  # Each crate must be visible on crates.io before the next can be published.
+  # The 30s sleep gives the registry index time to propagate.
+  #
+  # v0.1.0 scope: motus-core → motus-tween → motus-spring → motus-driver → motus
+  # (motus-path, motus-physics, motus-color, motus-timeline, motus-gpu,
+  #  motus-bevy, motus-wasm are deferred to later versions — see ROADMAP.md)
+  publish:
+    name: Publish to crates.io
+    runs-on: ubuntu-latest
+    needs: verify
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Publish motus-core
+        run: cargo publish -p motus-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
+      - name: Publish motus-tween
+        run: cargo publish -p motus-tween --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
+      - name: Publish motus-spring
+        run: cargo publish -p motus-spring --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
+      - name: Publish motus-driver
+        run: cargo publish -p motus-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
+      - name: Publish motus (facade)
+        run: cargo publish -p motus --token ${{ secrets.CARGO_REGISTRY_TOKEN }}

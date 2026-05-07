@@ -1,0 +1,29 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/motus-core",
+    "crates/motus-tween",
+    "crates/motus-spring",
+    "crates/motus-driver",
+    "crates/motus",
+]
+
+[workspace.package]
+version      = "0.1.0"
+edition      = "2024"
+license      = "MIT OR Apache-2.0"
+repository   = "https://github.com/AarambhDevHub/motus"
+authors      = ["Aarambh Dev Hub"]
+rust-version = "1.85"
+
+[workspace.dependencies]
+# Internal crates — path + version pinned to workspace
+motus-core   = { path = "crates/motus-core",   version = "0.1" }
+motus-tween  = { path = "crates/motus-tween",  version = "0.1" }
+motus-spring = { path = "crates/motus-spring", version = "0.1" }
+motus-driver = { path = "crates/motus-driver", version = "0.1" }
+
+# External crates — shared version pins
+serde     = { version = "1",   features = ["derive"] }
+approx    = { version = "0.5" }
+criterion = { version = "0.5", features = ["html_reports"] }

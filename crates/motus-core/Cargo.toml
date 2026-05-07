@@ -1,0 +1,19 @@
+[package]
+name        = "motus-core"
+description = "Core traits and easing system for the Motus animation library."
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "easing", "tween", "no_std", "interpolation"]
+categories  = ["no-std", "mathematics", "game-development"]
+
+[features]
+default = []
+std     = []
+serde   = ["dep:serde"]
+
+[dependencies]
+serde = { workspace = true, optional = true }

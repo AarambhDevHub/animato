@@ -23,7 +23,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 | Version | Name | Focus | Status |
 |---------|------|-------|--------|
-| `v0.1.0` | Foundation | Core traits, easing, tween, spring, driver | 📋 |
+| `v0.1.0` | Foundation | Core traits, easing, tween, spring, driver | ✅ |
 | `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | 📋 |
 | `v0.3.0` | Control | Looping, time scale, callbacks, value modifiers | 📋 |
 | `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | 📋 |
@@ -51,75 +51,76 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 ### Deliverables
 
 **`motus-core`**
-- [ ] `Interpolate` trait with blanket impls for `f32`, `f64`, `[f32; 2]`, `[f32; 3]`, `[f32; 4]`, `i32`, `u8`
-- [ ] `Animatable` blanket impl (auto-derived from `Interpolate + Clone + 'static`)
-- [ ] `Update` trait (`fn update(&mut self, dt: f32) -> bool`)
-- [ ] `Easing` enum — all 31 classic variants (Linear, Polynomial × 12, Sine × 3, Expo × 3, Circ × 3, Back × 3, Elastic × 3, Bounce × 3)
-- [ ] `Easing::apply(t: f32) -> f32` with internal `t` clamping
-- [ ] Free easing functions (`ease_out_cubic(t: f32) -> f32`, etc.) for zero-overhead use
-- [ ] `Easing::all_named() -> &'static [Easing]`
-- [ ] `no_std` compile gate (`#![cfg_attr(not(feature = "std"), no_std)]`)
-- [ ] Full doc comments on every public item
-- [ ] Test: every variant satisfies `apply(0.0) == 0.0` and `apply(1.0) == 1.0`
-- [ ] Test: no panic on `t` outside `[0, 1]`
+- [x] `Interpolate` trait with blanket impls for `f32`, `f64`, `[f32; 2]`, `[f32; 3]`, `[f32; 4]`, `i32`, `u8`
+- [x] `Animatable` blanket impl (auto-derived from `Interpolate + Clone + Send + 'static`)
+- [x] `Update` trait (`fn update(&mut self, dt: f32) -> bool`)
+- [x] `Easing` enum — all 31 classic variants (Linear, Polynomial × 12, Sine × 3, Expo × 3, Circ × 3, Back × 3, Elastic × 3, Bounce × 3)
+- [x] `Easing::apply(t: f32) -> f32` with internal `t` clamping
+- [x] Free easing functions (`ease_out_cubic(t: f32) -> f32`, etc.) for zero-overhead use
+- [x] `Easing::all_named() -> &'static [Easing]`
+- [x] `no_std` compile gate (`#![cfg_attr(not(feature = "std"), no_std)]`)
+- [x] Full doc comments on every public item
+- [x] Test: every variant satisfies `apply(0.0) == 0.0` and `apply(1.0) == 1.0`
+- [x] Test: no panic on `t` outside `[0, 1]`
 
 **`motus-tween`**
-- [ ] `Tween<T: Animatable>` struct (stack-allocated)
-- [ ] `TweenBuilder<T>` with consuming builder pattern
-- [ ] `TweenState` enum (`Idle`, `Running`, `Paused`, `Completed`)
-- [ ] `Update for Tween<T>` — delay handling, elapsed advancement, completion detection
-- [ ] `.value() -> T` — hot path, no allocation
-- [ ] `.progress() -> f32` and `.eased_progress() -> f32`
-- [ ] `.is_complete()`, `.reset()`, `.seek(t: f32)`, `.reverse()`
-- [ ] `.pause()` and `.resume()`
-- [ ] `Loop` enum (`Once`, `Times(u32)`, `Forever`, `PingPong`)
-- [ ] Time scale support (`.time_scale(f32)`)
-- [ ] `snap_to(value, grid)` and `round_to(value, decimals)` free functions
-- [ ] `no_std` compatible — no heap allocation
-- [ ] Tests: start/end values, delay, seek, reverse, large-dt, PingPong direction
+- [x] `Tween<T: Animatable>` struct (stack-allocated)
+- [x] `TweenBuilder<T>` with consuming builder pattern
+- [x] `TweenState` enum (`Idle`, `Running`, `Paused`, `Completed`)
+- [x] `Update for Tween<T>` — delay handling, elapsed advancement, completion detection
+- [x] `.value() -> T` — hot path, no allocation
+- [x] `.progress() -> f32` and `.eased_progress() -> f32`
+- [x] `.is_complete()`, `.reset()`, `.seek(t: f32)`, `.reverse()`
+- [x] `.pause()` and `.resume()`
+- [x] `Loop` enum (`Once`, `Times(u32)`, `Forever`, `PingPong`)
+- [x] Time scale support (`.time_scale(f32)`)
+- [x] `snap_to(value, grid)` and `round_to(value, decimals)` free functions
+- [x] `no_std` compatible — no heap allocation
+- [x] Tests: start/end values, delay, seek, reverse, large-dt, PingPong direction
 
 **`motus-spring`**
-- [ ] `Spring` struct (stack-allocated, `no_std`)
-- [ ] `SpringConfig` with `stiffness`, `damping`, `mass`, `epsilon`
-- [ ] Presets: `gentle()`, `wobbly()`, `stiff()`, `slow()`, `snappy()`
-- [ ] Semi-implicit Euler integration
-- [ ] RK4 integration behind `.use_rk4(true)` flag
-- [ ] `is_settled()` with epsilon-based detection
-- [ ] `snap_to(pos)` — teleport without animation
-- [ ] `SpringN<T: Animatable>` — multi-dimensional spring via component decomposition
-- [ ] `Update for Spring` and `Update for SpringN<T>`
-- [ ] Tests: settles to target for all presets, damping=0 oscillates, SpringN for `[f32; 3]`
+- [x] `Spring` struct (stack-allocated, `no_std`)
+- [x] `SpringConfig` with `stiffness`, `damping`, `mass`, `epsilon`
+- [x] Presets: `gentle()`, `wobbly()`, `stiff()`, `slow()`, `snappy()`
+- [x] Semi-implicit Euler integration
+- [x] RK4 integration behind `.use_rk4(true)` flag
+- [x] `is_settled()` with epsilon-based detection
+- [x] `snap_to(pos)` — teleport without animation
+- [x] `SpringN<T: Animatable>` — multi-dimensional spring via component decomposition (sealed `Decompose` trait)
+- [x] `Update for Spring` and `Update for SpringN<T>`
+- [x] Tests: settles to target for all presets, damping=0 oscillates, SpringN for `[f32; 3]`
 
 **`motus-driver`**
-- [ ] `AnimationDriver` — owns `Vec<Box<dyn Update + Send>>`
-- [ ] `AnimationId` newtype over `u64`
-- [ ] `.add()` returns `AnimationId`
-- [ ] `.tick(dt)` — ticks all, auto-removes completed
-- [ ] `.cancel(id)`, `.cancel_all()`, `.active_count()`, `.is_active(id)`
-- [ ] `Clock` trait (`fn delta(&mut self) -> f32`)
-- [ ] `WallClock` (requires `std`)
-- [ ] `ManualClock` — caller provides dt via `.advance(dt)`
-- [ ] `MockClock` — fixed-step for deterministic tests
-- [ ] Tests: auto-removal, cancel, active_count, MockClock correctness
+- [x] `AnimationDriver` — owns `Vec<Box<dyn Update + Send>>`, retain-drain pattern
+- [x] `AnimationId` newtype over `u64` — `Copy + Hash + Eq`
+- [x] `.add()` returns `AnimationId`
+- [x] `.tick(dt)` — ticks all, auto-removes completed
+- [x] `.cancel(id)`, `.cancel_all()`, `.active_count()`, `.is_active(id)`
+- [x] `Clock` trait (`fn delta(&mut self) -> f32`)
+- [x] `WallClock` (requires `std`)
+- [x] `ManualClock` — caller provides dt via `.advance(dt)`
+- [x] `MockClock` — fixed-step for deterministic tests
+- [x] Tests: auto-removal, cancel, active_count, MockClock correctness
 
 **`motus` facade**
-- [ ] Feature flags: `default`, `std`, `tween`, `spring`, `driver`, `serde`
-- [ ] Re-exports all public APIs behind `#[cfg(feature)]` guards
-- [ ] Facade-level `lib.rs` doc with quick-start example
+- [x] Feature flags: `default`, `std`, `tween`, `spring`, `driver`, `serde`
+- [x] Re-exports all public APIs behind `#[cfg(feature)]` guards
+- [x] Facade-level `lib.rs` doc with quick-start example
 
 **Documentation & Infrastructure**
-- [ ] `README.md` with installation, quick-start, feature table
-- [ ] `ARCHITECTURE.md` (done)
-- [ ] `ROADMAP.md` (this file)
+- [x] `README.md` with installation, quick-start, feature table
+- [x] `ARCHITECTURE.md` (done)
+- [x] `ROADMAP.md` (this file)
 - [ ] `CONTRIBUTING.md`
-- [ ] `CHANGELOG.md` with `## [0.1.0]` entry
+- [x] `CHANGELOG.md` with `## [0.1.0]` entry
 - [ ] `LICENSE-MIT` and `LICENSE-APACHE`
-- [ ] `.github/workflows/ci.yml` — test, clippy, fmt, no_std check
-- [ ] `examples/basic_tween.rs`
-- [ ] `examples/spring_demo.rs`
-- [ ] `benches/easing_bench.rs`
-- [ ] `tests/tween_lifecycle.rs`, `tests/spring_settles.rs`
-- [ ] `cargo publish --dry-run` passes for all crates
+- [x] `.github/workflows/ci.yml` — test (stable/beta/nightly), clippy, fmt, docs, no_std, bench compile
+- [x] `.github/workflows/publish.yml` — pre-verify gate + dep-ordered crates.io publish
+- [x] `examples/basic_tween.rs`
+- [x] `examples/spring_demo.rs`
+- [x] `benches/easing_bench.rs`, `tween_update_bench.rs`, `spring_bench.rs`
+- [x] `tests/tween_lifecycle.rs`, `tests/spring_settles.rs`, `tests/driver_lifecycle.rs`
+- [ ] `cargo publish --dry-run` passes for all crates (run before tagging v0.1.0)
 
 ---
 
@@ -462,9 +463,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.1.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.2.0` above and open a PR.
 
 ---
 
 *Roadmap version: 0.1.0 — last updated May 2026*  
+*v0.1.0 shipped ✅ — next milestone: v0.2.0 — Composition*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/motus*

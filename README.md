@@ -6,6 +6,7 @@
 [![Docs.rs](https://docs.rs/motus/badge.svg)](https://docs.rs/motus)
 [![CI](https://github.com/AarambhDevHub/motus/actions/workflows/ci.yml/badge.svg)](https://github.com/AarambhDevHub/motus/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
+![v0.1.0 ✅](https://img.shields.io/badge/v0.1.0-Foundation%20shipped-brightgreen)
 
 A professional-grade, renderer-agnostic animation library for Rust.
 
@@ -29,20 +30,27 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
+**Shipped in v0.1.0:**
+
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
-| [`motus-core`](./crates/motus-core) | Traits (`Interpolate`, `Animatable`, `Update`) + 43 easing functions | ✅ |
-| [`motus-tween`](./crates/motus-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop` | ✅ |
+| [`motus-core`](./crates/motus-core) | Traits (`Interpolate`, `Animatable`, `Update`) + 31 easing functions | ✅ |
+| [`motus-tween`](./crates/motus-tween) | `Tween<T>`, `Loop`, `TweenState`, `TweenBuilder` | ✅ |
 | [`motus-spring`](./crates/motus-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
-| [`motus-timeline`](./crates/motus-timeline) | `Timeline`, `Sequence`, `stagger`, `At` positioning | — |
-| [`motus-path`](./crates/motus-path) | Bezier, CatmullRom, SVG path parser, shape morph | — |
-| [`motus-physics`](./crates/motus-physics) | Inertia, `DragState`, `GestureRecognizer` | — |
-| [`motus-color`](./crates/motus-color) | Perceptual color interpolation (Lab, Oklch, Linear) | — |
-| [`motus-driver`](./crates/motus-driver) | `AnimationDriver`, `Clock` variants, `ScrollDriver` | — |
-| [`motus-gpu`](./crates/motus-gpu) | `GpuAnimationBatch` — 10K+ tweens per frame on GPU | — |
-| [`motus-bevy`](./crates/motus-bevy) | `MotusPlugin` for Bevy | — |
-| [`motus-wasm`](./crates/motus-wasm) | `RafDriver`, FLIP, SplitText, ScrollSmoother | — |
-| [`motus`](./crates/motus) | Facade crate — re-exports everything | — |
+| [`motus-driver`](./crates/motus-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
+| [`motus`](./crates/motus) | Facade crate — re-exports all of the above | — |
+
+**Planned in future versions (see [ROADMAP.md](./ROADMAP.md)):**
+
+| Crate | Version | Description |
+|-------|---------|-------------|
+| `motus-timeline` | v0.2.0 | `Timeline`, `Sequence`, `stagger`, `At` positioning |
+| `motus-path` | v0.4.0 | Bezier, CatmullRom, SVG path parser, shape morph |
+| `motus-physics` | v0.5.0 | Inertia, `DragState`, `GestureRecognizer` |
+| `motus-color` | v0.6.0 | Perceptual color interpolation (Lab, Oklch, Linear) |
+| `motus-bevy` | v0.7.0 | `MotusPlugin` for Bevy |
+| `motus-wasm` | v0.7.0 | `RafDriver`, FLIP, SplitText, ScrollSmoother |
+| `motus-gpu` | v0.9.0 | `GpuAnimationBatch` — 10K+ tweens per frame on GPU |
 
 Most users only need the facade:
 
@@ -85,79 +93,27 @@ while !spring.is_settled() {
 println!("settled at {}", spring.position());
 ```
 
-### Keyframe animation with looping
+### Loop modes
 
 ```rust
-use motus::{KeyframeTrack, Loop, Easing, Update};
+use motus::{Tween, Loop, Easing, Update};
 
-let mut track = KeyframeTrack::new()
-    .push(0.0, 0.0_f32)
-    .push_eased(0.5, 1.0, Easing::EaseOutQuad)
-    .push_eased(1.0, 0.0, Easing::EaseInQuad)
-    .looping(Loop::Forever);
+let mut tween = Tween::new(0.0_f32, 100.0)
+    .duration(1.0)
+    .easing(Easing::EaseInOutSine)
+    .looping(Loop::PingPong)
+    .build();
 
 for _ in 0..600 {
-    track.update(1.0 / 60.0);
+    tween.update(1.0 / 60.0);
 }
-println!("{}", track.value()); // oscillates between 0.0 and 1.0
-```
-
-### Multi-step timeline
-
-```rust
-use motus::{Tween, Easing, Sequence, Update};
-
-let mut seq = Sequence::new()
-    .then("fade_in",  Tween::new(0.0_f32, 1.0).duration(0.4).easing(Easing::EaseOutCubic).build(), 0.4)
-    .gap(0.1)
-    .then("slide_up", Tween::new(0.0_f32, 100.0).duration(0.6).easing(Easing::EaseOutBack).build(), 0.6)
-    .build();
-
-seq.play();
-// In loop: seq.update(dt);
-```
-
-### Animate along a motion path
-
-```rust
-use motus::{MotionPath, MotionPathTween, Easing, Update};
-
-let path = MotionPath::new()
-    .cubic([0.0, 0.0], [50.0, 100.0], [100.0, 100.0], [150.0, 0.0]);
-
-let mut tween = MotionPathTween::new(path)
-    .duration(2.0)
-    .easing(Easing::EaseInOutCubic)
-    .auto_rotate(true);
-
-tween.update(1.0);
-let [x, y] = tween.value();
-let heading = tween.rotation_deg();
-```
-
-### Perceptual color interpolation
-
-```rust
-use motus::{Tween, Easing, Update};
-use motus::color::InLab;
-use palette::Srgba;
-
-let mut tween = Tween::new(
-    InLab(Srgba::new(1.0_f32, 0.0, 0.0, 1.0)),  // red
-    InLab(Srgba::new(0.0_f32, 0.0, 1.0, 1.0)),  // blue
-)
-    .duration(1.0)
-    .easing(Easing::Linear)
-    .build();
-
-tween.update(0.5);
-let color: Srgba = tween.value().0; // perceptually correct midpoint
+println!("{}", tween.value()); // oscillates 0 ↔ 100
 ```
 
 ### AnimationDriver — manage many animations
 
 ```rust
-use motus::{Tween, Easing, AnimationDriver, WallClock};
+use motus::{Tween, Easing, AnimationDriver, WallClock, Clock};
 
 let mut driver = AnimationDriver::new();
 let mut clock  = WallClock::new();
@@ -174,31 +130,52 @@ loop {
 }
 ```
 
+### Multi-dimensional spring
+
+```rust
+use motus::{SpringN, SpringConfig, Update};
+
+let mut spring: SpringN<[f32; 3]> = SpringN::new(SpringConfig::stiff(), [0.0; 3]);
+spring.set_target([100.0, 200.0, 300.0]);
+
+while !spring.is_settled() {
+    spring.update(1.0 / 60.0);
+}
+let [x, y, z] = spring.position();
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-motus = { version = "0.1", features = ["path", "color", "serde"] }
+motus = { version = "0.1", features = ["serde"] }
 ```
 
+**v0.1.0 features:**
+
 | Feature | What it adds |
-|---------|-------------|
-| `default` | `std` + `tween` + `timeline` + `spring` + `driver` |
-| `std` | Wall clock, callbacks, heap allocation |
-| `tween` | `Tween<T>`, `KeyframeTrack<T>` |
-| `timeline` | `Timeline`, `Sequence`, `stagger` |
+|---------|--------------|
+| `default` | `std` + `tween` + `spring` + `driver` |
+| `std` | Wall clock, heap-backed `SpringN<T>` |
+| `tween` | `Tween<T>`, `Loop`, `TweenState` |
 | `spring` | `Spring`, `SpringN<T>`, all presets |
-| `path` | Bezier, MotionPath, SVG parser, shape morph |
-| `physics` | Inertia, DragState, GestureRecognizer |
-| `color` | Perceptual color interpolation via `palette` |
-| `driver` | `AnimationDriver`, Clock variants, ScrollDriver |
-| `gpu` | `GpuAnimationBatch` via `wgpu` |
-| `bevy` | `MotusPlugin` for Bevy |
-| `wasm` | `RafDriver` + WASM bindings |
+| `driver` | `AnimationDriver`, `Clock` variants |
 | `serde` | `Serialize`/`Deserialize` on all public types |
-| `tokio` | `.wait().await` on `Timeline` completion |
+
+**Features planned for future versions:**
+
+| Feature | Version | What it adds |
+|---------|---------|--------------|
+| `timeline` | v0.2.0 | `Timeline`, `Sequence`, `stagger` |
+| `path` | v0.4.0 | Bezier, MotionPath, SVG parser |
+| `physics` | v0.5.0 | Inertia, DragState, GestureRecognizer |
+| `color` | v0.6.0 | Perceptual color interpolation via `palette` |
+| `bevy` | v0.7.0 | `MotusPlugin` for Bevy |
+| `wasm` | v0.7.0 | `RafDriver` + WASM bindings |
+| `gpu` | v0.9.0 | `GpuAnimationBatch` via `wgpu` |
+| `tokio` | v0.3.0 | `.wait().await` on `Timeline` completion |
 
 ### `no_std` usage
 
@@ -215,7 +192,7 @@ Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, `SpringN<T>`, all `Interp
 
 ## Easing Functions
 
-43 easing functions available as `Easing::EaseOutCubic` (enum) or `ease_out_cubic(t)` (free function):
+31 easing functions available as `Easing::EaseOutCubic` (enum) or `ease_out_cubic(t)` (free function):
 
 | Group | Variants |
 |-------|----------|
@@ -227,9 +204,9 @@ Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, `SpringN<T>`, all `Interp
 | Back (overshoot) | `EaseIn/Out/InOutBack` |
 | Elastic | `EaseIn/Out/InOutElastic` |
 | Bounce | `EaseIn/Out/InOutBounce` |
-| CSS-compatible | `CubicBezier(x1, y1, x2, y2)`, `Steps(n)` |
-| Advanced | `RoughEase`, `SlowMo`, `Wiggle`, `CustomBounce`, `ExpoScale` |
 | Escape hatch | `Custom(fn(f32) -> f32)` |
+
+> Advanced variants (`CubicBezier`, `Steps`, `RoughEase`, etc.) are planned for v0.3.0+.
 
 ---
 
@@ -314,14 +291,16 @@ Motus is a Cargo workspace of 12 focused crates. See [ARCHITECTURE.md](./ARCHITE
 
 ## Examples
 
-```
+```sh
+# v0.1.0 examples (available now):
 cargo run --example basic_tween
 cargo run --example spring_demo
-cargo run --example timeline_sequence
-cargo run --example motion_path
-cargo run --example color_animation
-cargo run --example tui_progress
-cargo run --example tui_spinner
+
+# Coming in future versions:
+# cargo run --example timeline_sequence   # v0.2.0
+# cargo run --example motion_path         # v0.4.0
+# cargo run --example color_animation     # v0.6.0
+# cargo run --example tui_progress        # v0.7.0
 ```
 
 ---
@@ -348,7 +327,13 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-Current milestone: **v0.1.0 — Foundation**
+**Current status: `v0.1.0 — Foundation` ✅ shipped**
+
+| Next | Milestone |
+|------|-----------|
+| `v0.2.0` | Composition — `Timeline`, `Sequence`, `KeyframeTrack`, `stagger` |
+| `v0.3.0` | Control — callbacks, time scale, `CubicBezier`/`Steps` easing |
+| `v0.4.0` | Paths — Bezier, SVG, motion paths |
 
 ---
 
