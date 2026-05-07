@@ -60,15 +60,19 @@ fn main() {
     let mut ping = Tween::new(0.0_f32, 100.0)
         .duration(0.8)
         .easing(Easing::EaseInOutSine)
-        .looping(Loop::Times(6)) // 6 half-cycles = 3 full PingPong cycles
+        .looping(Loop::PingPong)
         .build();
 
     let mut clock2 = WallClock::new();
-    while !ping.is_complete() {
+    let mut elapsed_ping = 0.0_f32;
+    let ping_duration = 3.0 * 2.0 * 0.8; // 3 cycles × 2 passes per cycle × 0.8s per pass
+    while elapsed_ping < ping_duration {
         let dt = clock2.delta();
         ping.update(dt);
+        elapsed_ping += dt;
         render_bar(ping.value(), 40);
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
+    ping.reset();
     println!("\n\n  ✓ PingPong complete!\n");
 }
