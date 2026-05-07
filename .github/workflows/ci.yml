@@ -46,8 +46,10 @@ jobs:
       - name: Test (all features)
         run: cargo test --workspace --all-features
 
-      - name: Test (no default features — no_std check)
-        run: cargo test --workspace --no-default-features
+      # Only test no_std-compatible crates without default features.
+      # motus-driver requires std (WallClock uses std::time::Instant).
+      - name: Test no_std crates (no default features)
+        run: cargo test -p motus-core -p motus-tween -p motus-spring --no-default-features
 
   # ── Lint ───────────────────────────────────────────────────────────────────
   lint:
@@ -125,9 +127,9 @@ jobs:
       - name: Check benches compile
         run: cargo bench --workspace --no-run
 
-  # ── WASM ───────────────────────────────────────────────────────────────────
-  wasm:
-    name: WASM
+  # ── no_std cross-compile ───────────────────────────────────────────────────
+  no-std:
+    name: no_std cross-compile
     runs-on: ubuntu-latest
 
     steps:
@@ -136,10 +138,7 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: wasm32-unknown-unknown
-
-      - name: Install wasm-pack
-        run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+          targets: thumbv7m-none-eabi
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -148,14 +147,17 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-nostd-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build WASM (motus-wasm)
-        run: cargo build -p motus-wasm --target wasm32-unknown-unknown --features wasm
+      # Only the crates that are no_std-compatible
+      - name: Build motus-core (no_std)
+        run: cargo build -p motus-core --target thumbv7m-none-eabi --no-default-features
 
-      - name: Test WASM (headless Chrome)
-        run: wasm-pack test crates/motus-wasm --headless --chrome
-        continue-on-error: true   # remove once wasm tests are written
+      - name: Build motus-tween (no_std)
+        run: cargo build -p motus-tween --target thumbv7m-none-eabi --no-default-features
+
+      - name: Build motus-spring (no_std)
+        run: cargo build -p motus-spring --target thumbv7m-none-eabi --no-default-features
 
   # ── Security audit ─────────────────────────────────────────────────────────
   audit:
