@@ -101,3 +101,67 @@ jobs:
 
       - name: Publish motus (facade)
         run: cargo publish -p motus --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # ── GitHub Release ────────────────────────────────────────────────────────────
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: publish
+    permissions:
+      contents: write   # required to create releases
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Motus ${{ steps.version.outputs.VERSION }} — Foundation"
+          body: |
+            ## Motus ${{ steps.version.outputs.VERSION }} — Foundation
+
+            The first stable release of the Motus animation library for Rust.
+
+            ### Crates published to crates.io
+
+            | Crate | Version | Description |
+            |-------|---------|-------------|
+            | [`motus-core`](https://crates.io/crates/motus-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 31 easing functions, `no_std` |
+            | [`motus-tween`](https://crates.io/crates/motus-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std` |
+            | [`motus-spring`](https://crates.io/crates/motus-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
+            | [`motus-driver`](https://crates.io/crates/motus-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
+            | [`motus`](https://crates.io/crates/motus) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
+
+            ### Quick Start
+
+            ```toml
+            [dependencies]
+            motus = "${{ steps.version.outputs.VERSION }}"
+            ```
+
+            ```rust
+            use motus::{Tween, Easing, Update};
+
+            let mut tween = Tween::new(0.0_f32, 100.0)
+                .duration(1.0)
+                .easing(Easing::EaseOutCubic)
+                .build();
+
+            tween.update(0.016);
+            println!("{}", tween.value());
+            ```
+
+            ### What's Included
+            - ✅ 144 tests passing across all crates
+            - ✅ `no_std` support for `motus-core`, `motus-tween`, `motus-spring`
+            - ✅ Criterion benchmarks for easing, tween, and spring
+            - ✅ CI: stable + beta + nightly toolchains
+
+            See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.
+          draft: false
+          prerelease: false
