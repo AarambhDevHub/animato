@@ -52,7 +52,7 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.2.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato-timeline → animato
+  # v0.3.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato-timeline → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -125,32 +125,32 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: "Animato ${{ steps.version.outputs.VERSION }} — Composition"
+          name: "Animato ${{ steps.version.outputs.VERSION }} — Control"
           body: |
-            ## Animato ${{ steps.version.outputs.VERSION }} — Composition
+            ## Animato ${{ steps.version.outputs.VERSION }} — Control
 
-            The second release of the Animato animation library for Rust, adding composition primitives.
+            The third release of the Animato animation library for Rust, adding runtime control, callbacks, async completion waiting, and CSS-compatible easing.
 
             ### Crates published to crates.io
 
             | Crate | Version | Description |
             |-------|---------|-------------|
-            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 31 easing functions, `no_std` |
-            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack` |
+            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 33 easing variants, `no_std` |
+            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack`, serde |
             | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
             | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
-            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, composition |
+            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, time scale, callbacks, async wait |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
 
             ### Quick Start
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["timeline"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["timeline", "tokio"] }
             ```
 
             ```rust
-            use animato::{Timeline, Sequence, Tween, Easing, Update};
+            use animato::{At, Timeline, Tween, Easing, Update};
 
             let tween = Tween::new(0.0_f32, 100.0)
                 .duration(1.0)
@@ -158,18 +158,20 @@ jobs:
                 .build();
 
             let mut timeline = Timeline::new()
-                .then("tween-1", tween)
-                .build();
+                .add("move", tween, At::Start)
+                .time_scale(1.0)
+                .on_complete(|| println!("timeline complete"));
 
+            timeline.play();
             timeline.update(0.016);
             ```
 
-            ### What's New in v0.2.0
-            - ✅ `Timeline` — compose multiple animations with `At` positioning
-            - ✅ `Sequence` builder — chain animations sequentially
-            - ✅ `stagger()` — stagger multiple animations with delay
-            - ✅ `KeyframeTrack<T>` — keyframe interpolation with easing
-            - ✅ PingPong loop support
+            ### What's New in v0.3.0
+            - ✅ Timeline time scale via `.time_scale()` and `.set_time_scale()`
+            - ✅ Timeline callbacks via `.on_entry_complete()` and `.on_complete()`
+            - ✅ Tokio completion waiting via `.wait().await`
+            - ✅ CSS-compatible `CubicBezier(...)` and `Steps(...)` easing variants
+            - ✅ Serde trait re-exports and expanded serde coverage
             - ✅ 200+ tests passing across all crates
 
             ### What's Included

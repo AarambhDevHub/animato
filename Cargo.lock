@@ -19,7 +19,7 @@ checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
 name = "animato"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "animato-core",
  "animato-driver",
@@ -27,11 +27,12 @@ dependencies = [
  "animato-timeline",
  "animato-tween",
  "criterion",
+ "serde",
 ]
 
 [[package]]
 name = "animato-core"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "libm",
  "serde",
@@ -39,7 +40,7 @@ dependencies = [
 
 [[package]]
 name = "animato-driver"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -47,7 +48,7 @@ dependencies = [
 
 [[package]]
 name = "animato-spring"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -55,16 +56,17 @@ dependencies = [
 
 [[package]]
 name = "animato-timeline"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "animato-core",
  "animato-tween",
  "serde",
+ "tokio",
 ]
 
 [[package]]
 name = "animato-tween"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -527,6 +529,15 @@ checksum = "be4d6b5f19ff7664e8c98d03e2139cb510db9b0a60b55f8e8709b689d939b6bc"
 dependencies = [
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "tokio"
+version = "1.52.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "110a78583f19d5cdb2c5ccf321d1290344e71313c6c37d43520d386027d18386"
+dependencies = [
+ "pin-project-lite",
 ]
 
 [[package]]

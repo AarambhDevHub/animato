@@ -36,6 +36,7 @@ pub enum TweenState {
 ///
 /// `Tween<T>` is stack-allocated — no heap allocation occurs in `update()` or `value()`.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Tween<T: Animatable> {
     /// The value at `t = 0`.
     pub start: T,

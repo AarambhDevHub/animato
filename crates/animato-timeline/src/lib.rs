@@ -33,8 +33,9 @@
 //!
 //! | Feature | Effect |
 //! |---------|--------|
-//! | `std`   | Enables std-dependent features in core and tween |
+//! | `std`   | Enables std-dependent features in core and tween, plus callbacks |
 //! | `serde` | Derives `Serialize`/`Deserialize` on supported public enums |
+//! | `tokio` | Enables [`Timeline::wait()`] completion futures |
 
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]

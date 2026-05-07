@@ -7,6 +7,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.3.0] — 2026-05-07 — Control
+
+### Added
+- `animato-core`: `Easing::CubicBezier(f32, f32, f32, f32)` with CSS-compatible x-control clamping.
+- `animato-core`: `Easing::Steps(u32)` with CSS `jump-end` behavior.
+- `animato-core`: `cubic_bezier()` and `steps()` free easing helpers.
+- `animato-timeline`: timeline-level `.time_scale(f32)` and `.set_time_scale(f32)`.
+- `animato-timeline`: `std`-gated `.on_entry_complete(label, f)` and `.on_complete(f)` callbacks.
+- `animato-timeline`: `tokio` feature and `.wait().await` completion future.
+- `animato` facade: `tokio` feature pass-through and serde trait re-exports.
+- Integration tests for v0.3.0 control features.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins to `0.3.0`.
+- Updated README, roadmap, examples, benchmark labels, and publish workflow for `v0.3.0 — Control`.
+- Expanded serde coverage for concrete animation state types such as `Tween<T>` and `Spring`.
+
+---
+
 ## [0.2.0] — 2026-05-07 — Composition
 
 ### Added
@@ -56,6 +75,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/AarambhDevHub/animato/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AarambhDevHub/animato/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AarambhDevHub/animato/releases/tag/v0.1.0

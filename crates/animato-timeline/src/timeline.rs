@@ -62,6 +62,67 @@ impl TimelineEntry {
     }
 }
 
+#[cfg(feature = "std")]
+struct EntryCallback {
+    label: String,
+    callback: Box<dyn FnMut() + Send + 'static>,
+}
+
+#[cfg(feature = "std")]
+impl fmt::Debug for EntryCallback {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("EntryCallback")
+            .field("label", &self.label)
+            .finish()
+    }
+}
+
+#[cfg(feature = "std")]
+#[derive(Default)]
+struct TimelineCallbacks {
+    entry_complete: Vec<EntryCallback>,
+    complete: Option<Box<dyn FnMut() + Send + 'static>>,
+    complete_fired: bool,
+}
+
+#[cfg(feature = "std")]
+impl fmt::Debug for TimelineCallbacks {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("TimelineCallbacks")
+            .field("entry_complete", &self.entry_complete)
+            .field("has_complete", &self.complete.is_some())
+            .field("complete_fired", &self.complete_fired)
+            .finish()
+    }
+}
+
+#[cfg(feature = "std")]
+impl TimelineCallbacks {
+    fn fire_entry_complete(&mut self, completed_labels: &[String]) {
+        for completed_label in completed_labels {
+            for callback in self.entry_complete.iter_mut() {
+                if callback.label == *completed_label {
+                    (callback.callback)();
+                }
+            }
+        }
+    }
+
+    fn fire_complete(&mut self) {
+        if self.complete_fired {
+            return;
+        }
+        self.complete_fired = true;
+        if let Some(callback) = self.complete.as_mut() {
+            callback();
+        }
+    }
+
+    fn reset_completion(&mut self) {
+        self.complete_fired = false;
+    }
+}
+
 /// Composes multiple animations on one shared clock.
 ///
 /// Entries are stored by label, absolute start time, and cached duration.
@@ -73,6 +134,12 @@ pub struct Timeline {
     state: TimelineState,
     /// Timeline-level looping behavior.
     pub looping: Loop,
+    /// Timeline time scale. `1.0` = normal speed, `2.0` = double speed.
+    pub time_scale: f32,
+    #[cfg(feature = "std")]
+    callbacks: TimelineCallbacks,
+    #[cfg(feature = "tokio")]
+    completion_tx: tokio::sync::watch::Sender<bool>,
 }
 
 impl fmt::Debug for Timeline {
@@ -82,6 +149,17 @@ impl fmt::Debug for Timeline {
             .field("elapsed", &self.elapsed)
             .field("state", &self.state)
             .field("looping", &self.looping)
+            .field("time_scale", &self.time_scale)
+            .field("callbacks", &{
+                #[cfg(feature = "std")]
+                {
+                    &self.callbacks
+                }
+                #[cfg(not(feature = "std"))]
+                {
+                    &"disabled"
+                }
+            })
             .finish()
     }
 }
@@ -100,6 +178,11 @@ impl Timeline {
             elapsed: 0.0,
             state: TimelineState::Idle,
             looping: Loop::Once,
+            time_scale: 1.0,
+            #[cfg(feature = "std")]
+            callbacks: TimelineCallbacks::default(),
+            #[cfg(feature = "tokio")]
+            completion_tx: tokio::sync::watch::channel(false).0,
         }
     }
 
@@ -146,6 +229,67 @@ impl Timeline {
         self
     }
 
+    /// Set the timeline time scale.
+    ///
+    /// Negative values are clamped to `0.0`.
+    pub fn time_scale(mut self, scale: f32) -> Self {
+        self.set_time_scale(scale);
+        self
+    }
+
+    /// Change the timeline time scale at runtime.
+    ///
+    /// `1.0` is normal speed, `2.0` is double speed, and `0.0` freezes time.
+    pub fn set_time_scale(&mut self, scale: f32) {
+        self.time_scale = scale.max(0.0);
+    }
+
+    /// Register a callback fired when the labeled entry completes during `update`.
+    ///
+    /// This is available with the `std` feature. Seeking and resetting do not
+    /// fire callbacks.
+    #[cfg(feature = "std")]
+    pub fn on_entry_complete(
+        mut self,
+        label: impl Into<String>,
+        f: impl FnMut() + Send + 'static,
+    ) -> Self {
+        self.callbacks.entry_complete.push(EntryCallback {
+            label: label.into(),
+            callback: Box::new(f),
+        });
+        self
+    }
+
+    /// Register a callback fired once when finite timeline playback completes during `update`.
+    ///
+    /// This is available with the `std` feature. Seeking to the end does not
+    /// fire this callback.
+    #[cfg(feature = "std")]
+    pub fn on_complete(mut self, f: impl FnMut() + Send + 'static) -> Self {
+        self.callbacks.complete = Some(Box::new(f));
+        self
+    }
+
+    /// Return a future that resolves when the timeline reaches `Completed`.
+    ///
+    /// The future only observes completion; it does not drive the timeline.
+    /// Continue calling [`update`](Update::update) from your runtime loop.
+    #[cfg(feature = "tokio")]
+    pub fn wait(&self) -> impl core::future::Future<Output = ()> + Send + 'static {
+        let mut rx = self.completion_tx.subscribe();
+        async move {
+            loop {
+                if *rx.borrow() {
+                    return;
+                }
+                if rx.changed().await.is_err() {
+                    return;
+                }
+            }
+        }
+    }
+
     /// Begin playback.
     pub fn play(&mut self) {
         if self.state == TimelineState::Completed {
@@ -153,8 +297,10 @@ impl Timeline {
         }
         if self.duration() == 0.0 {
             self.state = TimelineState::Completed;
+            self.notify_completion_state(true);
         } else {
             self.state = TimelineState::Playing;
+            self.notify_completion_state(false);
             self.sync_to_elapsed();
         }
     }
@@ -177,6 +323,8 @@ impl Timeline {
     pub fn reset(&mut self) {
         self.elapsed = 0.0;
         self.state = TimelineState::Idle;
+        self.reset_completion_callbacks();
+        self.notify_completion_state(false);
         for entry in self.entries.iter_mut() {
             entry.animation.reset();
             entry.completed = false;
@@ -206,8 +354,10 @@ impl Timeline {
         self.sync_to_elapsed();
         if total.is_finite() && self.elapsed >= total {
             self.state = TimelineState::Completed;
+            self.notify_completion_state(true);
         } else if self.state == TimelineState::Completed {
             self.state = TimelineState::Playing;
+            self.notify_completion_state(false);
         }
     }
 
@@ -279,6 +429,39 @@ impl Timeline {
             .and_then(|entry| entry.animation.as_any_mut().downcast_mut::<T>())
     }
 
+    fn fire_entry_callbacks(&mut self, completed_labels: &[String]) {
+        #[cfg(feature = "std")]
+        self.callbacks.fire_entry_complete(completed_labels);
+
+        #[cfg(not(feature = "std"))]
+        let _ = completed_labels;
+    }
+
+    fn fire_complete_callback(&mut self) {
+        #[cfg(feature = "std")]
+        self.callbacks.fire_complete();
+    }
+
+    fn reset_completion_callbacks(&mut self) {
+        #[cfg(feature = "std")]
+        self.callbacks.reset_completion();
+    }
+
+    fn notify_completion_state(&self, complete: bool) {
+        #[cfg(feature = "tokio")]
+        let _ = self.completion_tx.send_replace(complete);
+
+        #[cfg(not(feature = "tokio"))]
+        let _ = complete;
+    }
+
+    fn complete_from_update(&mut self) -> bool {
+        self.state = TimelineState::Completed;
+        self.fire_complete_callback();
+        self.notify_completion_state(true);
+        false
+    }
+
     fn resolve_start(&self, at: At<'_>) -> f32 {
         match at {
             At::Absolute(secs) => secs.max(0.0),
@@ -333,10 +516,58 @@ impl Timeline {
         }
     }
 
-    fn tick_forward(&mut self, prev: f32, next: f32) {
+    fn entry_completion_labels_between(&self, prev: f32, next: f32, base: f32) -> Vec<String> {
+        let mut labels = Vec::new();
+        if next <= prev || base <= 0.0 {
+            return labels;
+        }
+
+        let (max_cycles, period) = match self.looping {
+            Loop::Once => (Some(1), base),
+            Loop::Times(n) => (Some(n.max(1)), base),
+            Loop::Forever => (None, base),
+            Loop::PingPong => (None, base * 2.0),
+        };
+
+        if period <= 0.0 {
+            return labels;
+        }
+
+        let mut cycle = (prev / period).max(0.0) as u32;
+        loop {
+            if let Some(max_cycles) = max_cycles {
+                if cycle >= max_cycles {
+                    break;
+                }
+            }
+
+            let cycle_start = cycle as f32 * period;
+            if cycle_start > next {
+                break;
+            }
+
+            for entry in self.entries.iter() {
+                let completion = cycle_start + entry.end_at();
+                if prev < completion && completion <= next {
+                    labels.push(entry.label.clone());
+                }
+            }
+
+            cycle = cycle.saturating_add(1);
+            if cycle == u32::MAX {
+                break;
+            }
+        }
+
+        labels
+    }
+
+    fn tick_forward(&mut self, prev: f32, next: f32) -> Vec<String> {
+        let mut completed_labels = Vec::new();
         for entry in self.entries.iter_mut() {
             let start = entry.start_at;
             let end = entry.end_at();
+            let was_completed = entry.completed;
 
             if next < start {
                 entry.animation.reset();
@@ -354,6 +585,9 @@ impl Timeline {
                     entry.animation.seek_to(1.0);
                     entry.completed = true;
                 }
+                if !was_completed && entry.completed {
+                    completed_labels.push(entry.label.clone());
+                }
                 continue;
             }
 
@@ -370,7 +604,12 @@ impl Timeline {
                 entry.animation.seek_to(1.0);
                 entry.completed = true;
             }
+
+            if !was_completed && entry.completed {
+                completed_labels.push(entry.label.clone());
+            }
         }
+        completed_labels
     }
 
     fn sync_to_elapsed(&mut self) {
@@ -404,11 +643,10 @@ impl Update for Timeline {
 
         let base = self.duration();
         if base == 0.0 {
-            self.state = TimelineState::Completed;
-            return false;
+            return self.complete_from_update();
         }
 
-        let dt = dt.max(0.0);
+        let dt = dt.max(0.0) * self.time_scale;
         let previous_elapsed = self.elapsed;
         let next_elapsed = previous_elapsed + dt;
 
@@ -416,25 +654,30 @@ impl Update for Timeline {
             Loop::Once => {
                 let prev_local = previous_elapsed.min(base);
                 let next_local = next_elapsed.min(base);
-                self.tick_forward(prev_local, next_local);
+                let completed_labels = self.tick_forward(prev_local, next_local);
+                self.fire_entry_callbacks(&completed_labels);
                 self.elapsed = next_elapsed.min(base);
                 if next_elapsed >= base {
-                    self.state = TimelineState::Completed;
-                    return false;
+                    return self.complete_from_update();
                 }
             }
             Loop::Times(n) => {
                 let total = base * n.max(1) as f32;
+                let completed_labels =
+                    self.entry_completion_labels_between(previous_elapsed, next_elapsed, base);
                 self.elapsed = next_elapsed.min(total);
                 self.sync_to_elapsed();
+                self.fire_entry_callbacks(&completed_labels);
                 if next_elapsed >= total {
-                    self.state = TimelineState::Completed;
-                    return false;
+                    return self.complete_from_update();
                 }
             }
             Loop::Forever | Loop::PingPong => {
+                let completed_labels =
+                    self.entry_completion_labels_between(previous_elapsed, next_elapsed, base);
                 self.elapsed = next_elapsed;
                 self.sync_to_elapsed();
+                self.fire_entry_callbacks(&completed_labels);
             }
         }
 
@@ -573,5 +816,106 @@ mod tests {
 
         assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 75.0);
         assert!(!timeline.is_complete());
+    }
+
+    #[test]
+    fn time_scale_speeds_up_timeline() {
+        let mut timeline = Timeline::new()
+            .add("a", tween(100.0, 1.0), At::Start)
+            .time_scale(2.0);
+        timeline.play();
+        timeline.update(0.25);
+
+        assert_eq!(timeline.elapsed(), 0.5);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 50.0);
+    }
+
+    #[test]
+    fn set_time_scale_clamps_negative_to_zero() {
+        let mut timeline = Timeline::new().add("a", tween(100.0, 1.0), At::Start);
+        timeline.set_time_scale(-1.0);
+        timeline.play();
+        timeline.update(0.5);
+
+        assert_eq!(timeline.elapsed(), 0.0);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 0.0);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn callbacks_fire_once_during_update() {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let entry_count = Arc::new(AtomicUsize::new(0));
+        let complete_count = Arc::new(AtomicUsize::new(0));
+        let entry_seen = Arc::clone(&entry_count);
+        let complete_seen = Arc::clone(&complete_count);
+
+        let mut timeline = Timeline::new()
+            .add("a", tween(100.0, 1.0), At::Start)
+            .on_entry_complete("a", move || {
+                entry_seen.fetch_add(1, Ordering::SeqCst);
+            })
+            .on_complete(move || {
+                complete_seen.fetch_add(1, Ordering::SeqCst);
+            });
+
+        timeline.play();
+        assert!(!timeline.update(1.0));
+        assert!(!timeline.update(1.0));
+
+        assert_eq!(entry_count.load(Ordering::SeqCst), 1);
+        assert_eq!(complete_count.load(Ordering::SeqCst), 1);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn callbacks_do_not_fire_on_seek_or_reset() {
+        use std::sync::Arc;
+        use std::sync::atomic::{AtomicUsize, Ordering};
+
+        let entry_count = Arc::new(AtomicUsize::new(0));
+        let complete_count = Arc::new(AtomicUsize::new(0));
+        let entry_seen = Arc::clone(&entry_count);
+        let complete_seen = Arc::clone(&complete_count);
+
+        let mut timeline = Timeline::new()
+            .add("a", tween(100.0, 1.0), At::Start)
+            .on_entry_complete("a", move || {
+                entry_seen.fetch_add(1, Ordering::SeqCst);
+            })
+            .on_complete(move || {
+                complete_seen.fetch_add(1, Ordering::SeqCst);
+            });
+
+        timeline.seek(1.0);
+        timeline.reset();
+
+        assert_eq!(entry_count.load(Ordering::SeqCst), 0);
+        assert_eq!(complete_count.load(Ordering::SeqCst), 0);
+    }
+
+    #[cfg(feature = "tokio")]
+    #[test]
+    fn wait_is_ready_after_completion() {
+        use core::future::Future;
+        use std::sync::Arc;
+        use std::task::{Context, Poll, Wake, Waker};
+
+        struct NoopWaker;
+        impl Wake for NoopWaker {
+            fn wake(self: Arc<Self>) {}
+        }
+
+        let mut timeline = Timeline::new().add("a", tween(1.0, 1.0), At::Start);
+        timeline.play();
+        timeline.update(1.0);
+
+        let mut wait = Box::pin(timeline.wait());
+        let waker = Waker::from(Arc::new(NoopWaker));
+        let mut cx = Context::from_waker(&waker);
+
+        assert!(matches!(wait.as_mut().poll(&mut cx), Poll::Ready(())));
     }
 }

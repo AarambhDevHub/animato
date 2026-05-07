@@ -6,7 +6,7 @@
 [![Docs.rs](https://docs.rs/animato/badge.svg)](https://docs.rs/animato)
 [![CI](https://github.com/AarambhDevHub/animato/actions/workflows/ci.yml/badge.svg)](https://github.com/AarambhDevHub/animato/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
-![v0.2.0](https://img.shields.io/badge/v0.2.0-Composition%20shipped-brightgreen)
+![v0.3.0](https://img.shields.io/badge/v0.3.0-Control%20shipped-brightgreen)
 
 A professional-grade, renderer-agnostic animation library for Rust.
 
@@ -30,13 +30,13 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.2.0:**
+**Shipped in v0.3.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
-| [`animato-core`](./crates/animato-core) | Traits (`Interpolate`, `Animatable`, `Update`, `Playable`) + 31 easing functions | yes |
+| [`animato-core`](./crates/animato-core) | Traits (`Interpolate`, `Animatable`, `Update`, `Playable`) + 33 easing variants | yes |
 | [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState`, `TweenBuilder` | partial |
-| [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, `At` positioning | alloc |
+| [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, callbacks, time scale, async wait | alloc |
 | [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
 | [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
@@ -56,7 +56,7 @@ Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.2"
+animato = "0.3"
 ```
 
 ---
@@ -174,26 +174,47 @@ timeline.update(0.5);
 assert_eq!(timeline.get::<Tween<f32>>("slide").unwrap().value(), 50.0);
 ```
 
+### Timeline control
+
+```rust
+use animato::{At, Timeline, Tween, Update};
+
+let fade = Tween::new(0.0_f32, 1.0).duration(1.0).build();
+
+let mut timeline = Timeline::new()
+    .add("fade", fade, At::Start)
+    .time_scale(0.5)
+    .on_entry_complete("fade", || println!("fade done"))
+    .on_complete(|| println!("timeline done"));
+
+timeline.play();
+timeline.update(1.0);
+assert_eq!(timeline.get::<Tween<f32>>("fade").unwrap().value(), 0.5);
+```
+
+With the `tokio` feature, `timeline.wait().await` resolves when another task or loop drives the timeline to completion.
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.2", features = ["serde"] }
+animato = { version = "0.3", features = ["serde"] }
 ```
 
-**v0.2.0 features:**
+**v0.3.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
 | `default` | `std` + `tween` + `timeline` + `spring` + `driver` |
-| `std` | Wall clock, heap-backed composition types |
+| `std` | Wall clock, heap-backed composition types, timeline callbacks |
 | `tween` | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState` |
-| `timeline` | `Timeline`, `Sequence`, `stagger` |
+| `timeline` | `Timeline`, `Sequence`, `stagger`, time scale |
 | `spring` | `Spring`, `SpringN<T>`, all presets |
 | `driver` | `AnimationDriver`, `Clock` variants |
-| `serde` | `Serialize`/`Deserialize` on all public types |
+| `serde` | `Serialize`/`Deserialize` on supported concrete public types |
+| `tokio` | `.wait().await` on `Timeline` completion |
 
 **Features planned for future versions:**
 
@@ -205,15 +226,14 @@ animato = { version = "0.2", features = ["serde"] }
 | `bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
 | `wasm` | v0.7.0 | `RafDriver` + WASM bindings |
 | `gpu` | v0.9.0 | `GpuAnimationBatch` via `wgpu` |
-| `tokio` | v0.3.0 | `.wait().await` on `Timeline` completion |
 
 ### `no_std` usage
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.2", default-features = false }
-animato-tween  = { version = "0.2", default-features = false }
-animato-spring = { version = "0.2", default-features = false }
+animato-core   = { version = "0.3", default-features = false }
+animato-tween  = { version = "0.3", default-features = false }
+animato-spring = { version = "0.3", default-features = false }
 ```
 
 Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, and `SpringN<T>` require allocation.
@@ -222,7 +242,7 @@ Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, all `Interpolate` blanket
 
 ## Easing Functions
 
-31 easing functions available as `Easing::EaseOutCubic` (enum) or `ease_out_cubic(t)` (free function):
+33 easing variants are available as `Easing::EaseOutCubic` (enum) or `ease_out_cubic(t)` (free function where applicable):
 
 | Group | Variants |
 |-------|----------|
@@ -234,13 +254,16 @@ Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, all `Interpolate` blanket
 | Back (overshoot) | `EaseIn/Out/InOutBack` |
 | Elastic | `EaseIn/Out/InOutElastic` |
 | Bounce | `EaseIn/Out/InOutBounce` |
+| CSS-compatible | `CubicBezier(f32, f32, f32, f32)`, `Steps(u32)` |
 | Escape hatch | `Custom(fn(f32) -> f32)` |
 
-> Advanced variants (`CubicBezier`, `Steps`, `RoughEase`, etc.) are planned for v0.3.0+.
+Additional advanced variants (`RoughEase`, `SlowMo`, `Wiggle`, `CustomBounce`, `ExpoScale`) remain planned for v0.8.0.
 
 ---
 
-## Bevy Integration
+## Future Bevy Integration
+
+Planned for v0.7.0.
 
 ```rust
 use bevy::prelude::*;
@@ -275,11 +298,13 @@ fn on_tween_done(mut events: EventReader<TweenCompleted>) {
 
 ---
 
-## WASM Integration
+## Future WASM Integration
+
+Planned for v0.7.0.
 
 ```toml
 [dependencies]
-animato = { version = "0.2", features = ["wasm"] }
+animato = { version = "0.7", features = ["wasm"] }
 ```
 
 ```rust
@@ -342,7 +367,7 @@ cargo run --example timeline_sequence
 cargo test --workspace --all-features
 
 # no_std check:
-cargo test --workspace --no-default-features
+cargo test -p animato-core -p animato-tween -p animato-spring --no-default-features
 
 # Benchmarks:
 cargo bench
@@ -357,12 +382,12 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.2.0 — Composition` shipped**
+**Current status: `v0.3.0 — Control` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.3.0` | Control — callbacks, time scale, `CubicBezier`/`Steps` easing |
 | `v0.4.0` | Paths — Bezier, SVG, motion paths |
+| `v0.5.0` | Physics — inertia, drag, gesture recognition |
 
 ---
 

@@ -41,6 +41,11 @@ pub fn sqrt(x: f32) -> f32 {
 pub fn round(x: f32) -> f32 {
     x.round()
 }
+#[cfg(feature = "std")]
+#[inline]
+pub fn ceil(x: f32) -> f32 {
+    x.ceil()
+}
 
 #[cfg(not(feature = "std"))]
 #[inline]
@@ -71,4 +76,9 @@ pub fn sqrt(x: f32) -> f32 {
 #[inline]
 pub fn round(x: f32) -> f32 {
     libm::roundf(x)
+}
+#[cfg(not(feature = "std"))]
+#[inline]
+pub fn ceil(x: f32) -> f32 {
+    libm::ceilf(x)
 }

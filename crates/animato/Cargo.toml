@@ -20,7 +20,9 @@ tween   = ["dep:animato-tween", "animato-tween/alloc"]
 timeline = ["dep:animato-timeline"]
 spring  = ["dep:animato-spring", "animato-spring?/alloc"]
 driver  = ["dep:animato-driver"]
+tokio   = ["timeline", "animato-timeline/tokio"]
 serde   = [
+    "dep:serde",
     "animato-core/serde",
     "animato-tween?/serde",
     "animato-timeline?/serde",
@@ -33,6 +35,7 @@ animato-tween  = { workspace = true, optional = true }
 animato-timeline = { workspace = true, optional = true }
 animato-spring = { workspace = true, optional = true }
 animato-driver = { workspace = true, optional = true }
+serde          = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion    = { workspace = true }
@@ -64,6 +67,11 @@ required-features = ["tween"]
 name = "timeline_sequence"
 path = "../../tests/timeline_sequence.rs"
 required-features = ["tween", "timeline"]
+
+[[test]]
+name = "control_features"
+path = "../../tests/control_features.rs"
+required-features = ["tween", "timeline", "spring", "serde", "tokio"]
 
 # ── Benchmarks ───────────────────────────────────────────────────────────────
 [[bench]]

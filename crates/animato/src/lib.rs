@@ -56,9 +56,9 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.2", default-features = false }
-//! animato-tween  = { version = "0.2", default-features = false }
-//! animato-spring = { version = "0.2", default-features = false }
+//! animato-core   = { version = "0.3", default-features = false }
+//! animato-tween  = { version = "0.3", default-features = false }
+//! animato-spring = { version = "0.3", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -71,12 +71,17 @@
 //! | `timeline` | [`Timeline`], [`Sequence`], [`stagger()`] |
 //! | `spring` | [`Spring`], [`SpringConfig`], [`SpringN<T>`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
+//! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
 // ── Core — always present ────────────────────────────────────────────────────
 pub use animato_core::{Animatable, Easing, Interpolate, Playable, Update};
 
-/// All 31 free easing functions (`ease_out_cubic`, etc.) re-exported at crate root.
+// ── Serde convenience re-export ─────────────────────────────────────────────
+#[cfg(feature = "serde")]
+pub use serde::{Deserialize, Serialize};
+
+/// All free easing functions (`ease_out_cubic`, `cubic_bezier`, etc.) re-exported at crate root.
 ///
 /// These are `#[inline]` free functions — use them when you want zero-overhead
 /// easing without the `Easing` enum indirection.

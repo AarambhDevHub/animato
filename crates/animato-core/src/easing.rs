@@ -22,16 +22,18 @@
 //! - `apply(1.0) == 1.0`
 //! - `t` outside `[0.0, 1.0]` is clamped — no panic
 
-use crate::math::{cos, powf, powi, sin, sqrt};
+use crate::math::{ceil, cos, powf, powi, sin, sqrt};
 use core::f32::consts::PI;
 
-/// All 31 classic easing variants plus an escape-hatch `Custom` function pointer.
+/// All 31 classic easing variants, CSS-compatible parameterized variants,
+/// and an escape-hatch `Custom` function pointer.
 ///
 /// # `PartialEq` behaviour
 ///
 /// `Custom(_)` never equals anything (including itself) because function
 /// pointers aren't meaningfully comparable by identity in this context.
-/// All other variants use structural equality.
+/// All other variants use structural equality, including parameter values for
+/// `CubicBezier` and `Steps`.
 ///
 /// # Serialization
 ///
@@ -120,6 +122,19 @@ pub enum Easing {
     /// Bounce ease-in-out.
     EaseInOutBounce,
 
+    // ── CSS-compatible ──────────────────────────────────────────────────────
+    /// CSS-compatible cubic Bezier easing: `(x1, y1, x2, y2)`.
+    ///
+    /// The x control points are clamped to `[0.0, 1.0]` before evaluation,
+    /// matching the valid CSS timing-function domain. The y control points may
+    /// overshoot to support anticipation and bounce-like curves.
+    CubicBezier(f32, f32, f32, f32),
+
+    /// CSS `steps(n, jump-end)` easing.
+    ///
+    /// `0` is treated as `1` step so invalid input remains safe.
+    Steps(u32),
+
     // ── Escape hatch ──────────────────────────────────────────────────────────
     /// Custom function pointer — zero overhead, no allocation.
     ///
@@ -134,11 +149,15 @@ pub enum Easing {
     Custom(fn(f32) -> f32),
 }
 
-// Manual PartialEq: Custom never equals anything; all others use discriminant.
+// Manual PartialEq: Custom never equals anything; parameterized variants compare data.
 impl PartialEq for Easing {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Easing::Custom(_), _) | (_, Easing::Custom(_)) => false,
+            (Easing::CubicBezier(ax1, ay1, ax2, ay2), Easing::CubicBezier(bx1, by1, bx2, by2)) => {
+                ax1 == bx1 && ay1 == by1 && ax2 == bx2 && ay2 == by2
+            }
+            (Easing::Steps(a), Easing::Steps(b)) => a == b,
             _ => core::mem::discriminant(self) == core::mem::discriminant(other),
         }
     }
@@ -199,6 +218,8 @@ impl Easing {
                     Easing::EaseInBounce => ease_in_bounce(t),
                     Easing::EaseOutBounce => ease_out_bounce(t),
                     Easing::EaseInOutBounce => ease_in_out_bounce(t),
+                    Easing::CubicBezier(x1, y1, x2, y2) => cubic_bezier(t, *x1, *y1, *x2, *y2),
+                    Easing::Steps(count) => steps(t, *count),
                     Easing::Custom(_) => unreachable!(),
                 }
             }
@@ -249,6 +270,8 @@ impl Easing {
             Easing::EaseInBounce,
             Easing::EaseOutBounce,
             Easing::EaseInOutBounce,
+            Easing::CubicBezier(0.25, 0.1, 0.25, 1.0),
+            Easing::Steps(1),
         ]
     }
 }
@@ -524,6 +547,82 @@ pub fn ease_in_out_bounce(t: f32) -> f32 {
     }
 }
 
+/// CSS-compatible cubic Bezier easing.
+///
+/// `x1` and `x2` are clamped to `[0.0, 1.0]` because CSS timing functions
+/// require monotonic x control points. `y1` and `y2` are left unconstrained so
+/// curves can overshoot.
+#[inline]
+pub fn cubic_bezier(t: f32, x1: f32, y1: f32, x2: f32, y2: f32) -> f32 {
+    let t = t.clamp(0.0, 1.0);
+    if t == 0.0 || t == 1.0 {
+        return t;
+    }
+
+    let x1 = x1.clamp(0.0, 1.0);
+    let x2 = x2.clamp(0.0, 1.0);
+    let mut u = t;
+
+    for _ in 0..6 {
+        let x = sample_cubic(x1, x2, u) - t;
+        if x.abs() < 1e-6 {
+            return sample_cubic(y1, y2, u);
+        }
+        let derivative = sample_cubic_derivative(x1, x2, u);
+        if derivative.abs() < 1e-6 {
+            break;
+        }
+        u = (u - x / derivative).clamp(0.0, 1.0);
+    }
+
+    let mut low = 0.0;
+    let mut high = 1.0;
+    u = t;
+    for _ in 0..10 {
+        let x = sample_cubic(x1, x2, u);
+        if (x - t).abs() < 1e-6 {
+            break;
+        }
+        if x < t {
+            low = u;
+        } else {
+            high = u;
+        }
+        u = (low + high) * 0.5;
+    }
+
+    sample_cubic(y1, y2, u)
+}
+
+/// CSS `steps(n, jump-end)` easing.
+///
+/// `count = 0` is treated as one step.
+#[inline]
+pub fn steps(t: f32, count: u32) -> f32 {
+    let t = t.clamp(0.0, 1.0);
+    if t == 0.0 {
+        return 0.0;
+    }
+    let count = count.max(1) as f32;
+    (ceil(t * count) / count).clamp(0.0, 1.0)
+}
+
+#[inline]
+fn sample_cubic(a1: f32, a2: f32, t: f32) -> f32 {
+    let c = 3.0 * a1;
+    let b = 3.0 * (a2 - a1) - c;
+    let a = 1.0 - c - b;
+    ((a * t + b) * t + c) * t
+}
+
+#[inline]
+fn sample_cubic_derivative(a1: f32, a2: f32, t: f32) -> f32 {
+    let c = 3.0 * a1;
+    let b = 3.0 * (a2 - a1) - c;
+    let a = 1.0 - c - b;
+    (3.0 * a * t + 2.0 * b) * t + c
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // Tests
 // ──────────────────────────────────────────────────────────────────────────────
@@ -594,7 +693,13 @@ mod tests {
     fn named_equality() {
         assert_eq!(Easing::Linear, Easing::Linear);
         assert_eq!(Easing::EaseOutCubic, Easing::EaseOutCubic);
+        assert_eq!(
+            Easing::CubicBezier(0.25, 0.1, 0.25, 1.0),
+            Easing::CubicBezier(0.25, 0.1, 0.25, 1.0)
+        );
+        assert_eq!(Easing::Steps(4), Easing::Steps(4));
         assert_ne!(Easing::EaseInQuad, Easing::EaseOutQuad);
+        assert_ne!(Easing::Steps(3), Easing::Steps(4));
     }
 
     /// Free functions match Easing::apply output.
@@ -646,9 +751,52 @@ mod tests {
         }
     }
 
-    /// all_named() has exactly 31 entries.
+    #[test]
+    fn cubic_bezier_linear_control_points_are_identity() {
+        let easing = Easing::CubicBezier(0.0, 0.0, 1.0, 1.0);
+        for t in [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0] {
+            assert!(
+                approx_eq(easing.apply(t), t),
+                "linear cubic-bezier at t={} was {}",
+                t,
+                easing.apply(t)
+            );
+        }
+    }
+
+    #[test]
+    fn cubic_bezier_css_ease_shape_is_frontloaded() {
+        let ease = Easing::CubicBezier(0.25, 0.1, 0.25, 1.0);
+        assert_eq!(ease.apply(0.0), 0.0);
+        assert_eq!(ease.apply(1.0), 1.0);
+        assert!(ease.apply(0.5) > 0.5);
+    }
+
+    #[test]
+    fn cubic_bezier_clamps_invalid_x_control_points() {
+        let invalid = Easing::CubicBezier(-2.0, 0.0, 4.0, 1.0);
+        let clamped = Easing::CubicBezier(0.0, 0.0, 1.0, 1.0);
+        assert!(approx_eq(invalid.apply(0.5), clamped.apply(0.5)));
+    }
+
+    #[test]
+    fn steps_jump_end_behavior() {
+        let easing = Easing::Steps(4);
+        assert_eq!(easing.apply(0.0), 0.0);
+        assert_eq!(easing.apply(0.01), 0.25);
+        assert_eq!(easing.apply(0.25), 0.25);
+        assert_eq!(easing.apply(0.26), 0.5);
+        assert_eq!(easing.apply(1.0), 1.0);
+    }
+
+    #[test]
+    fn steps_zero_count_is_one_step() {
+        assert_eq!(Easing::Steps(0).apply(0.5), 1.0);
+    }
+
+    /// all_named() has exactly 33 entries.
     #[test]
     fn all_named_count() {
-        assert_eq!(Easing::all_named().len(), 31);
+        assert_eq!(Easing::all_named().len(), 33);
     }
 }

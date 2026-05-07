@@ -25,7 +25,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 |---------|------|-------|--------|
 | `v0.1.0` | Foundation | Core traits, easing, tween, spring, driver | ✅ |
 | `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | ✅ |
-| `v0.3.0` | Control | Time scale, callbacks, advanced easing | 📋 |
+| `v0.3.0` | Control | Time scale, callbacks, advanced easing | ✅ |
 | `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | 📋 |
 | `v0.5.0` | Physics | Inertia, drag, gesture recognition | 📋 |
 | `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | 📋 |
@@ -174,19 +174,21 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 ### Deliverables
 
 **`animato-timeline`**
-- [ ] Callbacks (`std` feature): `.on_entry_complete(label, f)`, `.on_complete(f)`
-- [ ] `tokio` feature: `.wait().await` resolves when timeline completes
-- [ ] Time scale on `Timeline` (`.time_scale(f32)`)
+- [x] Callbacks (`std` feature): `.on_entry_complete(label, f)`, `.on_complete(f)`
+- [x] `tokio` feature: `.wait().await` resolves when timeline completes
+- [x] Time scale on `Timeline` (`.time_scale(f32)`, `.set_time_scale(f32)`)
 
 **`animato-core`**
-- [ ] `CubicBezier(f32, f32, f32, f32)` easing variant (CSS-compatible)
-- [ ] `Steps(u32)` easing variant
-- [ ] Tests for new easing variants
+- [x] `CubicBezier(f32, f32, f32, f32)` easing variant (CSS-compatible)
+- [x] `Steps(u32)` easing variant
+- [x] Tests for new easing variants
+
+Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 **`animato` facade**
-- [ ] `serde` feature exports `Serialize`/`Deserialize` on core types
-- [ ] `tokio` feature passes through to `animato-timeline`
-- [ ] `examples/keyframe_track.rs` with looping + PingPong demo
+- [x] `serde` feature exports `Serialize`/`Deserialize` on supported concrete core types
+- [x] `tokio` feature passes through to `animato-timeline`
+- [x] `examples/keyframe_track.rs` with looping + PingPong demo
 
 ---
 
@@ -464,10 +466,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.3.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.4.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.2.0 — last updated May 2026*  
-*v0.2.0 shipped — next milestone: v0.3.0 — Control*  
+*Roadmap version: 0.3.0 — last updated May 2026*  
+*v0.3.0 shipped — next milestone: v0.4.0 — Paths*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

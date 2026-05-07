@@ -243,7 +243,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.1.0"
+version      = "0.3.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -252,15 +252,11 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.1" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.1" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.1" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.1" }
-animato-path     = { path = "crates/animato-path",     version = "0.1" }
-animato-physics  = { path = "crates/animato-physics",  version = "0.1" }
-animato-color    = { path = "crates/animato-color",    version = "0.1" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.1" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "0.1" }
+animato-core     = { path = "crates/animato-core",     version = "0.3" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.3" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.3" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.3" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.3" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -335,7 +331,7 @@ pub trait Playable: Update + core::any::Any {
 
 #### `src/easing.rs`
 
-All 43 easing functions exposed as:
+All 33 shipped easing variants are exposed as:
 1. `Easing` enum with `.apply(t: f32) -> f32` — storable, passable, optionally serializable
 2. Free `#[inline] pub fn ease_out_cubic(t: f32) -> f32` — zero-overhead direct calls
 
@@ -373,7 +369,7 @@ pub enum Easing {
     CubicBezier(f32, f32, f32, f32),   // (x1, y1, x2, y2)
     Steps(u32),                        // CSS steps()
 
-    // Advanced parameterized
+    // Advanced parameterized (planned for v0.8.0)
     RoughEase { strength: f32, points: u32 },
     SlowMo { linear_ratio: f32, power: f32 },
     Wiggle { wiggles: u32 },
@@ -1286,7 +1282,7 @@ tests/
 
 ```
 benches/
-├── easing_bench.rs            — all 43 easing variants via criterion
+├── easing_bench.rs            — all shipped easing variants via criterion
 ├── tween_update_bench.rs      — update() throughput, 1 and 10,000 tweens
 └── spring_bench.rs            — spring settle time across all presets
 ```
@@ -1447,9 +1443,9 @@ fn on_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.1", default-features = false }
-animato-tween = { version = "0.1", default-features = false }
-animato-spring = { version = "0.1", default-features = false }
+animato-core  = { version = "0.3", default-features = false }
+animato-tween = { version = "0.3", default-features = false }
+animato-spring = { version = "0.3", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, all `Interpolate` blanket impls.
@@ -1556,5 +1552,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.2.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.3.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

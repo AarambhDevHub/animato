@@ -5,6 +5,7 @@ use animato_core::Update;
 
 /// Integration method for the spring ODE.
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum Integrator {
     /// Semi-implicit Euler — fast, stable, default choice for animation.
     SemiImplicitEuler,
@@ -31,6 +32,7 @@ pub enum Integrator {
 /// assert!((s.position() - 100.0).abs() < 0.01);
 /// ```
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Spring {
     /// The spring configuration (stiffness, damping, mass, epsilon).
     pub config: SpringConfig,

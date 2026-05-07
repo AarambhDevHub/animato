@@ -10,7 +10,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.2.0"
+version      = "0.3.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 readme       = "README.md"
@@ -20,13 +20,14 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 # Internal crates — path + version pinned to workspace
-animato-core   = { path = "crates/animato-core",   version = "0.2" }
-animato-tween  = { path = "crates/animato-tween",  version = "0.2" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.2" }
-animato-spring = { path = "crates/animato-spring", version = "0.2" }
-animato-driver = { path = "crates/animato-driver", version = "0.2" }
+animato-core   = { path = "crates/animato-core",   version = "0.3" }
+animato-tween  = { path = "crates/animato-tween",  version = "0.3" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.3" }
+animato-spring = { path = "crates/animato-spring", version = "0.3" }
+animato-driver = { path = "crates/animato-driver", version = "0.3" }
 
 # External crates — shared version pins
 serde     = { version = "1",   features = ["derive"] }
+tokio     = { version = "1",   features = ["sync"] }
 approx    = { version = "0.5" }
 criterion = { version = "0.5", features = ["html_reports"] }

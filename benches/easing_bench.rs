@@ -1,4 +1,4 @@
-//! Benchmark: all 31 named easing variants via Criterion.
+//! Benchmark: all 33 named/representative easing variants via Criterion.
 //!
 //! Run with: `cargo bench --bench easing_bench`
 
@@ -51,6 +51,24 @@ fn bench_free_functions(c: &mut Criterion) {
     bench_fn!(ease_out_elastic);
     bench_fn!(ease_out_back);
     bench_fn!(ease_in_out_sine);
+    group.bench_function("cubic_bezier_css_ease", |b| {
+        b.iter(|| {
+            let mut s = 0.0_f32;
+            for i in 0..=100 {
+                s += cubic_bezier(black_box(i as f32 / 100.0), 0.25, 0.1, 0.25, 1.0);
+            }
+            black_box(s)
+        })
+    });
+    group.bench_function("steps_4", |b| {
+        b.iter(|| {
+            let mut s = 0.0_f32;
+            for i in 0..=100 {
+                s += steps(black_box(i as f32 / 100.0), 4);
+            }
+            black_box(s)
+        })
+    });
 
     group.finish();
 }

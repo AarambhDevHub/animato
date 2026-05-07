@@ -15,8 +15,10 @@ categories  = ["game-development", "graphics"]
 default = ["std"]
 std     = ["animato-core/std", "animato-tween/std"]
 serde   = ["dep:serde", "animato-core/serde", "animato-tween/serde"]
+tokio   = ["std", "dep:tokio"]
 
 [dependencies]
 animato-core  = { workspace = true }
 animato-tween = { workspace = true }
 serde         = { workspace = true, optional = true }
+tokio         = { workspace = true, optional = true }
