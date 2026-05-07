@@ -6,7 +6,7 @@
 [![Docs.rs](https://docs.rs/animato/badge.svg)](https://docs.rs/animato)
 [![CI](https://github.com/AarambhDevHub/animato/actions/workflows/ci.yml/badge.svg)](https://github.com/AarambhDevHub/animato/actions)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](#license)
-![v0.3.0](https://img.shields.io/badge/v0.3.0-Control%20shipped-brightgreen)
+[![Version](https://img.shields.io/crates/v/animato.svg)](https://crates.io/crates/animato)
 
 A professional-grade, renderer-agnostic animation library for Rust.
 
@@ -35,7 +35,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
 | [`animato-core`](./crates/animato-core) | Traits (`Interpolate`, `Animatable`, `Update`, `Playable`) + 33 easing variants | yes |
-| [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState`, `TweenBuilder` | partial |
+| [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState`, `TweenBuilder` | alloc |
 | [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, callbacks, time scale, async wait | alloc |
 | [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
@@ -281,7 +281,8 @@ fn main() {
 
 fn spawn_animated(mut commands: Commands) {
     commands.spawn((
-        SpriteBundle::default(),
+        Sprite::default(),
+        Transform::default(),
         Tween::new([0.0_f32, 0.0], [300.0, 0.0])
             .duration(1.0)
             .easing(Easing::EaseOutBack)
