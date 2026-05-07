@@ -1,13 +1,14 @@
 //! Multi-dimensional [`SpringN<T>`] using one [`Spring`] per component of `T`.
 
-use alloc::vec::Vec;
-use core::marker::PhantomData;
-use motus_core::Update;
 use crate::config::SpringConfig;
 use crate::decompose::Decompose;
 use crate::spring::Spring;
+use alloc::vec::Vec;
+use core::marker::PhantomData;
+use motus_core::Update;
 
-/// A multi-dimensional spring that animates any [`Decompose`]-able type.
+/// A multi-dimensional spring that animates any type that can be decomposed
+/// into independent `f32` components (see the sealed `Decompose` trait).
 ///
 /// Internally holds one [`Spring`] per component of `T` and reconstructs
 /// the full value each frame.
@@ -53,7 +54,10 @@ impl<T: Decompose> SpringN<T> {
             })
             .collect();
 
-        Self { components, _marker: PhantomData }
+        Self {
+            components,
+            _marker: PhantomData,
+        }
     }
 
     /// Set the target for all component springs simultaneously.
@@ -91,7 +95,9 @@ impl<T: Decompose> SpringN<T> {
 
 impl<T: Decompose> Update for SpringN<T> {
     fn update(&mut self, dt: f32) -> bool {
-        if self.is_settled() { return false; }
+        if self.is_settled() {
+            return false;
+        }
         for s in self.components.iter_mut() {
             s.update(dt);
         }
@@ -111,7 +117,9 @@ mod tests {
 
     fn settle<T: Decompose>(spring: &mut SpringN<T>) {
         for _ in 0..10_000 {
-            if !spring.update(DT) { break; }
+            if !spring.update(DT) {
+                break;
+            }
         }
         assert!(spring.is_settled(), "SpringN did not settle");
     }

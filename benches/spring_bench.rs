@@ -2,9 +2,9 @@
 //!
 //! Run with: `cargo bench --bench spring_bench`
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use motus_spring::{Spring, SpringConfig};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use motus_core::Update;
+use motus_spring::{Spring, SpringConfig};
 
 const DT: f32 = 1.0 / 60.0;
 
@@ -22,19 +22,17 @@ fn bench_settle_all_presets(c: &mut Criterion) {
     let mut group = c.benchmark_group("spring/settle");
 
     let presets: &[(&str, fn() -> SpringConfig)] = &[
-        ("gentle",  SpringConfig::gentle),
-        ("wobbly",  SpringConfig::wobbly),
-        ("stiff",   SpringConfig::stiff),
-        ("slow",    SpringConfig::slow),
-        ("snappy",  SpringConfig::snappy),
+        ("gentle", SpringConfig::gentle),
+        ("wobbly", SpringConfig::wobbly),
+        ("stiff", SpringConfig::stiff),
+        ("slow", SpringConfig::slow),
+        ("snappy", SpringConfig::snappy),
     ];
 
     for (name, make) in presets {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(name),
-            name,
-            |b, _| b.iter(|| black_box(settle(make()))),
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(name), name, |b, _| {
+            b.iter(|| black_box(settle(make())))
+        });
     }
     group.finish();
 }
@@ -44,7 +42,7 @@ fn bench_single_step(c: &mut Criterion) {
 
     let configs: &[(&str, SpringConfig)] = &[
         ("euler_default", SpringConfig::default()),
-        ("rk4_default",   SpringConfig::default()),
+        ("rk4_default", SpringConfig::default()),
     ];
 
     for (name, config) in configs {
@@ -54,9 +52,14 @@ fn bench_single_step(c: &mut Criterion) {
             &(config.clone(), use_rk4),
             |b, (cfg, rk4)| {
                 let mut s = Spring::new(cfg.clone());
-                if *rk4 { s = s.use_rk4(true); }
+                if *rk4 {
+                    s = s.use_rk4(true);
+                }
                 s.set_target(100.0);
-                b.iter(|| { s.update(black_box(DT)); black_box(s.position()) });
+                b.iter(|| {
+                    s.update(black_box(DT));
+                    black_box(s.position())
+                });
             },
         );
     }

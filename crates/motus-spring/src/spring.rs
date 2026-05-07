@@ -1,7 +1,7 @@
 //! 1D [`Spring`] — damped harmonic oscillator.
 
-use motus_core::Update;
 use crate::config::SpringConfig;
+use motus_core::Update;
 
 /// Integration method for the spring ODE.
 #[derive(Clone, Debug, PartialEq)]
@@ -169,7 +169,11 @@ mod tests {
         while !spring.is_settled() {
             spring.update(DT);
             steps += 1;
-            assert!(steps < MAX_STEPS, "Spring did not settle within {} steps", MAX_STEPS);
+            assert!(
+                steps < MAX_STEPS,
+                "Spring did not settle within {} steps",
+                MAX_STEPS
+            );
         }
         steps
     }
@@ -224,12 +228,22 @@ mod tests {
         slow.set_target(100.0);
         let slow_steps = run_to_settle(&mut slow);
 
-        assert!(fast_steps < slow_steps, "snappy={} slow={}", fast_steps, slow_steps);
+        assert!(
+            fast_steps < slow_steps,
+            "snappy={} slow={}",
+            fast_steps,
+            slow_steps
+        );
     }
 
     #[test]
     fn zero_damping_oscillates() {
-        let cfg = SpringConfig { stiffness: 100.0, damping: 0.0, mass: 1.0, epsilon: 0.001 };
+        let cfg = SpringConfig {
+            stiffness: 100.0,
+            damping: 0.0,
+            mass: 1.0,
+            epsilon: 0.001,
+        };
         let mut s = Spring::new(cfg);
         s.set_target(1.0);
         // Run 10,000 steps — should never settle with zero damping
@@ -259,7 +273,10 @@ mod tests {
 
     #[test]
     fn zero_stiffness_snaps_immediately() {
-        let cfg = SpringConfig { stiffness: 0.0, ..SpringConfig::default() };
+        let cfg = SpringConfig {
+            stiffness: 0.0,
+            ..SpringConfig::default()
+        };
         let mut s = Spring::new(cfg);
         s.set_target(42.0);
         s.update(DT);

@@ -45,7 +45,9 @@ pub struct WallClock {
 impl WallClock {
     /// Create a new `WallClock` set to the current instant.
     pub fn new() -> Self {
-        Self { last: std::time::Instant::now() }
+        Self {
+            last: std::time::Instant::now(),
+        }
     }
 }
 
@@ -138,7 +140,9 @@ pub struct MockClock {
 impl MockClock {
     /// Create a `MockClock` that always returns `step_seconds` from [`delta`](Clock::delta).
     pub fn new(step_seconds: f32) -> Self {
-        Self { step: step_seconds.max(0.0) }
+        Self {
+            step: step_seconds.max(0.0),
+        }
     }
 }
 

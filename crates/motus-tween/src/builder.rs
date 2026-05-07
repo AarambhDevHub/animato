@@ -1,8 +1,8 @@
 //! Builder for [`Tween<T>`].
 
-use motus_core::{Animatable, Easing};
 use crate::loop_mode::Loop;
 use crate::tween::Tween;
+use motus_core::{Animatable, Easing};
 
 /// Consuming builder for [`Tween<T>`].
 ///
@@ -23,13 +23,13 @@ use crate::tween::Tween;
 ///     .build();
 /// ```
 pub struct TweenBuilder<T: Animatable> {
-    start:      T,
-    end:        T,
-    duration:   f32,
-    easing:     Easing,
-    delay:      f32,
+    start: T,
+    end: T,
+    duration: f32,
+    easing: Easing,
+    delay: f32,
     time_scale: f32,
-    looping:    Loop,
+    looping: Loop,
 }
 
 impl<T: Animatable + core::fmt::Debug> core::fmt::Debug for TweenBuilder<T> {

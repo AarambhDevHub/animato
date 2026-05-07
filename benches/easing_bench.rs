@@ -2,7 +2,7 @@
 //!
 //! Run with: `cargo bench --bench easing_bench`
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use motus_core::Easing;
 
 fn bench_all_named(c: &mut Criterion) {
@@ -10,21 +10,17 @@ fn bench_all_named(c: &mut Criterion) {
 
     for easing in Easing::all_named() {
         let label = format!("{:?}", easing);
-        group.bench_with_input(
-            BenchmarkId::new("apply", &label),
-            easing,
-            |b, e| {
-                b.iter(|| {
-                    // Sweep 100 t values across [0, 1]
-                    let mut sum = 0.0_f32;
-                    for i in 0..=100 {
-                        let t = i as f32 / 100.0;
-                        sum += e.apply(black_box(t));
-                    }
-                    black_box(sum)
-                })
-            },
-        );
+        group.bench_with_input(BenchmarkId::new("apply", &label), easing, |b, e| {
+            b.iter(|| {
+                // Sweep 100 t values across [0, 1]
+                let mut sum = 0.0_f32;
+                for i in 0..=100 {
+                    let t = i as f32 / 100.0;
+                    sum += e.apply(black_box(t));
+                }
+                black_box(sum)
+            })
+        });
     }
     group.finish();
 }

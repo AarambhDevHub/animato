@@ -38,8 +38,10 @@
 #![deny(missing_debug_implementations)]
 
 pub mod easing;
+/// Internal math shim — `no_std`/`std` portable math functions.
+#[doc(hidden)]
+pub mod math;
 pub mod traits;
-pub(crate) mod math;
 
 // Flatten the most important items to the crate root for convenience.
 pub use easing::Easing;

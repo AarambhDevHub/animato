@@ -1,8 +1,8 @@
 //! Integration test: AnimationDriver lifecycle.
 
+use motus_core::Easing;
 use motus_driver::{AnimationDriver, Clock, MockClock};
 use motus_tween::Tween;
-use motus_core::Easing;
 
 const DT: f32 = 1.0 / 60.0;
 
@@ -141,14 +141,7 @@ fn multiple_easings_all_complete() {
     let ids: Vec<_> = easings
         .iter()
         .cloned()
-        .map(|e| {
-            driver.add(
-                Tween::new(0.0_f32, 100.0)
-                    .duration(1.0)
-                    .easing(e)
-                    .build(),
-            )
-        })
+        .map(|e| driver.add(Tween::new(0.0_f32, 100.0).duration(1.0).easing(e).build()))
         .collect();
 
     driver.tick(2.0); // all should be done

@@ -2,9 +2,9 @@
 //!
 //! Run with: `cargo bench --bench tween_update_bench`
 
-use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use motus_tween::Tween;
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use motus_core::{Easing, Update};
+use motus_tween::Tween;
 
 const DT: f32 = 1.0 / 60.0;
 
@@ -29,21 +29,17 @@ fn bench_n_tweens(c: &mut Criterion) {
     let mut group = c.benchmark_group("tween/update/n");
 
     for &n in &[100_usize, 1_000, 10_000] {
-        group.bench_with_input(
-            BenchmarkId::from_parameter(n),
-            &n,
-            |b, &n| {
-                let mut tweens: Vec<Tween<f32>> = (0..n).map(|_| make_tween()).collect();
-                b.iter(|| {
-                    let mut sum = 0.0_f32;
-                    for t in tweens.iter_mut() {
-                        t.update(black_box(DT));
-                        sum += t.value();
-                    }
-                    black_box(sum)
-                });
-            },
-        );
+        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+            let mut tweens: Vec<Tween<f32>> = (0..n).map(|_| make_tween()).collect();
+            b.iter(|| {
+                let mut sum = 0.0_f32;
+                for t in tweens.iter_mut() {
+                    t.update(black_box(DT));
+                    sum += t.value();
+                }
+                black_box(sum)
+            });
+        });
     }
     group.finish();
 }

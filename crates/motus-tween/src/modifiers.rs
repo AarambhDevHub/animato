@@ -1,5 +1,7 @@
 //! Value modifier free functions for post-processing tween output.
 
+use motus_core::math::{powi, round};
+
 /// Snap a value to the nearest multiple of `grid`.
 ///
 /// # Example
@@ -14,7 +16,7 @@ pub fn snap_to(value: f32, grid: f32) -> f32 {
     if grid == 0.0 {
         return value;
     }
-    (value / grid).round() * grid
+    round(value / grid) * grid
 }
 
 /// Round a value to a given number of decimal places.
@@ -27,8 +29,8 @@ pub fn snap_to(value: f32, grid: f32) -> f32 {
 /// ```
 #[inline]
 pub fn round_to(value: f32, decimals: u32) -> f32 {
-    let factor = 10_f32.powi(decimals as i32);
-    (value * factor).round() / factor
+    let factor = powi(10.0_f32, decimals as i32);
+    round(value * factor) / factor
 }
 
 #[cfg(test)]
@@ -39,8 +41,8 @@ mod tests {
     fn snap_to_grid() {
         assert_eq!(snap_to(13.4, 5.0), 15.0);
         assert_eq!(snap_to(12.0, 5.0), 10.0);
-        assert_eq!(snap_to(7.5,  5.0), 10.0);
-        assert_eq!(snap_to(0.0,  5.0),  0.0);
+        assert_eq!(snap_to(7.5, 5.0), 10.0);
+        assert_eq!(snap_to(0.0, 5.0), 0.0);
     }
 
     #[test]
@@ -52,6 +54,6 @@ mod tests {
     fn round_to_decimals() {
         assert_eq!(round_to(3.14159, 2), 3.14);
         assert_eq!(round_to(3.14159, 0), 3.0);
-        assert_eq!(round_to(3.145,   2), 3.15);
+        assert_eq!(round_to(3.145, 2), 3.15);
     }
 }

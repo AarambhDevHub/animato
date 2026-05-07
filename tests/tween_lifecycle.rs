@@ -1,8 +1,8 @@
 //! Integration test: full tween lifecycle using MockClock.
 
-use motus_tween::{Loop, Tween, TweenState};
 use motus_core::{Easing, Update};
 use motus_driver::{Clock, MockClock};
+use motus_tween::{Loop, Tween, TweenState};
 
 const DT: f32 = 1.0 / 60.0;
 
@@ -64,7 +64,10 @@ fn value_is_end_after_completion() {
 
 #[test]
 fn loop_once_completes() {
-    let mut t = Tween::new(0.0_f32, 1.0).duration(1.0).looping(Loop::Once).build();
+    let mut t = Tween::new(0.0_f32, 1.0)
+        .duration(1.0)
+        .looping(Loop::Once)
+        .build();
     tick_n(&mut t, 120);
     assert!(t.is_complete());
 }
@@ -154,7 +157,11 @@ fn reverse_plays_backward() {
         .build();
     // Advance 30% forward: value ≈ 30
     t.update(0.3);
-    assert!((t.value() - 30.0).abs() < 1.0, "before reverse: value={}", t.value());
+    assert!(
+        (t.value() - 30.0).abs() < 1.0,
+        "before reverse: value={}",
+        t.value()
+    );
     // Reverse mid-animation: elapsed mirrors to 70% of backward journey
     // Visual position is preserved — still ≈ 30
     t.reverse();
@@ -196,7 +203,10 @@ fn resumed_tween_continues() {
     tick_n(&mut t, 30);
     t.resume();
     tick_n(&mut t, 30);
-    assert!(t.value() > v_paused, "resumed tween must advance past pause point");
+    assert!(
+        t.value() > v_paused,
+        "resumed tween must advance past pause point"
+    );
 }
 
 // ── Large dt safety ───────────────────────────────────────────────────────────

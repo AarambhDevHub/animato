@@ -50,26 +50,51 @@ impl Default for SpringConfig {
 impl SpringConfig {
     /// Slow, soft spring — good for subtle UI elements.
     pub fn gentle() -> Self {
-        Self { stiffness: 60.0, damping: 14.0, mass: 1.0, epsilon: 0.001 }
+        Self {
+            stiffness: 60.0,
+            damping: 14.0,
+            mass: 1.0,
+            epsilon: 0.001,
+        }
     }
 
     /// Bouncy, playful spring — great for icons and interactive elements.
     pub fn wobbly() -> Self {
-        Self { stiffness: 180.0, damping: 12.0, mass: 1.0, epsilon: 0.001 }
+        Self {
+            stiffness: 180.0,
+            damping: 12.0,
+            mass: 1.0,
+            epsilon: 0.001,
+        }
     }
 
     /// Fast, firm spring — good for panels and drawers.
     pub fn stiff() -> Self {
-        Self { stiffness: 210.0, damping: 20.0, mass: 1.0, epsilon: 0.001 }
+        Self {
+            stiffness: 210.0,
+            damping: 20.0,
+            mass: 1.0,
+            epsilon: 0.001,
+        }
     }
 
     /// Very slow, lazy spring — good for background animations.
     pub fn slow() -> Self {
-        Self { stiffness: 37.0, damping: 14.0, mass: 1.0, epsilon: 0.001 }
+        Self {
+            stiffness: 37.0,
+            damping: 14.0,
+            mass: 1.0,
+            epsilon: 0.001,
+        }
     }
 
     /// Near-instant response — for time-critical feedback.
     pub fn snappy() -> Self {
-        Self { stiffness: 300.0, damping: 30.0, mass: 1.0, epsilon: 0.001 }
+        Self {
+            stiffness: 300.0,
+            damping: 30.0,
+            mass: 1.0,
+            epsilon: 0.001,
+        }
     }
 }

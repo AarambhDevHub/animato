@@ -16,7 +16,10 @@ struct Slot {
 
 impl std::fmt::Debug for Slot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Slot").field("id", &self.id).field("remove", &self.remove).finish()
+        f.debug_struct("Slot")
+            .field("id", &self.id)
+            .field("remove", &self.remove)
+            .finish()
     }
 }
 
@@ -52,7 +55,10 @@ pub struct AnimationDriver {
 impl AnimationDriver {
     /// Create a new, empty driver.
     pub fn new() -> Self {
-        Self { slots: Vec::new(), next_id: 0 }
+        Self {
+            slots: Vec::new(),
+            next_id: 0,
+        }
     }
 
     /// Register an animation and return its [`AnimationId`].
@@ -76,7 +82,9 @@ impl AnimationDriver {
     /// at the end of the tick — no allocation during the tick itself.
     pub fn tick(&mut self, dt: f32) {
         for slot in self.slots.iter_mut() {
-            if slot.remove { continue; }
+            if slot.remove {
+                continue;
+            }
             let still_running = slot.animation.update(dt);
             if !still_running {
                 slot.remove = true;
@@ -117,8 +125,8 @@ impl AnimationDriver {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use motus_tween::Tween;
     use motus_core::Easing;
+    use motus_tween::Tween;
 
     #[test]
     fn auto_removes_completed() {
@@ -180,7 +188,10 @@ mod tests {
         let mut driver = AnimationDriver::new();
         let slow = driver.add(Tween::new(0.0_f32, 1.0).duration(2.0).build());
         let fast = driver.add(
-            Tween::new(0.0_f32, 1.0).duration(0.5).easing(Easing::Linear).build(),
+            Tween::new(0.0_f32, 1.0)
+                .duration(0.5)
+                .easing(Easing::Linear)
+                .build(),
         );
 
         driver.tick(1.0); // fast completes, slow still running

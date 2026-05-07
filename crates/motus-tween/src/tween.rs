@@ -1,7 +1,7 @@
 //! Core [`Tween<T>`] type and [`TweenState`] enum.
 
-use motus_core::{Animatable, Easing, Update};
 use crate::loop_mode::Loop;
+use motus_core::{Animatable, Easing, Update};
 
 /// The current execution state of a [`Tween`].
 #[derive(Clone, Debug, PartialEq)]
@@ -332,10 +332,7 @@ mod tests {
 
     #[test]
     fn delay_holds_at_start() {
-        let mut t = Tween::new(0.0_f32, 100.0)
-            .duration(1.0)
-            .delay(0.5)
-            .build();
+        let mut t = Tween::new(0.0_f32, 100.0).duration(1.0).delay(0.5).build();
         t.update(0.25); // still in delay
         assert_eq!(t.value(), 0.0);
         assert_eq!(t.state(), &TweenState::Idle);
@@ -343,10 +340,7 @@ mod tests {
 
     #[test]
     fn delay_transitions_to_running() {
-        let mut t = Tween::new(0.0_f32, 100.0)
-            .duration(1.0)
-            .delay(0.5)
-            .build();
+        let mut t = Tween::new(0.0_f32, 100.0).duration(1.0).delay(0.5).build();
         t.update(0.5); // exactly at delay end → now Running
         assert_eq!(t.state(), &TweenState::Running);
     }
@@ -377,8 +371,12 @@ mod tests {
         // Reverse: visual position preserved, now animating toward 0
         t.reverse();
         // Immediately after reverse, same visual position
-        assert!((t.value() - before).abs() < 1.0,
-            "visual position should be preserved: before={} after={}", before, t.value());
+        assert!(
+            (t.value() - before).abs() < 1.0,
+            "visual position should be preserved: before={} after={}",
+            before,
+            t.value()
+        );
         // One more step: value should decrease
         t.update(0.1);
         assert!(t.value() < before, "value should decrease after reverse");
@@ -403,7 +401,11 @@ mod tests {
         let v_paused = t.value();
         t.resume();
         t.update(0.5); // should advance
-        assert!(t.value() > v_paused, "resumed tween must advance past v_paused={}", v_paused);
+        assert!(
+            t.value() > v_paused,
+            "resumed tween must advance past v_paused={}",
+            v_paused
+        );
     }
 
     #[test]
@@ -446,10 +448,7 @@ mod tests {
 
     #[test]
     fn reset_returns_to_idle_with_delay() {
-        let mut t = Tween::new(0.0_f32, 1.0)
-            .duration(1.0)
-            .delay(0.5)
-            .build();
+        let mut t = Tween::new(0.0_f32, 1.0).duration(1.0).delay(0.5).build();
         t.update(2.0); // complete
         t.reset();
         assert_eq!(t.state(), &TweenState::Idle);

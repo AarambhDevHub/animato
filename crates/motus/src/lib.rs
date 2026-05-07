@@ -85,7 +85,7 @@ pub mod easing {
 
 // ── Tween ────────────────────────────────────────────────────────────────────
 #[cfg(feature = "tween")]
-pub use motus_tween::{snap_to, round_to, Loop, Tween, TweenBuilder, TweenState};
+pub use motus_tween::{Loop, Tween, TweenBuilder, TweenState, round_to, snap_to};
 
 // ── Spring ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "spring")]

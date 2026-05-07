@@ -63,9 +63,9 @@ impl<T: Interpolate + Clone + 'static> Animatable for T {}
 
 /// A value that advances through time.
 ///
-/// Implemented by [`Tween`](motus_tween::Tween), `Spring`, `SpringN`,
+/// Implemented by `Tween<T>`, `Spring`, `SpringN<T>`,
 /// `Timeline`, and any user-defined animation type.
-/// The [`AnimationDriver`](motus_driver::AnimationDriver) calls this each frame.
+/// The `AnimationDriver` (see `motus-driver`) calls this each frame.
 ///
 /// # Contract
 ///
@@ -255,10 +255,14 @@ mod tests {
     // --- Update trait contract ---
     #[test]
     fn update_returns_false_when_done() {
-        struct OneShot { done: bool }
+        struct OneShot {
+            done: bool,
+        }
         impl Update for OneShot {
             fn update(&mut self, _dt: f32) -> bool {
-                if self.done { return false; }
+                if self.done {
+                    return false;
+                }
                 self.done = true;
                 false
             }

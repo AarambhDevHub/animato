@@ -30,8 +30,10 @@ fn render_position(position: f32, target: f32, range: f32) {
 
 fn run_preset(label: &str, config: SpringConfig, target: f32) {
     println!("  ┌─ {label}");
-    println!("  │  stiffness={:.0}  damping={:.0}  mass={:.1}",
-        config.stiffness, config.damping, config.mass);
+    println!(
+        "  │  stiffness={:.0}  damping={:.0}  mass={:.1}",
+        config.stiffness, config.damping, config.mass
+    );
     print!("  │  ");
 
     let mut spring = Spring::new(config);
@@ -48,8 +50,10 @@ fn run_preset(label: &str, config: SpringConfig, target: f32) {
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
 
-    println!("\n  └─ Settled in ~{frames} frames  final={:.4}\n",
-        spring.position());
+    println!(
+        "\n  └─ Settled in ~{frames} frames  final={:.4}\n",
+        spring.position()
+    );
 }
 
 fn main() {
@@ -58,11 +62,11 @@ fn main() {
 
     let target = 100.0_f32;
 
-    run_preset("gentle  (slow, soft)",      SpringConfig::gentle(),  target);
-    run_preset("wobbly  (bouncy, playful)", SpringConfig::wobbly(),  target);
-    run_preset("stiff   (fast, firm)",      SpringConfig::stiff(),   target);
-    run_preset("slow    (very lazy)",       SpringConfig::slow(),    target);
-    run_preset("snappy  (near-instant)",    SpringConfig::snappy(),  target);
+    run_preset("gentle  (slow, soft)", SpringConfig::gentle(), target);
+    run_preset("wobbly  (bouncy, playful)", SpringConfig::wobbly(), target);
+    run_preset("stiff   (fast, firm)", SpringConfig::stiff(), target);
+    run_preset("slow    (very lazy)", SpringConfig::slow(), target);
+    run_preset("snappy  (near-instant)", SpringConfig::snappy(), target);
 
     // ── SpringN<[f32; 3]> demo ───────────────────────────────────────────────
     use motus::SpringN;

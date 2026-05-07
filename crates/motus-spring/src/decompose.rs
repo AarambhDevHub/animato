@@ -24,32 +24,58 @@ pub trait Decompose: Animatable + private::Sealed {
 
 impl private::Sealed for f32 {}
 impl Decompose for f32 {
-    fn component_count() -> usize { 1 }
-    fn write_components(&self, out: &mut [f32]) { out[0] = *self; }
-    fn from_components(c: &[f32]) -> Self { c[0] }
+    fn component_count() -> usize {
+        1
+    }
+    fn write_components(&self, out: &mut [f32]) {
+        out[0] = *self;
+    }
+    fn from_components(c: &[f32]) -> Self {
+        c[0]
+    }
 }
 
 impl private::Sealed for [f32; 2] {}
 impl Decompose for [f32; 2] {
-    fn component_count() -> usize { 2 }
-    fn write_components(&self, out: &mut [f32]) { out[0] = self[0]; out[1] = self[1]; }
-    fn from_components(c: &[f32]) -> Self { [c[0], c[1]] }
+    fn component_count() -> usize {
+        2
+    }
+    fn write_components(&self, out: &mut [f32]) {
+        out[0] = self[0];
+        out[1] = self[1];
+    }
+    fn from_components(c: &[f32]) -> Self {
+        [c[0], c[1]]
+    }
 }
 
 impl private::Sealed for [f32; 3] {}
 impl Decompose for [f32; 3] {
-    fn component_count() -> usize { 3 }
-    fn write_components(&self, out: &mut [f32]) {
-        out[0] = self[0]; out[1] = self[1]; out[2] = self[2];
+    fn component_count() -> usize {
+        3
     }
-    fn from_components(c: &[f32]) -> Self { [c[0], c[1], c[2]] }
+    fn write_components(&self, out: &mut [f32]) {
+        out[0] = self[0];
+        out[1] = self[1];
+        out[2] = self[2];
+    }
+    fn from_components(c: &[f32]) -> Self {
+        [c[0], c[1], c[2]]
+    }
 }
 
 impl private::Sealed for [f32; 4] {}
 impl Decompose for [f32; 4] {
-    fn component_count() -> usize { 4 }
-    fn write_components(&self, out: &mut [f32]) {
-        out[0] = self[0]; out[1] = self[1]; out[2] = self[2]; out[3] = self[3];
+    fn component_count() -> usize {
+        4
     }
-    fn from_components(c: &[f32]) -> Self { [c[0], c[1], c[2], c[3]] }
+    fn write_components(&self, out: &mut [f32]) {
+        out[0] = self[0];
+        out[1] = self[1];
+        out[2] = self[2];
+        out[3] = self[3];
+    }
+    fn from_components(c: &[f32]) -> Self {
+        [c[0], c[1], c[2], c[3]]
+    }
 }

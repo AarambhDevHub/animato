@@ -38,10 +38,10 @@
 
 pub mod builder;
 pub mod loop_mode;
-pub mod tween;
 pub mod modifiers;
+pub mod tween;
 
 pub use builder::TweenBuilder;
 pub use loop_mode::Loop;
+pub use modifiers::{round_to, snap_to};
 pub use tween::{Tween, TweenState};
-pub use modifiers::{snap_to, round_to};

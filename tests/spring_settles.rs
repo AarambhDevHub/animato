@@ -1,7 +1,7 @@
 //! Integration test: spring settles for all presets.
 
-use motus_spring::{Spring, SpringConfig, SpringN};
 use motus_core::Update;
+use motus_spring::{Spring, SpringConfig, SpringN};
 
 const DT: f32 = 1.0 / 60.0;
 const MAX_STEPS: usize = 10_000;
@@ -70,7 +70,12 @@ fn snappy_settles_faster_than_slow() {
     slow.set_target(100.0);
     let slow_n = settle_steps(&mut slow);
 
-    assert!(fast_n < slow_n, "snappy={} frames, slow={} frames", fast_n, slow_n);
+    assert!(
+        fast_n < slow_n,
+        "snappy={} frames, slow={} frames",
+        fast_n,
+        slow_n
+    );
 }
 
 #[test]
@@ -113,7 +118,9 @@ fn spring_n_vec3_settles() {
     let mut s: SpringN<[f32; 3]> = SpringN::new(SpringConfig::stiff(), [0.0; 3]);
     s.set_target([10.0, 20.0, 30.0]);
     for _ in 0..MAX_STEPS {
-        if !s.update(DT) { break; }
+        if !s.update(DT) {
+            break;
+        }
     }
     assert!(s.is_settled(), "SpringN<[f32;3]> did not settle");
     let pos = s.position();
@@ -127,7 +134,9 @@ fn spring_n_independent_axes() {
     let mut s: SpringN<[f32; 3]> = SpringN::new(SpringConfig::snappy(), [0.0; 3]);
     s.set_target([1.0, -1.0, 0.5]);
     for _ in 0..MAX_STEPS {
-        if !s.update(DT) { break; }
+        if !s.update(DT) {
+            break;
+        }
     }
     let pos = s.position();
     assert!((pos[0] - 1.0).abs() < EPSILON);
