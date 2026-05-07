@@ -52,9 +52,7 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.1.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato
-  # (animato-path, animato-physics, animato-color, animato-timeline, animato-gpu,
-  #  animato-bevy, animato-wasm are deferred to later versions — see ROADMAP.md)
+  # v0.2.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato-timeline → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -93,20 +91,20 @@ jobs:
       - name: Wait for registry index
         run: sleep 30
 
-       - name: Publish animato-driver
-         run: cargo publish -p animato-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato-driver
+        run: cargo publish -p animato-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-       - name: Wait for registry index
-         run: sleep 30
+      - name: Wait for registry index
+        run: sleep 30
 
-       - name: Publish animato-timeline
-         run: cargo publish -p animato-timeline --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato-timeline
+        run: cargo publish -p animato-timeline --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-       - name: Wait for registry index
-         run: sleep 30
+      - name: Wait for registry index
+        run: sleep 30
 
-       - name: Publish animato (facade)
-         run: cargo publish -p animato --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato (facade)
+        run: cargo publish -p animato --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   # ── GitHub Release ────────────────────────────────────────────────────────────
   release:
@@ -123,62 +121,62 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
 
-       - name: Create GitHub Release
-         uses: softprops/action-gh-release@v2
-         with:
-           tag_name: ${{ github.ref_name }}
-           name: "Animato ${{ steps.version.outputs.VERSION }} — Composition"
-           body: |
-             ## Animato ${{ steps.version.outputs.VERSION }} — Composition
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "Animato ${{ steps.version.outputs.VERSION }} — Composition"
+          body: |
+            ## Animato ${{ steps.version.outputs.VERSION }} — Composition
 
-             The second release of the Animato animation library for Rust, adding composition primitives.
+            The second release of the Animato animation library for Rust, adding composition primitives.
 
-             ### Crates published to crates.io
+            ### Crates published to crates.io
 
-             | Crate | Version | Description |
-             |-------|---------|-------------|
-             | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 31 easing functions, `no_std` |
-             | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack` |
-             | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
-             | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
-             | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, composition |
-             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
+            | Crate | Version | Description |
+            |-------|---------|-------------|
+            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 31 easing functions, `no_std` |
+            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack` |
+            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
+            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
+            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, composition |
+            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
 
-             ### Quick Start
+            ### Quick Start
 
-             ```toml
-             [dependencies]
-             animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["timeline"] }
-             ```
+            ```toml
+            [dependencies]
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["timeline"] }
+            ```
 
-             ```rust
-             use animato::{Timeline, Sequence, Tween, Easing, Update};
+            ```rust
+            use animato::{Timeline, Sequence, Tween, Easing, Update};
 
-             let tween = Tween::new(0.0_f32, 100.0)
-                 .duration(1.0)
-                 .easing(Easing::EaseOutCubic)
-                 .build();
+            let tween = Tween::new(0.0_f32, 100.0)
+                .duration(1.0)
+                .easing(Easing::EaseOutCubic)
+                .build();
 
-             let mut timeline = Timeline::new()
-                 .then("tween-1", tween)
-                 .build();
+            let mut timeline = Timeline::new()
+                .then("tween-1", tween)
+                .build();
 
-             timeline.update(0.016);
-             ```
+            timeline.update(0.016);
+            ```
 
-             ### What's New in v0.2.0
-             - ✅ `Timeline` — compose multiple animations with `At` positioning
-             - ✅ `Sequence` builder — chain animations sequentially
-             - ✅ `stagger()` — stagger multiple animations with delay
-             - ✅ `KeyframeTrack<T>` — keyframe interpolation with easing
-             - ✅ PingPong loop support
-             - ✅ 200+ tests passing across all crates
+            ### What's New in v0.2.0
+            - ✅ `Timeline` — compose multiple animations with `At` positioning
+            - ✅ `Sequence` builder — chain animations sequentially
+            - ✅ `stagger()` — stagger multiple animations with delay
+            - ✅ `KeyframeTrack<T>` — keyframe interpolation with easing
+            - ✅ PingPong loop support
+            - ✅ 200+ tests passing across all crates
 
-             ### What's Included
-             - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`
-             - ✅ Criterion benchmarks for easing, tween, spring, and timeline
-             - ✅ CI: stable + beta + nightly toolchains
+            ### What's Included
+            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`
+            - ✅ Criterion benchmarks for easing, tween, spring, and timeline
+            - ✅ CI: stable + beta + nightly toolchains
 
-             See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.
-           draft: false
-           prerelease: false
+            See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.
+          draft: false
+          prerelease: false
