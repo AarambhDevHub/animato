@@ -23,6 +23,7 @@
 //! - `t` outside `[0.0, 1.0]` is clamped — no panic
 
 use core::f32::consts::PI;
+use crate::math::{sin, cos, powf, powi, sqrt};
 
 /// All 31 classic easing variants plus an escape-hatch `Custom` function pointer.
 ///
@@ -245,64 +246,62 @@ impl Easing {
 /// Quadratic ease-in-out.
 #[inline]
 pub fn ease_in_out_quad(t: f32) -> f32 {
-    if t < 0.5 { 2.0 * t * t } else { 1.0 - (-2.0 * t + 2.0).powi(2) / 2.0 }
+    if t < 0.5 { 2.0 * t * t } else { 1.0 - powi(-2.0 * t + 2.0, 2) / 2.0 }
 }
 
 /// Cubic ease-in: `t³`
 #[inline] pub fn ease_in_cubic(t: f32) -> f32 { t * t * t }
 
 /// Cubic ease-out: `1 - (1-t)³`
-#[inline] pub fn ease_out_cubic(t: f32) -> f32 { 1.0 - (1.0 - t).powi(3) }
+#[inline] pub fn ease_out_cubic(t: f32) -> f32 { 1.0 - powi(1.0 - t, 3) }
 
 /// Cubic ease-in-out.
 #[inline]
 pub fn ease_in_out_cubic(t: f32) -> f32 {
-    if t < 0.5 { 4.0 * t * t * t } else { 1.0 - (-2.0 * t + 2.0).powi(3) / 2.0 }
+    if t < 0.5 { 4.0 * t * t * t } else { 1.0 - powi(-2.0 * t + 2.0, 3) / 2.0 }
 }
 
 /// Quartic ease-in: `t⁴`
 #[inline] pub fn ease_in_quart(t: f32) -> f32 { t * t * t * t }
 
 /// Quartic ease-out: `1 - (1-t)⁴`
-#[inline] pub fn ease_out_quart(t: f32) -> f32 { 1.0 - (1.0 - t).powi(4) }
+#[inline] pub fn ease_out_quart(t: f32) -> f32 { 1.0 - powi(1.0 - t, 4) }
 
 /// Quartic ease-in-out.
 #[inline]
 pub fn ease_in_out_quart(t: f32) -> f32 {
-    if t < 0.5 { 8.0 * t * t * t * t } else { 1.0 - (-2.0 * t + 2.0).powi(4) / 2.0 }
+    if t < 0.5 { 8.0 * t * t * t * t } else { 1.0 - powi(-2.0 * t + 2.0, 4) / 2.0 }
 }
 
 /// Quintic ease-in: `t⁵`
 #[inline] pub fn ease_in_quint(t: f32) -> f32 { t * t * t * t * t }
 
 /// Quintic ease-out: `1 - (1-t)⁵`
-#[inline] pub fn ease_out_quint(t: f32) -> f32 { 1.0 - (1.0 - t).powi(5) }
+#[inline] pub fn ease_out_quint(t: f32) -> f32 { 1.0 - powi(1.0 - t, 5) }
 
 /// Quintic ease-in-out.
 #[inline]
 pub fn ease_in_out_quint(t: f32) -> f32 {
-    if t < 0.5 { 16.0 * t * t * t * t * t } else { 1.0 - (-2.0 * t + 2.0).powi(5) / 2.0 }
+    if t < 0.5 { 16.0 * t * t * t * t * t } else { 1.0 - powi(-2.0 * t + 2.0, 5) / 2.0 }
 }
 
 /// Sinusoidal ease-in.
-#[inline] pub fn ease_in_sine(t: f32) -> f32 { 1.0 - (t * PI / 2.0).cos() }
-
+#[inline] pub fn ease_in_sine(t: f32)     -> f32 { 1.0 - cos(t * PI / 2.0) }
 /// Sinusoidal ease-out.
-#[inline] pub fn ease_out_sine(t: f32) -> f32 { (t * PI / 2.0).sin() }
-
+#[inline] pub fn ease_out_sine(t: f32)    -> f32 { sin(t * PI / 2.0) }
 /// Sinusoidal ease-in-out.
-#[inline] pub fn ease_in_out_sine(t: f32) -> f32 { -((t * PI).cos() - 1.0) / 2.0 }
+#[inline] pub fn ease_in_out_sine(t: f32) -> f32 { -(cos(t * PI) - 1.0) / 2.0 }
 
 /// Exponential ease-in.
 #[inline]
 pub fn ease_in_expo(t: f32) -> f32 {
-    if t == 0.0 { 0.0 } else { (2.0_f32).powf(10.0 * t - 10.0) }
+    if t == 0.0 { 0.0 } else { powf(2.0, 10.0 * t - 10.0) }
 }
 
 /// Exponential ease-out.
 #[inline]
 pub fn ease_out_expo(t: f32) -> f32 {
-    if t == 1.0 { 1.0 } else { 1.0 - (2.0_f32).powf(-10.0 * t) }
+    if t == 1.0 { 1.0 } else { 1.0 - powf(2.0, -10.0 * t) }
 }
 
 /// Exponential ease-in-out.
@@ -311,25 +310,24 @@ pub fn ease_in_out_expo(t: f32) -> f32 {
     if t == 0.0 { return 0.0; }
     if t == 1.0 { return 1.0; }
     if t < 0.5 {
-        (2.0_f32).powf(20.0 * t - 10.0) / 2.0
+        powf(2.0, 20.0 * t - 10.0) / 2.0
     } else {
-        (2.0 - (2.0_f32).powf(-20.0 * t + 10.0)) / 2.0
+        (2.0 - powf(2.0, -20.0 * t + 10.0)) / 2.0
     }
 }
 
 /// Circular ease-in.
-#[inline] pub fn ease_in_circ(t: f32) -> f32 { 1.0 - (1.0 - t * t).sqrt() }
-
+#[inline] pub fn ease_in_circ(t: f32)  -> f32 { 1.0 - sqrt(1.0 - t * t) }
 /// Circular ease-out.
-#[inline] pub fn ease_out_circ(t: f32) -> f32 { (1.0 - (t - 1.0) * (t - 1.0)).sqrt() }
+#[inline] pub fn ease_out_circ(t: f32) -> f32 { sqrt(1.0 - (t - 1.0) * (t - 1.0)) }
 
 /// Circular ease-in-out.
 #[inline]
 pub fn ease_in_out_circ(t: f32) -> f32 {
     if t < 0.5 {
-        (1.0 - (1.0 - (2.0 * t).powi(2)).sqrt()) / 2.0
+        (1.0 - sqrt(1.0 - powi(2.0 * t, 2))) / 2.0
     } else {
-        ((1.0 - (-2.0 * t + 2.0).powi(2)).sqrt() + 1.0) / 2.0
+        (sqrt(1.0 - powi(-2.0 * t + 2.0, 2)) + 1.0) / 2.0
     }
 }
 
@@ -354,9 +352,9 @@ pub fn ease_out_back(t: f32) -> f32 {
 #[inline]
 pub fn ease_in_out_back(t: f32) -> f32 {
     if t < 0.5 {
-        ((2.0 * t).powi(2) * ((BACK_C2 + 1.0) * 2.0 * t - BACK_C2)) / 2.0
+        (powi(2.0 * t, 2) * ((BACK_C2 + 1.0) * 2.0 * t - BACK_C2)) / 2.0
     } else {
-        ((2.0 * t - 2.0).powi(2) * ((BACK_C2 + 1.0) * (2.0 * t - 2.0) + BACK_C2) + 2.0) / 2.0
+        (powi(2.0 * t - 2.0, 2) * ((BACK_C2 + 1.0) * (2.0 * t - 2.0) + BACK_C2) + 2.0) / 2.0
     }
 }
 
@@ -368,7 +366,7 @@ const ELASTIC_C5: f32 = (2.0 * PI) / 4.5;
 pub fn ease_in_elastic(t: f32) -> f32 {
     if t == 0.0 { return 0.0; }
     if t == 1.0 { return 1.0; }
-    -(2.0_f32).powf(10.0 * t - 10.0) * ((10.0 * t - 10.75) * ELASTIC_C4).sin()
+    -powf(2.0, 10.0 * t - 10.0) * sin((10.0 * t - 10.75) * ELASTIC_C4)
 }
 
 /// Elastic ease-out — spring-like oscillation at the end.
@@ -376,7 +374,7 @@ pub fn ease_in_elastic(t: f32) -> f32 {
 pub fn ease_out_elastic(t: f32) -> f32 {
     if t == 0.0 { return 0.0; }
     if t == 1.0 { return 1.0; }
-    (2.0_f32).powf(-10.0 * t) * ((10.0 * t - 0.75) * ELASTIC_C4).sin() + 1.0
+    powf(2.0, -10.0 * t) * sin((10.0 * t - 0.75) * ELASTIC_C4) + 1.0
 }
 
 /// Elastic ease-in-out.
@@ -385,9 +383,9 @@ pub fn ease_in_out_elastic(t: f32) -> f32 {
     if t == 0.0 { return 0.0; }
     if t == 1.0 { return 1.0; }
     if t < 0.5 {
-        -((2.0_f32).powf(20.0 * t - 10.0) * ((20.0 * t - 11.125) * ELASTIC_C5).sin()) / 2.0
+        -(powf(2.0, 20.0 * t - 10.0) * sin((20.0 * t - 11.125) * ELASTIC_C5)) / 2.0
     } else {
-        ((2.0_f32).powf(-20.0 * t + 10.0) * ((20.0 * t - 11.125) * ELASTIC_C5).sin()) / 2.0 + 1.0
+        (powf(2.0, -20.0 * t + 10.0) * sin((20.0 * t - 11.125) * ELASTIC_C5)) / 2.0 + 1.0
     }
 }
 

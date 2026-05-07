@@ -16,4 +16,7 @@ std     = []
 serde   = ["dep:serde"]
 
 [dependencies]
+# libm provides f32 math intrinsics (sin, cos, powf, sqrt, …) for no_std targets.
+# In std builds the std implementation is used instead via the math shim.
+libm  = "0.2"
 serde = { workspace = true, optional = true }

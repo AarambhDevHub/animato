@@ -39,6 +39,7 @@
 
 pub mod easing;
 pub mod traits;
+pub(crate) mod math;
 
 // Flatten the most important items to the crate root for convenience.
 pub use easing::Easing;
