@@ -1,6 +1,6 @@
-# Contributing to Motus
+# Contributing to Animato
 
-Thank you for taking the time to contribute. Every bug report, feature suggestion, documentation improvement, and pull request makes Motus better for everyone.
+Thank you for taking the time to contribute. Every bug report, feature suggestion, documentation improvement, and pull request makes Animato better for everyone.
 
 ---
 
@@ -34,7 +34,7 @@ You do not need to write code to contribute:
 - **Report a bug** — open an issue with a minimal reproduction
 - **Suggest a feature** — open an issue describing the use case, not just the API
 - **Improve documentation** — fix typos, add examples, clarify confusing sections
-- **Write an example** — show Motus being used in a real scenario
+- **Write an example** — show Animato being used in a real scenario
 - **Write a benchmark** — help identify performance regressions
 - **Review pull requests** — read others' changes and leave thoughtful feedback
 - **Write tests** — increase coverage for existing code
@@ -58,8 +58,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ### Clone and build
 
 ```sh
-git clone https://github.com/AarambhDevHub/motus.git
-cd motus
+git clone https://github.com/AarambhDevHub/animato.git
+cd animato
 
 # Build all crates:
 cargo build --workspace
@@ -82,33 +82,33 @@ cargo fmt --check
 
 ### IDE Setup
 
-This is a standard Cargo workspace. Any IDE with `rust-analyzer` support (VS Code, IntelliJ, Neovim) will work out of the box. Open the root `motus/` folder — `rust-analyzer` will detect the workspace automatically.
+This is a standard Cargo workspace. Any IDE with `rust-analyzer` support (VS Code, IntelliJ, Neovim) will work out of the box. Open the root `animato/` folder — `rust-analyzer` will detect the workspace automatically.
 
 ---
 
 ## Project Structure
 
 ```
-motus/
+animato/
 ├── crates/
-│   ├── motus-core/        ← traits + easing — start here if unsure
-│   ├── motus-tween/       ← Tween<T>, KeyframeTrack<T>
-│   ├── motus-timeline/    ← Timeline, Sequence, stagger
-│   ├── motus-spring/      ← Spring physics
-│   ├── motus-path/        ← Bezier, SVG parser, morph
-│   ├── motus-physics/     ← Inertia, Drag, Gesture
-│   ├── motus-color/       ← perceptual color interpolation
-│   ├── motus-driver/      ← AnimationDriver, Clocks, Scroll
-│   ├── motus-gpu/         ← GPU batch compute
-│   ├── motus-bevy/        ← Bevy plugin
-│   ├── motus-wasm/        ← WASM + DOM integrations
-│   └── motus/             ← facade crate (re-exports everything)
+│   ├── animato-core/        ← traits + easing — start here if unsure
+│   ├── animato-tween/       ← Tween<T>, KeyframeTrack<T>
+│   ├── animato-timeline/    ← Timeline, Sequence, stagger
+│   ├── animato-spring/      ← Spring physics
+│   ├── animato-path/        ← Bezier, SVG parser, morph
+│   ├── animato-physics/     ← Inertia, Drag, Gesture
+│   ├── animato-color/       ← perceptual color interpolation
+│   ├── animato-driver/      ← AnimationDriver, Clocks, Scroll
+│   ├── animato-gpu/         ← GPU batch compute
+│   ├── animato-bevy/        ← Bevy plugin
+│   ├── animato-wasm/        ← WASM + DOM integrations
+│   └── animato/             ← facade crate (re-exports everything)
 ├── examples/              ← runnable examples
 ├── benches/               ← criterion benchmarks
 └── tests/                 ← workspace-level integration tests
 ```
 
-Each crate is self-contained. If you are working on spring physics, you should only need to open `crates/motus-spring/`. You should not need to understand `motus-gpu` to fix a spring bug.
+Each crate is self-contained. If you are working on spring physics, you should only need to open `crates/animato-spring/`. You should not need to understand `animato-gpu` to fix a spring bug.
 
 ---
 
@@ -116,14 +116,14 @@ Each crate is self-contained. If you are working on spring physics, you should o
 
 ### 1. Check for an existing issue
 
-Search [open issues](https://github.com/AarambhDevHub/motus/issues) before starting work. If there is no issue for your change, open one first — especially for anything larger than a typo fix. This prevents duplicate work and gives maintainers a chance to give early feedback on direction.
+Search [open issues](https://github.com/AarambhDevHub/animato/issues) before starting work. If there is no issue for your change, open one first — especially for anything larger than a typo fix. This prevents duplicate work and gives maintainers a chance to give early feedback on direction.
 
 ### 2. Fork and branch
 
 ```sh
 # Fork on GitHub, then:
-git clone https://github.com/YOUR_USERNAME/motus.git
-cd motus
+git clone https://github.com/YOUR_USERNAME/animato.git
+cd animato
 git checkout -b fix/spring-settle-detection
 ```
 
@@ -181,7 +181,7 @@ Use the [Conventional Commits](https://www.conventionalcommits.org/) format:
 | `chore` | Build system, CI, dependency updates |
 | `ci` | CI configuration changes |
 
-**Scope** is the affected crate (without the `motus-` prefix):
+**Scope** is the affected crate (without the `animato-` prefix):
 
 ```
 feat(spring): add snappy() preset to SpringConfig
@@ -222,10 +222,10 @@ Every pull request must include tests. There are no exceptions.
 cargo test --workspace
 
 # A specific crate only:
-cargo test -p motus-spring
+cargo test -p animato-spring
 
 # A specific test by name:
-cargo test -p motus-spring spring_settles_with_wobbly_preset
+cargo test -p animato-spring spring_settles_with_wobbly_preset
 
 # All features (required before opening a PR):
 cargo test --workspace --all-features
@@ -262,7 +262,7 @@ This means any clippy warning is a CI failure. Fix all warnings before pushing.
 /// # Examples
 ///
 /// ```rust
-/// use motus::{Tween, Easing, Update};
+/// use animato::{Tween, Easing, Update};
 ///
 /// let mut tween = Tween::new(0.0_f32, 1.0)
 ///     .duration(1.0)
@@ -327,7 +327,7 @@ Open an issue using the **Bug Report** template. Include:
 1. **What you expected to happen.**
 2. **What actually happened** — include the full error message or unexpected output.
 3. **A minimal reproduction** — the smallest possible code that demonstrates the bug. Remove everything unrelated.
-4. **Environment** — Rust version (`rustc --version`), OS, Motus version, active feature flags.
+4. **Environment** — Rust version (`rustc --version`), OS, Animato version, active feature flags.
 
 A minimal reproduction is the single most important thing you can provide. Issues without one may be closed if the bug cannot be reproduced.
 
@@ -347,7 +347,7 @@ Feature requests that describe only the desired API without explaining the use c
 
 ## Crate Versioning
 
-Motus follows [Semantic Versioning](https://semver.org/).
+Animato follows [Semantic Versioning](https://semver.org/).
 
 - **Patch** (`0.1.x`) — bug fixes only, no API changes.
 - **Minor** (`0.x.0`) — new features, backward-compatible API additions, new crates.
@@ -355,7 +355,7 @@ Motus follows [Semantic Versioning](https://semver.org/).
 
 Until `v1.0.0`, minor versions may contain small breaking changes if unavoidable. These will always be documented clearly in `CHANGELOG.md`.
 
-Each sub-crate (`motus-core`, `motus-tween`, etc.) is versioned independently. The facade crate (`motus`) tracks the highest version among all sub-crates.
+Each sub-crate (`animato-core`, `animato-tween`, etc.) is versioned independently. The facade crate (`animato`) tracks the highest version among all sub-crates.
 
 ---
 
@@ -363,4 +363,4 @@ Each sub-crate (`motus-core`, `motus-tween`, etc.) is versioned independently. T
 
 If you are unsure about anything — whether a bug is worth reporting, whether a feature fits the project, or how to approach a change — open an issue and ask. There are no stupid questions.
 
-You can also join the discussion on the [Aarambh Dev Hub Discord](https://discord.gg/aarambhdevhub) — look for the `#motus` channel.
+You can also join the discussion on the [Aarambh Dev Hub Discord](https://discord.gg/aarambhdevhub) — look for the `#animato` channel.

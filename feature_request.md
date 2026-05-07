@@ -28,7 +28,7 @@ What can you do today instead? Why is it insufficient?
 
 ## Affected Crate(s)
 
-Which crate(s) would this change? e.g. `motus-tween`, `motus-spring`, `motus-core`
+Which crate(s) would this change? e.g. `animato-tween`, `animato-spring`, `animato-core`
 
 ## Additional Context
 

@@ -35,7 +35,7 @@ jobs:
         run: cargo test --workspace --all-features
 
       - name: Run no_std check (no_std-compatible crates only)
-        run: cargo test -p motus-core -p motus-tween -p motus-spring --no-default-features
+        run: cargo test -p animato-core -p animato-tween -p animato-spring --no-default-features
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
@@ -52,9 +52,9 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.1.0 scope: motus-core → motus-tween → motus-spring → motus-driver → motus
-  # (motus-path, motus-physics, motus-color, motus-timeline, motus-gpu,
-  #  motus-bevy, motus-wasm are deferred to later versions — see ROADMAP.md)
+  # v0.1.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato
+  # (animato-path, animato-physics, animato-color, animato-timeline, animato-gpu,
+  #  animato-bevy, animato-wasm are deferred to later versions — see ROADMAP.md)
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -75,32 +75,32 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Publish motus-core
-        run: cargo publish -p motus-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato-core
+        run: cargo publish -p animato-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Wait for registry index
         run: sleep 30
 
-      - name: Publish motus-tween
-        run: cargo publish -p motus-tween --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato-tween
+        run: cargo publish -p animato-tween --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Wait for registry index
         run: sleep 30
 
-      - name: Publish motus-spring
-        run: cargo publish -p motus-spring --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato-spring
+        run: cargo publish -p animato-spring --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Wait for registry index
         run: sleep 30
 
-      - name: Publish motus-driver
-        run: cargo publish -p motus-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato-driver
+        run: cargo publish -p animato-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Wait for registry index
         run: sleep 30
 
-      - name: Publish motus (facade)
-        run: cargo publish -p motus --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Publish animato (facade)
+        run: cargo publish -p animato --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   # ── GitHub Release ────────────────────────────────────────────────────────────
   release:
@@ -121,31 +121,31 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: "Motus ${{ steps.version.outputs.VERSION }} — Foundation"
+          name: "Animato ${{ steps.version.outputs.VERSION }} — Foundation"
           body: |
-            ## Motus ${{ steps.version.outputs.VERSION }} — Foundation
+            ## Animato ${{ steps.version.outputs.VERSION }} — Foundation
 
-            The first stable release of the Motus animation library for Rust.
+            The first stable release of the Animato animation library for Rust.
 
             ### Crates published to crates.io
 
             | Crate | Version | Description |
             |-------|---------|-------------|
-            | [`motus-core`](https://crates.io/crates/motus-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 31 easing functions, `no_std` |
-            | [`motus-tween`](https://crates.io/crates/motus-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std` |
-            | [`motus-spring`](https://crates.io/crates/motus-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
-            | [`motus-driver`](https://crates.io/crates/motus-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
-            | [`motus`](https://crates.io/crates/motus) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
+            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 31 easing functions, `no_std` |
+            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std` |
+            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
+            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
+            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
 
             ### Quick Start
 
             ```toml
             [dependencies]
-            motus = "${{ steps.version.outputs.VERSION }}"
+            animato = "${{ steps.version.outputs.VERSION }}"
             ```
 
             ```rust
-            use motus::{Tween, Easing, Update};
+            use animato::{Tween, Easing, Update};
 
             let mut tween = Tween::new(0.0_f32, 100.0)
                 .duration(1.0)
@@ -158,7 +158,7 @@ jobs:
 
             ### What's Included
             - ✅ 144 tests passing across all crates
-            - ✅ `no_std` support for `motus-core`, `motus-tween`, `motus-spring`
+            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`
             - ✅ Criterion benchmarks for easing, tween, and spring
             - ✅ CI: stable + beta + nightly toolchains
 

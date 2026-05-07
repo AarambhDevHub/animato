@@ -18,6 +18,49 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
+name = "animato"
+version = "0.1.0"
+dependencies = [
+ "animato-core",
+ "animato-driver",
+ "animato-spring",
+ "animato-tween",
+ "criterion",
+]
+
+[[package]]
+name = "animato-core"
+version = "0.1.0"
+dependencies = [
+ "libm",
+ "serde",
+]
+
+[[package]]
+name = "animato-driver"
+version = "0.1.0"
+dependencies = [
+ "animato-core",
+ "animato-tween",
+]
+
+[[package]]
+name = "animato-spring"
+version = "0.1.0"
+dependencies = [
+ "animato-core",
+ "serde",
+]
+
+[[package]]
+name = "animato-tween"
+version = "0.1.0"
+dependencies = [
+ "animato-core",
+ "serde",
+]
+
+[[package]]
 name = "anstyle"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -268,49 +311,6 @@ name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
-
-[[package]]
-name = "motus"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "motus-core",
- "motus-driver",
- "motus-spring",
- "motus-tween",
-]
-
-[[package]]
-name = "motus-core"
-version = "0.1.0"
-dependencies = [
- "libm",
- "serde",
-]
-
-[[package]]
-name = "motus-driver"
-version = "0.1.0"
-dependencies = [
- "motus-core",
- "motus-tween",
-]
-
-[[package]]
-name = "motus-spring"
-version = "0.1.0"
-dependencies = [
- "motus-core",
- "serde",
-]
-
-[[package]]
-name = "motus-tween"
-version = "0.1.0"
-dependencies = [
- "motus-core",
- "serde",
-]
 
 [[package]]
 name = "num-traits"

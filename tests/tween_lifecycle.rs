@@ -1,8 +1,8 @@
 //! Integration test: full tween lifecycle using MockClock.
 
-use motus_core::{Easing, Update};
-use motus_driver::{Clock, MockClock};
-use motus_tween::{Loop, Tween, TweenState};
+use animato_core::{Easing, Update};
+use animato_driver::{Clock, MockClock};
+use animato_tween::{Loop, Tween, TweenState};
 
 const DT: f32 = 1.0 / 60.0;
 

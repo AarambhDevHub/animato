@@ -1,0 +1,21 @@
+[package]
+name        = "animato-tween"
+description = "Tween<T> single-value animation for the Animato animation library."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "tween", "easing", "interpolation", "no_std"]
+categories  = ["no-std", "game-development"]
+
+[features]
+default = []
+std     = ["animato-core/std"]
+serde   = ["dep:serde", "animato-core/serde"]
+
+[dependencies]
+animato-core = { workspace = true }
+serde      = { workspace = true, optional = true }

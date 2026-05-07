@@ -1,4 +1,4 @@
-# Motus — Project Roadmap
+# Animato — Project Roadmap
 
 > Latin: mōtus — motion, movement, impulse.  
 > A professional-grade, renderer-agnostic animation library for Rust.
@@ -38,19 +38,19 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ## v0.1.0 — Foundation
 
-**Goal:** The smallest useful version of Motus. A developer can animate a single value from A to B, drive it with a clock, and use it in any Rust project.
+**Goal:** The smallest useful version of Animato. A developer can animate a single value from A to B, drive it with a clock, and use it in any Rust project.
 
 ### Crates shipped
 
-- `motus-core` `v0.1.0`
-- `motus-tween` `v0.1.0`
-- `motus-spring` `v0.1.0`
-- `motus-driver` `v0.1.0`
-- `motus` `v0.1.0` (facade — default features only)
+- `animato-core` `v0.1.0`
+- `animato-tween` `v0.1.0`
+- `animato-spring` `v0.1.0`
+- `animato-driver` `v0.1.0`
+- `animato` `v0.1.0` (facade — default features only)
 
 ### Deliverables
 
-**`motus-core`**
+**`animato-core`**
 - [x] `Interpolate` trait with blanket impls for `f32`, `f64`, `[f32; 2]`, `[f32; 3]`, `[f32; 4]`, `i32`, `u8`
 - [x] `Animatable` blanket impl (auto-derived from `Interpolate + Clone + Send + 'static`)
 - [x] `Update` trait (`fn update(&mut self, dt: f32) -> bool`)
@@ -63,7 +63,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [x] Test: every variant satisfies `apply(0.0) == 0.0` and `apply(1.0) == 1.0`
 - [x] Test: no panic on `t` outside `[0, 1]`
 
-**`motus-tween`**
+**`animato-tween`**
 - [x] `Tween<T: Animatable>` struct (stack-allocated)
 - [x] `TweenBuilder<T>` with consuming builder pattern
 - [x] `TweenState` enum (`Idle`, `Running`, `Paused`, `Completed`)
@@ -78,7 +78,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [x] `no_std` compatible — no heap allocation
 - [x] Tests: start/end values, delay, seek, reverse, large-dt, PingPong direction
 
-**`motus-spring`**
+**`animato-spring`**
 - [x] `Spring` struct (stack-allocated, `no_std`)
 - [x] `SpringConfig` with `stiffness`, `damping`, `mass`, `epsilon`
 - [x] Presets: `gentle()`, `wobbly()`, `stiff()`, `slow()`, `snappy()`
@@ -90,7 +90,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [x] `Update for Spring` and `Update for SpringN<T>`
 - [x] Tests: settles to target for all presets, damping=0 oscillates, SpringN for `[f32; 3]`
 
-**`motus-driver`**
+**`animato-driver`**
 - [x] `AnimationDriver` — owns `Vec<Box<dyn Update + Send>>`, retain-drain pattern
 - [x] `AnimationId` newtype over `u64` — `Copy + Hash + Eq`
 - [x] `.add()` returns `AnimationId`
@@ -102,7 +102,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [x] `MockClock` — fixed-step for deterministic tests
 - [x] Tests: auto-removal, cancel, active_count, MockClock correctness
 
-**`motus` facade**
+**`animato` facade**
 - [x] Feature flags: `default`, `std`, `tween`, `spring`, `driver`, `serde`
 - [x] Re-exports all public APIs behind `#[cfg(feature)]` guards
 - [x] Facade-level `lib.rs` doc with quick-start example
@@ -130,12 +130,12 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Crates shipped
 
-- `motus-timeline` `v0.2.0` (new)
+- `animato-timeline` `v0.2.0` (new)
 - All previous crates bumped to `v0.2.0`
 
 ### Deliverables
 
-**`motus-timeline`**
+**`animato-timeline`**
 - [ ] `Timeline` struct with `Vec<TimelineEntry>` internally
 - [ ] `TimelineState` enum (`Idle`, `Playing`, `Paused`, `Completed`)
 - [ ] `.add(label, anim, At)` builder method
@@ -150,7 +150,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] `Update for Timeline` — only tick entries within their time window
 - [ ] Tests: concurrent play, sequential play, seek, pause, loop, stagger order
 
-**`motus` facade**
+**`animato` facade**
 - [ ] Add `timeline` feature flag
 - [ ] Re-export `Timeline`, `Sequence`, `At`, `stagger`
 - [ ] `examples/timeline_sequence.rs`
@@ -164,7 +164,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Deliverables
 
-**`motus-tween`**
+**`animato-tween`**
 - [ ] `KeyframeTrack<T: Animatable>` with sorted `Vec<Keyframe<T>>`
 - [ ] `Keyframe<T>` struct (`time: f32`, `value: T`, `easing: Easing`)
 - [ ] `.push()` and `.push_eased()` builder methods
@@ -172,19 +172,19 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] PingPong loop logic in `KeyframeTrack`
 - [ ] Tests: single frame, two frames, multi-frame, looping, PingPong
 
-**`motus-timeline`**
+**`animato-timeline`**
 - [ ] Callbacks (`std` feature): `.on_entry_complete(label, f)`, `.on_complete(f)`
 - [ ] `tokio` feature: `.wait().await` resolves when timeline completes
 - [ ] Time scale on `Timeline` (`.time_scale(f32)`)
 
-**`motus-core`**
+**`animato-core`**
 - [ ] `CubicBezier(f32, f32, f32, f32)` easing variant (CSS-compatible)
 - [ ] `Steps(u32)` easing variant
 - [ ] Tests for new easing variants
 
-**`motus` facade**
+**`animato` facade**
 - [ ] `serde` feature exports `Serialize`/`Deserialize` on core types
-- [ ] `tokio` feature passes through to `motus-timeline`
+- [ ] `tokio` feature passes through to `animato-timeline`
 - [ ] `examples/keyframe_track.rs` with looping + PingPong demo
 
 ---
@@ -195,11 +195,11 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Crates shipped
 
-- `motus-path` `v0.4.0` (new)
+- `animato-path` `v0.4.0` (new)
 
 ### Deliverables
 
-**`motus-path`**
+**`animato-path`**
 
 *`bezier.rs`*
 - [ ] `QuadBezier` — quadratic Bezier curve with `position(t)` and `tangent(t)`
@@ -224,7 +224,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] Support for `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z` commands
 - [ ] Support for relative (lowercase) variants of all commands
 
-**`motus` facade**
+**`animato` facade**
 - [ ] `path` feature flag
 - [ ] `examples/motion_path.rs` — object moves along a Bezier curve
 - [ ] `tests/path_arc_length.rs` — arc-length monotonicity and endpoint tests
@@ -237,11 +237,11 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Crates shipped
 
-- `motus-physics` `v0.5.0` (new)
+- `animato-physics` `v0.5.0` (new)
 
 ### Deliverables
 
-**`motus-physics`**
+**`animato-physics`**
 
 *`inertia.rs`*
 - [ ] `InertiaConfig` with `friction`, `min_velocity`, and optional `bounds`
@@ -264,7 +264,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] `SwipeDirection` enum: `Up`, `Down`, `Left`, `Right`
 - [ ] `GestureRecognizer` — feeds pointer events, emits `Gesture` on pointer-up
 
-**`motus` facade**
+**`animato` facade**
 - [ ] `physics` feature flag
 
 ---
@@ -275,11 +275,11 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Crates shipped
 
-- `motus-color` `v0.6.0` (new)
+- `animato-color` `v0.6.0` (new)
 
 ### Deliverables
 
-**`motus-color`**
+**`animato-color`**
 - [ ] `InLab<C>` wrapper — interpolates in CIE L\*a\*b\* space
 - [ ] `InOklch<C>` wrapper — interpolates in Oklch (modern perceptual space)
 - [ ] `InLinear<C>` wrapper — interpolates in linear light (gamma-correct sRGB lerp)
@@ -287,25 +287,25 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] Tests: `InLab` red-to-blue midpoint is not a muddy brown
 - [ ] Tests: `InLinear` vs `InLab` produce different midpoints (proof the wrapper matters)
 
-**`motus` facade**
-- [ ] `color` feature flag (enables `dep:motus-color`, `dep:palette`)
+**`animato` facade**
+- [ ] `color` feature flag (enables `dep:animato-color`, `dep:palette`)
 - [ ] `examples/color_animation.rs` — animate background color in Lab space
 
 ---
 
 ## v0.7.0 — Integrations
 
-**Goal:** First-class support for Bevy, WASM browsers, and ratatui TUIs. A developer can drop `MotusPlugin` into Bevy or call `RafDriver::tick()` from a `requestAnimationFrame` callback.
+**Goal:** First-class support for Bevy, WASM browsers, and ratatui TUIs. A developer can drop `AnimatoPlugin` into Bevy or call `RafDriver::tick()` from a `requestAnimationFrame` callback.
 
 ### Crates shipped
 
-- `motus-bevy` `v0.7.0` (new)
-- `motus-wasm` `v0.7.0` (new)
+- `animato-bevy` `v0.7.0` (new)
+- `animato-wasm` `v0.7.0` (new)
 
 ### Deliverables
 
-**`motus-bevy`**
-- [ ] `MotusPlugin` — registers all systems and events
+**`animato-bevy`**
+- [ ] `AnimatoPlugin` — registers all systems and events
 - [ ] `tick_tweens` system — runs in `Update`, calls `.update(time.delta_seconds())`
 - [ ] `tick_springs` system — same pattern for `SpringN<T>`
 - [ ] `TweenCompleted` event — fired when a `Tween` component finishes
@@ -313,7 +313,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] `AnimationLabel` component — optional label for identifying animations in events
 - [ ] Tests: Bevy integration test with `App::new()` + plugin, asserts event fires
 
-**`motus-wasm`**
+**`animato-wasm`**
 - [ ] `RafDriver` — wraps `AnimationDriver`, converts `timestamp_ms: f64` to `dt: f32`
 - [ ] `.pause()`, `.resume()`, `.set_time_scale(f32)`
 - [ ] `FlipState` and `FlipAnimation` — FLIP layout transition helpers (`wasm-dom` sub-feature)
@@ -323,9 +323,9 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] `Observer` — unified pointer/touch/wheel event abstraction
 - [ ] `examples/wasm_counter/` — wasm-pack example with rAF loop
 
-**`motus` facade**
+**`animato` facade**
 - [ ] `bevy` feature flag
-- [ ] `wasm` feature flag (enables `motus-wasm` core)
+- [ ] `wasm` feature flag (enables `animato-wasm` core)
 - [ ] `wasm-dom` sub-feature (enables DOM plugin types)
 - [ ] `examples/tui_progress.rs` — ratatui animated progress bar
 - [ ] `examples/tui_spinner.rs` — braille spinner via KeyframeTrack
@@ -338,16 +338,16 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Deliverables
 
-**`motus-path`**
+**`animato-path`**
 - [ ] `MorphPath` — point-by-point shape morph with auto-resampling
 - [ ] `resample(points: &[[f32; 2]], count: usize) -> Vec<[f32; 2]>` — uniform resampling
 - [ ] `DrawSvg` trait — `draw_on(progress: f32) -> f32` and `draw_on_reverse(progress: f32) -> f32` for `stroke-dashoffset` animation
 
-**`motus-driver`**
+**`animato-driver`**
 - [ ] `ScrollDriver` — drives animations from scroll position instead of time
 - [ ] `ScrollClock` — `Clock` implementation backed by scroll position
 
-**`motus-core`**
+**`animato-core`**
 - [ ] Advanced easing variants:
   - [ ] `RoughEase { strength: f32, points: u32 }`
   - [ ] `SlowMo { linear_ratio: f32, power: f32 }`
@@ -355,11 +355,11 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
   - [ ] `CustomBounce { strength: f32 }`
   - [ ] `ExpoScale { start: f32, end: f32 }`
 
-**`motus-wasm`**
+**`animato-wasm`**
 - [ ] `LayoutAnimator` — FLIP-style layout transitions with `compute_transitions()` and `css_transform()`
 - [ ] `SharedElementTransition` — animate an element between two layout positions
 
-**`motus` facade**
+**`animato` facade**
 - [ ] `examples/scroll_linked.rs` — scroll-driven animation
 - [ ] `examples/morph_path.rs` — shape morphing between two polygons
 
@@ -371,17 +371,17 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 
 ### Crates shipped
 
-- `motus-gpu` `v0.9.0` (new)
+- `animato-gpu` `v0.9.0` (new)
 
 ### Deliverables
 
-**`motus-gpu`**
+**`animato-gpu`**
 - [ ] `GpuAnimationBatch` — uploads tween state to GPU, dispatches WGSL compute shader, reads back results
 - [ ] `shaders/tween.wgsl` — evaluates all 31 classic easings on GPU
 - [ ] CPU fallback mode when GPU is unavailable (`new_auto()`)
 - [ ] Benchmark: 10,000 tweens per frame on GPU vs CPU
 
-**`motus-core` / `motus-tween` / `motus-spring`**
+**`animato-core` / `animato-tween` / `animato-spring`**
 - [ ] Audit every type for `no_std` correctness
 - [ ] `cargo test --workspace --no-default-features` passes with zero warnings
 - [ ] Binary size measurement: `no_std` build of core + tween + spring < 10 KB `.text`
@@ -393,7 +393,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [ ] `benches/timeline_bench.rs` — 10-entry timeline tick throughput
 - [ ] Benchmark results published to `docs/benchmarks.md`
 
-**`motus` facade**
+**`animato` facade**
 - [ ] `gpu` feature flag
 - [ ] `examples/gpu_particles.rs` — 10,000 particle tweens on GPU
 
@@ -446,11 +446,11 @@ These are not committed — they are ideas to revisit after the stable release.
 
 | Idea | Notes |
 |------|-------|
-| `motus-egui` | `EguiMotusPlugin` for egui animation helpers |
-| `motus-tauri` | Tauri IPC bridge for driving Motus from the JS frontend |
-| `motus-dioxus` | Dioxus signal integration for reactive animations |
-| `motus-leptos` | Leptos signal/resource integration |
-| Declarative animation DSL | A `motus!{ }` proc macro for GSAP-style chaining |
+| `animato-egui` | `EguiAnimatoPlugin` for egui animation helpers |
+| `animato-tauri` | Tauri IPC bridge for driving Animato from the JS frontend |
+| `animato-dioxus` | Dioxus signal integration for reactive animations |
+| `animato-leptos` | Leptos signal/resource integration |
+| Declarative animation DSL | A `animato!{ }` proc macro for GSAP-style chaining |
 | Spring from velocity | Start a spring with an initial velocity, not just a target |
 | Animation recording | Record and replay animation sequences as data |
 | `f64` time precision | Optional `dt: f64` for high-precision simulation targets |
@@ -459,7 +459,7 @@ These are not committed — they are ideas to revisit after the stable release.
 
 ---
 
-## Contributing to Motus
+## Contributing to Animato
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
@@ -469,4 +469,4 @@ The best way to contribute right now is to pick any unchecked item from `v0.2.0`
 
 *Roadmap version: 0.1.0 — last updated May 2026*  
 *v0.1.0 shipped ✅ — next milestone: v0.2.0 — Composition*  
-*Project: Aarambh Dev Hub — github.com/AarambhDevHub/motus*
+*Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

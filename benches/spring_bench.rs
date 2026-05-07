@@ -3,8 +3,8 @@
 //! Run with: `cargo bench --bench spring_bench`
 
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use motus_core::Update;
-use motus_spring::{Spring, SpringConfig};
+use animato_core::Update;
+use animato_spring::{Spring, SpringConfig};
 
 const DT: f32 = 1.0 / 60.0;
 

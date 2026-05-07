@@ -1,4 +1,4 @@
-# Motus — Full Project Architecture
+# Animato — Full Project Architecture
 
 > *Latin: mōtus — motion, movement, impulse.*
 >
@@ -14,18 +14,18 @@
 2. [Why a Workspace — Not a Single Crate](#2-why-a-workspace-not-a-single-crate)
 3. [Workspace Layout](#3-workspace-layout)
 4. [Crate-by-Crate Specification](#4-crate-by-crate-specification)
-   - 4.1 [motus-core](#41-motus-core)
-   - 4.2 [motus-tween](#42-motus-tween)
-   - 4.3 [motus-timeline](#43-motus-timeline)
-   - 4.4 [motus-spring](#44-motus-spring)
-   - 4.5 [motus-path](#45-motus-path)
-   - 4.6 [motus-physics](#46-motus-physics)
-   - 4.7 [motus-color](#47-motus-color)
-   - 4.8 [motus-driver](#48-motus-driver)
-   - 4.9 [motus-gpu](#49-motus-gpu)
-   - 4.10 [motus-bevy](#410-motus-bevy)
-   - 4.11 [motus-wasm](#411-motus-wasm)
-   - 4.12 [motus (facade)](#412-motus-facade)
+   - 4.1 [animato-core](#41-animato-core)
+   - 4.2 [animato-tween](#42-animato-tween)
+   - 4.3 [animato-timeline](#43-animato-timeline)
+   - 4.4 [animato-spring](#44-animato-spring)
+   - 4.5 [animato-path](#45-animato-path)
+   - 4.6 [animato-physics](#46-animato-physics)
+   - 4.7 [animato-color](#47-animato-color)
+   - 4.8 [animato-driver](#48-animato-driver)
+   - 4.9 [animato-gpu](#49-animato-gpu)
+   - 4.10 [animato-bevy](#410-animato-bevy)
+   - 4.11 [animato-wasm](#411-animato-wasm)
+   - 4.12 [animato (facade)](#412-animato-facade)
 5. [Data Flow & Runtime Loop](#5-data-flow--runtime-loop)
 6. [Type System Design](#6-type-system-design)
 7. [Feature Flag Strategy](#7-feature-flag-strategy)
@@ -41,7 +41,7 @@
 
 ## 1. Project Vision
 
-Motus is built around one principle: **any value that can be linearly interpolated can be animated.**
+Animato is built around one principle: **any value that can be linearly interpolated can be animated.**
 
 Everything else — easing curves, keyframe tracks, timelines, spring physics, motion paths, GPU batching — is layered cleanly on top of that single primitive. Each layer lives in its own crate, carries its own `Cargo.toml`, and can be used standalone or composed with others.
 
@@ -50,42 +50,42 @@ Everything else — easing curves, keyframe tracks, timelines, spring physics, m
 | Goal | Decision |
 |------|----------|
 | Zero mandatory dependencies | Core is pure Rust math with no external crates |
-| `no_std` support | `motus-core`, `motus-tween`, `motus-spring` are fully `no_std` |
+| `no_std` support | `animato-core`, `animato-tween`, `animato-spring` are fully `no_std` |
 | Clean crate boundaries | Each concern lives in its own crate — not one giant `src/` |
 | Composable, not monolithic | Use only the crates you need |
 | Ergonomic public API | Builder pattern on every complex type |
 | Type-safe animation targets | Generic over `T: Animatable` throughout |
 | Testable without a real clock | `Clock` trait with `MockClock` for deterministic tests |
 | Serializable state | Optional `serde` feature, never forced |
-| Discoverable | One facade crate (`motus`) re-exports everything |
+| Discoverable | One facade crate (`animato`) re-exports everything |
 
 ### Non-Goals
 
-- Motus does **NOT** render anything. It computes values; the caller renders.
-- Motus does **NOT** own a game loop. It accepts a `dt` tick; the caller drives it.
-- Motus does **NOT** manage scene graphs or entity hierarchies (Bevy handles that).
+- Animato does **NOT** render anything. It computes values; the caller renders.
+- Animato does **NOT** own a game loop. It accepts a `dt` tick; the caller drives it.
+- Animato does **NOT** manage scene graphs or entity hierarchies (Bevy handles that).
 
 ---
 
 ## 2. Why a Workspace — Not a Single Crate
 
 Spanda grew into a flat `src/` with 25+ files and no clear internal boundaries.
-Motus solves this with a Cargo workspace from day one.
+Animato solves this with a Cargo workspace from day one.
 
 **Benefits:**
 
-- **Compile-time isolation.** Changes to `motus-path` do not recompile `motus-core`.
-- **Clear ownership.** Each crate has one job. A contributor opening `motus-spring` only needs to understand springs.
-- **Granular dependencies.** A user who only needs tweening adds `motus-tween`. They never download wgpu or bevy.
+- **Compile-time isolation.** Changes to `animato-path` do not recompile `animato-core`.
+- **Clear ownership.** Each crate has one job. A contributor opening `animato-spring` only needs to understand springs.
+- **Granular dependencies.** A user who only needs tweening adds `animato-tween`. They never download wgpu or bevy.
 - **Parallel compilation.** Cargo compiles independent crates in parallel across CPU cores.
-- **Separate versioning.** `motus-gpu` can be `0.1.0` while `motus-core` reaches `1.0.0`.
+- **Separate versioning.** `animato-gpu` can be `0.1.0` while `animato-core` reaches `1.0.0`.
 
 ---
 
 ## 3. Workspace Layout
 
 ```
-motus/
+animato/
 ├── Cargo.toml                          ← workspace root (no [lib] here)
 ├── README.md
 ├── ARCHITECTURE.md                     ← this file
@@ -104,14 +104,14 @@ motus/
 │       └── feature_request.md
 │
 ├── crates/
-│   ├── motus-core/                     ← traits, easing, interpolation (no_std)
+│   ├── animato-core/                     ← traits, easing, interpolation (no_std)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── traits.rs               ← Interpolate, Animatable, Update
 │   │       └── easing.rs               ← Easing enum + 38+ functions
 │   │
-│   ├── motus-tween/                    ← Tween<T>, KeyframeTrack<T>, Loop
+│   ├── animato-tween/                    ← Tween<T>, KeyframeTrack<T>, Loop
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -119,7 +119,7 @@ motus/
 │   │       ├── builder.rs              ← TweenBuilder<T>
 │   │       └── keyframe.rs             ← KeyframeTrack<T>, Keyframe<T>
 │   │
-│   ├── motus-timeline/                 ← Timeline, Sequence, At, stagger
+│   ├── animato-timeline/                 ← Timeline, Sequence, At, stagger
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -127,14 +127,14 @@ motus/
 │   │       ├── sequence.rs
 │   │       └── stagger.rs
 │   │
-│   ├── motus-spring/                   ← Spring, SpringN<T>, SpringConfig (no_std)
+│   ├── animato-spring/                   ← Spring, SpringN<T>, SpringConfig (no_std)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── spring.rs
 │   │       └── config.rs
 │   │
-│   ├── motus-path/                     ← motion paths, Bezier, SVG, morphing
+│   ├── animato-path/                     ← motion paths, Bezier, SVG, morphing
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -144,7 +144,7 @@ motus/
 │   │       ├── morph.rs                ← MorphPath + auto-resample
 │   │       └── svg.rs                  ← SvgPathParser (d-attribute)
 │   │
-│   ├── motus-physics/                  ← Inertia, DragState, GestureRecognizer
+│   ├── animato-physics/                  ← Inertia, DragState, GestureRecognizer
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -152,13 +152,13 @@ motus/
 │   │       ├── drag.rs
 │   │       └── gesture.rs
 │   │
-│   ├── motus-color/                    ← perceptual color interpolation
+│   ├── animato-color/                    ← perceptual color interpolation
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       └── spaces.rs               ← InLab, InOklch, InLinear wrappers
 │   │
-│   ├── motus-driver/                   ← AnimationDriver, Clock, ScrollDriver
+│   ├── animato-driver/                   ← AnimationDriver, Clock, ScrollDriver
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -166,7 +166,7 @@ motus/
 │   │       ├── clock.rs
 │   │       └── scroll.rs
 │   │
-│   ├── motus-gpu/                      ← GpuAnimationBatch via wgpu
+│   ├── animato-gpu/                      ← GpuAnimationBatch via wgpu
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -174,14 +174,14 @@ motus/
 │   │       └── shaders/
 │   │           └── tween.wgsl
 │   │
-│   ├── motus-bevy/                     ← SpandaPlugin → MotusPlugin for Bevy
+│   ├── animato-bevy/                     ← SpandaPlugin → AnimatoPlugin for Bevy
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
 │   │       ├── plugin.rs
 │   │       └── systems.rs
 │   │
-│   ├── motus-wasm/                     ← WASM + DOM integrations
+│   ├── animato-wasm/                     ← WASM + DOM integrations
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -192,7 +192,7 @@ motus/
 │   │       ├── draggable.rs
 │   │       └── observer.rs
 │   │
-│   └── motus/                          ← facade crate — the one users add to Cargo.toml
+│   └── animato/                          ← facade crate — the one users add to Cargo.toml
 │       ├── Cargo.toml
 │       └── src/
 │           └── lib.rs                  ← pub use everything from every sub-crate
@@ -228,39 +228,39 @@ motus/
 [workspace]
 resolver = "2"
 members = [
-    "crates/motus-core",
-    "crates/motus-tween",
-    "crates/motus-timeline",
-    "crates/motus-spring",
-    "crates/motus-path",
-    "crates/motus-physics",
-    "crates/motus-color",
-    "crates/motus-driver",
-    "crates/motus-gpu",
-    "crates/motus-bevy",
-    "crates/motus-wasm",
-    "crates/motus",
+    "crates/animato-core",
+    "crates/animato-tween",
+    "crates/animato-timeline",
+    "crates/animato-spring",
+    "crates/animato-path",
+    "crates/animato-physics",
+    "crates/animato-color",
+    "crates/animato-driver",
+    "crates/animato-gpu",
+    "crates/animato-bevy",
+    "crates/animato-wasm",
+    "crates/animato",
 ]
 
 [workspace.package]
 version      = "0.1.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
-repository   = "https://github.com/AarambhDevHub/motus"
+repository   = "https://github.com/AarambhDevHub/animato"
 authors      = ["Aarambh Dev Hub"]
 rust-version = "1.85"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-motus-core     = { path = "crates/motus-core",     version = "0.1" }
-motus-tween    = { path = "crates/motus-tween",    version = "0.1" }
-motus-timeline = { path = "crates/motus-timeline", version = "0.1" }
-motus-spring   = { path = "crates/motus-spring",   version = "0.1" }
-motus-path     = { path = "crates/motus-path",     version = "0.1" }
-motus-physics  = { path = "crates/motus-physics",  version = "0.1" }
-motus-color    = { path = "crates/motus-color",    version = "0.1" }
-motus-driver   = { path = "crates/motus-driver",   version = "0.1" }
-motus-gpu      = { path = "crates/motus-gpu",      version = "0.1" }
+animato-core     = { path = "crates/animato-core",     version = "0.1" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.1" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.1" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.1" }
+animato-path     = { path = "crates/animato-path",     version = "0.1" }
+animato-physics  = { path = "crates/animato-physics",  version = "0.1" }
+animato-color    = { path = "crates/animato-color",    version = "0.1" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.1" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "0.1" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -285,7 +285,7 @@ criterion    = { version = "0.5",  features = ["html_reports"] }
 
 ---
 
-### 4.1 `motus-core`
+### 4.1 `animato-core`
 
 **Responsibility:** Core traits and the easing system. This is the foundation every other crate builds on. Must compile in `no_std` environments with zero external dependencies.
 
@@ -311,7 +311,7 @@ pub trait Update {
 }
 ```
 
-**Blanket `Interpolate` implementations shipped in `motus-core`:**
+**Blanket `Interpolate` implementations shipped in `animato-core`:**
 
 | Type | Behavior |
 |------|----------|
@@ -388,8 +388,8 @@ impl Easing {
 
 ```toml
 [package]
-name        = "motus-core"
-description = "Core traits and easing system for the Motus animation library."
+name        = "animato-core"
+description = "Core traits and easing system for the Animato animation library."
 # inherits workspace.package fields
 
 [features]
@@ -403,11 +403,11 @@ serde = { workspace = true, optional = true }
 
 ---
 
-### 4.2 `motus-tween`
+### 4.2 `animato-tween`
 
 **Responsibility:** `Tween<T>` (single-value animation) and `KeyframeTrack<T>` (multi-stop animation). The bread-and-butter of the library.
 
-**Depends on:** `motus-core`
+**Depends on:** `animato-core`
 
 #### `src/tween.rs`
 
@@ -559,11 +559,11 @@ t = if cycle_t <= total { cycle_t } else { 2.0 * total - cycle_t }
 
 ---
 
-### 4.3 `motus-timeline`
+### 4.3 `animato-timeline`
 
 **Responsibility:** Composing animations into concurrent or sequential groups. The `Timeline` is the mixer; `Sequence` is sugar for chaining.
 
-**Depends on:** `motus-core`, `motus-tween`
+**Depends on:** `animato-core`, `animato-tween`
 
 #### `src/timeline.rs`
 
@@ -674,11 +674,11 @@ pub fn stagger(
 
 ---
 
-### 4.4 `motus-spring`
+### 4.4 `animato-spring`
 
 **Responsibility:** Physics-based animation using a damped harmonic oscillator. `no_std`-compatible — no heap allocation needed for `Spring` itself.
 
-**Depends on:** `motus-core`
+**Depends on:** `animato-core`
 
 #### `src/spring.rs`
 
@@ -773,11 +773,11 @@ impl<T: Animatable> SpringN<T> {
 
 ---
 
-### 4.5 `motus-path`
+### 4.5 `animato-path`
 
 **Responsibility:** All motion-path related types — Bezier curves, CatmullRom splines, arc-length parameterization, SVG path parsing, shape morphing, and the `MotionPathTween`.
 
-**Depends on:** `motus-core`, `motus-tween`
+**Depends on:** `animato-core`, `animato-tween`
 
 #### Module breakdown
 
@@ -817,11 +817,11 @@ impl MotionPathTween {
 
 ---
 
-### 4.6 `motus-physics`
+### 4.6 `animato-physics`
 
 **Responsibility:** Input-driven physics — inertia (friction deceleration), drag tracking with velocity, and gesture recognition.
 
-**Depends on:** `motus-core`
+**Depends on:** `animato-core`
 
 #### Module breakdown
 
@@ -845,11 +845,11 @@ pub enum Gesture {
 
 ---
 
-### 4.7 `motus-color`
+### 4.7 `animato-color`
 
 **Responsibility:** Perceptual color interpolation by wrapping the `palette` crate. Only meaningful with `features = ["palette"]`.
 
-**Depends on:** `motus-core`, `palette`
+**Depends on:** `animato-core`, `palette`
 
 ```rust
 // spaces.rs — wrapper types that impl Interpolate using the correct color space
@@ -867,11 +867,11 @@ impl<C: palette::Mix + Clone + 'static> Interpolate for InLab<C> {
 
 ---
 
-### 4.8 `motus-driver`
+### 4.8 `animato-driver`
 
 **Responsibility:** The runtime — `AnimationDriver` manages many animations, `Clock` abstracts time, `ScrollDriver` links scroll position to animation progress.
 
-**Depends on:** `motus-core` (+ `std` for `AnimationDriver`)
+**Depends on:** `animato-core` (+ `std` for `AnimationDriver`)
 
 #### `src/driver.rs`
 
@@ -943,11 +943,11 @@ impl ScrollDriver {
 
 ---
 
-### 4.9 `motus-gpu`
+### 4.9 `animato-gpu`
 
 **Responsibility:** Batch-evaluate 10,000+ tweens per frame on the GPU using `wgpu` compute shaders. Falls back to CPU if GPU unavailable.
 
-**Depends on:** `motus-core`, `motus-tween`, `wgpu`, `bytemuck`, `pollster`
+**Depends on:** `animato-core`, `animato-tween`, `wgpu`, `bytemuck`, `pollster`
 
 ```rust
 pub struct GpuAnimationBatch {
@@ -975,18 +975,18 @@ The shader receives a buffer of tween state structs `{start, end, duration, elap
 
 ---
 
-### 4.10 `motus-bevy`
+### 4.10 `animato-bevy`
 
-**Responsibility:** Bevy plugin integrating Motus into the Bevy ECS. Component registration, system scheduling, and event types.
+**Responsibility:** Bevy plugin integrating Animato into the Bevy ECS. Component registration, system scheduling, and event types.
 
-**Depends on:** `motus-core`, `motus-tween`, `motus-spring`, `bevy_app`, `bevy_ecs`, `bevy_time`
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `bevy_app`, `bevy_ecs`, `bevy_time`
 
 #### `src/plugin.rs`
 
 ```rust
-pub struct MotusPlugin;
+pub struct AnimatoPlugin;
 
-impl bevy_app::Plugin for MotusPlugin {
+impl bevy_app::Plugin for AnimatoPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app
             .add_event::<TweenCompleted>()
@@ -1022,11 +1022,11 @@ fn tick_tweens(
 
 ---
 
-### 4.11 `motus-wasm`
+### 4.11 `animato-wasm`
 
 **Responsibility:** Browser-specific integrations. `requestAnimationFrame` driver, FLIP layout transitions, SplitText, ScrollSmoother, Draggable, Observer.
 
-**Depends on:** `motus-core`, `motus-driver`, `wasm-bindgen`, `js-sys`, `web-sys`
+**Depends on:** `animato-core`, `animato-driver`, `wasm-bindgen`, `js-sys`, `web-sys`
 
 #### `src/raf.rs`
 
@@ -1049,26 +1049,26 @@ impl RafDriver {
 
 ---
 
-### 4.12 `motus` (facade)
+### 4.12 `animato` (facade)
 
 **Responsibility:** The one crate users put in their `Cargo.toml`. Feature flags on this crate activate the matching sub-crates and re-export their public APIs.
 
 ```toml
 [features]
 default  = ["std", "tween", "timeline", "spring", "driver"]
-std      = ["motus-core/std", "motus-driver/std"]
-tween    = ["dep:motus-tween"]
-timeline = ["dep:motus-timeline"]
-spring   = ["dep:motus-spring"]
-path     = ["dep:motus-path"]
-physics  = ["dep:motus-physics"]
-color    = ["dep:motus-color", "dep:palette"]
-driver   = ["dep:motus-driver"]
-gpu      = ["dep:motus-gpu"]
-bevy     = ["dep:motus-bevy"]
-wasm     = ["dep:motus-wasm"]
-serde    = ["motus-core/serde", "motus-tween/serde", "motus-spring/serde"]
-tokio    = ["motus-timeline/tokio"]
+std      = ["animato-core/std", "animato-driver/std"]
+tween    = ["dep:animato-tween"]
+timeline = ["dep:animato-timeline"]
+spring   = ["dep:animato-spring"]
+path     = ["dep:animato-path"]
+physics  = ["dep:animato-physics"]
+color    = ["dep:animato-color", "dep:palette"]
+driver   = ["dep:animato-driver"]
+gpu      = ["dep:animato-gpu"]
+bevy     = ["dep:animato-bevy"]
+wasm     = ["dep:animato-wasm"]
+serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde"]
+tokio    = ["animato-timeline/tokio"]
 no_std   = []
 ```
 
@@ -1189,13 +1189,13 @@ With default features:    Uses std heap allocation, wall clock, callbacks
 With no_std:              Stack-only. Vec requires `extern crate alloc`.
 
 Available in no_std:
-  motus-core  → Easing, Interpolate, Animatable, Update
-  motus-tween → Tween<T> (stack allocated), Loop, TweenState
-  motus-spring → Spring (stack allocated), SpringConfig
+  animato-core  → Easing, Interpolate, Animatable, Update
+  animato-tween → Tween<T> (stack allocated), Loop, TweenState
+  animato-spring → Spring (stack allocated), SpringConfig
 
 NOT available in no_std (require allocation):
   KeyframeTrack<T>, Timeline, Sequence, AnimationDriver,
-  WallClock, callbacks, MotusPlugin, RafDriver
+  WallClock, callbacks, AnimatoPlugin, RafDriver
 ```
 
 ---
@@ -1206,16 +1206,16 @@ NOT available in no_std (require allocation):
 |---------|----------------|-----------------|
 | `default` | `std` + `tween` + `timeline` + `spring` + `driver` | All core crates |
 | `std` | Wall clock, callbacks, heap allocation | OS |
-| `tween` | `Tween<T>`, `KeyframeTrack<T>` | `motus-tween` |
-| `timeline` | `Timeline`, `Sequence`, `stagger` | `motus-timeline` |
-| `spring` | `Spring`, `SpringN<T>` | `motus-spring` |
-| `path` | Bezier, MotionPath, SVG parser | `motus-path` |
-| `physics` | Inertia, DragState, Gesture | `motus-physics` |
-| `color` | Perceptual color interpolation | `motus-color`, `palette` |
-| `driver` | `AnimationDriver`, Clocks, ScrollDriver | `motus-driver` |
-| `gpu` | `GpuAnimationBatch` via wgpu | `motus-gpu`, `wgpu` |
-| `bevy` | `MotusPlugin` | `motus-bevy`, bevy crates |
-| `wasm` | `RafDriver` + WASM binding | `motus-wasm`, `wasm-bindgen` |
+| `tween` | `Tween<T>`, `KeyframeTrack<T>` | `animato-tween` |
+| `timeline` | `Timeline`, `Sequence`, `stagger` | `animato-timeline` |
+| `spring` | `Spring`, `SpringN<T>` | `animato-spring` |
+| `path` | Bezier, MotionPath, SVG parser | `animato-path` |
+| `physics` | Inertia, DragState, Gesture | `animato-physics` |
+| `color` | Perceptual color interpolation | `animato-color`, `palette` |
+| `driver` | `AnimationDriver`, Clocks, ScrollDriver | `animato-driver` |
+| `gpu` | `GpuAnimationBatch` via wgpu | `animato-gpu`, `wgpu` |
+| `bevy` | `AnimatoPlugin` | `animato-bevy`, bevy crates |
+| `wasm` | `RafDriver` + WASM binding | `animato-wasm`, `wasm-bindgen` |
 | `serde` | `Serialize`/`Deserialize` on all public types | `serde` |
 | `tokio` | `.wait().await` on timelines | `tokio` |
 
@@ -1234,7 +1234,7 @@ NOT available in no_std (require allocation):
 
 ## 8. Error Handling Strategy
 
-Motus uses **no `Result` in hot paths**. Animation update functions never fail. They clamp, saturate, or silently correct invalid input.
+Animato uses **no `Result` in hot paths**. Animation update functions never fail. They clamp, saturate, or silently correct invalid input.
 
 | Situation | Behavior |
 |-----------|----------|
@@ -1247,7 +1247,7 @@ Motus uses **no `Result` in hot paths**. Animation update functions never fail. 
 | Spring with `stiffness = 0.0` | Returns `target` immediately |
 | `seek()` with `t > 1.0` | Clamped to `1.0` |
 
-`Result` is only returned by builders that validate user-provided data at construction time (e.g. if `duration < 0.0` is given, `TweenBuilder::build()` can return `Err(MotusError::InvalidDuration)`).
+`Result` is only returned by builders that validate user-provided data at construction time (e.g. if `duration < 0.0` is given, `TweenBuilder::build()` can return `Err(AnimatoError::InvalidDuration)`).
 
 ---
 
@@ -1259,15 +1259,15 @@ Every module has `#[cfg(test)]` at the bottom. Required tests:
 
 | Crate / Module | Required tests |
 |----------------|----------------|
-| `motus-core / traits.rs` | `f32` lerp endpoints, midpoint, `[f32; 4]` independence |
-| `motus-core / easing.rs` | Every variant: `apply(0)=0`, `apply(1)=1`, no panic on out-of-range `t` |
-| `motus-tween / tween.rs` | Start value, end value, complete flag, delay, seek, reverse, large-dt safety, PingPong reversal |
-| `motus-tween / keyframe.rs` | Single frame, two frames, multi-frame, looping, PingPong, out-of-range query |
-| `motus-timeline / timeline.rs` | Concurrent play, sequential play, seek, pause/resume, loop, callback fires |
-| `motus-spring / spring.rs` | Settles to target, stiff settles fast, damping=0 oscillates, SpringN for `[f32; 3]` |
-| `motus-driver / driver.rs` | Completed removed automatically, cancel mid-animation, `active_count`, thread-safe add |
-| `motus-driver / clock.rs` | MockClock returns correct fixed dt, ManualClock advance+delta |
-| `motus-path / bezier.rs` | position(0)=start, position(1)=end, arc-length monotonicity |
+| `animato-core / traits.rs` | `f32` lerp endpoints, midpoint, `[f32; 4]` independence |
+| `animato-core / easing.rs` | Every variant: `apply(0)=0`, `apply(1)=1`, no panic on out-of-range `t` |
+| `animato-tween / tween.rs` | Start value, end value, complete flag, delay, seek, reverse, large-dt safety, PingPong reversal |
+| `animato-tween / keyframe.rs` | Single frame, two frames, multi-frame, looping, PingPong, out-of-range query |
+| `animato-timeline / timeline.rs` | Concurrent play, sequential play, seek, pause/resume, loop, callback fires |
+| `animato-spring / spring.rs` | Settles to target, stiff settles fast, damping=0 oscillates, SpringN for `[f32; 3]` |
+| `animato-driver / driver.rs` | Completed removed automatically, cancel mid-animation, `active_count`, thread-safe add |
+| `animato-driver / clock.rs` | MockClock returns correct fixed dt, ManualClock advance+delta |
+| `animato-path / bezier.rs` | position(0)=start, position(1)=end, arc-length monotonicity |
 
 ### Integration tests — `tests/` at workspace root
 
@@ -1337,7 +1337,7 @@ for tween in tweens.iter_mut() {
 
 ### GPU batch for extreme scale
 
-For 10,000+ concurrent tweens, use `motus-gpu`. The WGSL compute shader evaluates all tweens in one GPU dispatch with no CPU-side loops at update time.
+For 10,000+ concurrent tweens, use `animato-gpu`. The WGSL compute shader evaluates all tweens in one GPU dispatch with no CPU-side loops at update time.
 
 ---
 
@@ -1346,7 +1346,7 @@ For 10,000+ concurrent tweens, use `motus-gpu`. The WGSL compute shader evaluate
 ### TUI / CLI (ratatui)
 
 ```rust
-use motus::{Tween, Easing, WallClock, Update};
+use animato::{Tween, Easing, WallClock, Update};
 
 struct App { progress: Tween<f32> }
 
@@ -1381,8 +1381,8 @@ Build with `wasm-pack build --target web --features wasm`.
 
 ```rust
 use wasm_bindgen::prelude::*;
-use motus::{Tween, Easing};
-use motus_wasm::RafDriver;
+use animato::{Tween, Easing};
+use animato_wasm::RafDriver;
 
 #[wasm_bindgen]
 pub struct App {
@@ -1411,13 +1411,13 @@ impl App {
 
 ```rust
 use bevy::prelude::*;
-use motus_bevy::{MotusPlugin, TweenCompleted};
-use motus::Tween;
+use animato_bevy::{AnimatoPlugin, TweenCompleted};
+use animato::Tween;
 
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(MotusPlugin)
+        .add_plugins(AnimatoPlugin)
         .add_systems(Startup, spawn)
         .add_systems(Update, on_done)
         .run();
@@ -1444,9 +1444,9 @@ fn on_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-motus-core  = { version = "0.1", default-features = false }
-motus-tween = { version = "0.1", default-features = false }
-motus-spring = { version = "0.1", default-features = false }
+animato-core  = { version = "0.1", default-features = false }
+animato-tween = { version = "0.1", default-features = false }
+animato-spring = { version = "0.1", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, all `Interpolate` blanket impls.
@@ -1482,10 +1482,10 @@ Jobs:
 ```
 Steps:
   - Verify tag matches version in each Cargo.toml
-  - cargo publish -p motus-core
-  - cargo publish -p motus-tween
+  - cargo publish -p animato-core
+  - cargo publish -p animato-tween
   - ... (in dependency order)
-  - cargo publish -p motus
+  - cargo publish -p animato
 ```
 
 ---
@@ -1510,9 +1510,9 @@ Before `cargo publish` for any crate:
 ### Publish order (dependency chain)
 
 ```
-motus-core → motus-tween → motus-spring → motus-path → motus-physics
-          → motus-color → motus-driver → motus-timeline
-          → motus-gpu → motus-bevy → motus-wasm → motus
+animato-core → animato-tween → animato-spring → animato-path → animato-physics
+          → animato-color → animato-driver → animato-timeline
+          → animato-gpu → animato-bevy → animato-wasm → animato
 ```
 
 ---
@@ -1521,8 +1521,8 @@ motus-core → motus-tween → motus-spring → motus-path → motus-physics
 
 ### Crate naming
 
-`motus-{concern}` — Latin prefix, lowercase, hyphen-separated.  
-The facade crate is simply `motus`.
+`animato-{concern}` — Latin prefix, lowercase, hyphen-separated.  
+The facade crate is simply `animato`.
 
 ### Type naming
 
@@ -1549,9 +1549,9 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 1. One-sentence summary
 2. Quick-start example (compiles as a `cargo test --doc`)
 3. Feature flags table
-4. Link to the `motus` facade crate
+4. Link to the `animato` facade crate
 
 ---
 
-*Document version: 0.1.0 — covers architecture through Motus 1.0.0*  
-*Project: Aarambh Dev Hub — github.com/AarambhDevHub/motus*
+*Document version: 0.1.0 — covers architecture through Animato 1.0.0*  
+*Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

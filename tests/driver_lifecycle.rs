@@ -1,8 +1,8 @@
 //! Integration test: AnimationDriver lifecycle.
 
-use motus_core::Easing;
-use motus_driver::{AnimationDriver, Clock, MockClock};
-use motus_tween::Tween;
+use animato_core::Easing;
+use animato_driver::{AnimationDriver, Clock, MockClock};
+use animato_tween::Tween;
 
 const DT: f32 = 1.0 / 60.0;
 

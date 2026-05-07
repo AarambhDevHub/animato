@@ -47,9 +47,9 @@ jobs:
         run: cargo test --workspace --all-features
 
       # Only test no_std-compatible crates without default features.
-      # motus-driver requires std (WallClock uses std::time::Instant).
+      # animato-driver requires std (WallClock uses std::time::Instant).
       - name: Test no_std crates (no default features)
-        run: cargo test -p motus-core -p motus-tween -p motus-spring --no-default-features
+        run: cargo test -p animato-core -p animato-tween -p animato-spring --no-default-features
 
   # ── Lint ───────────────────────────────────────────────────────────────────
   lint:
@@ -150,14 +150,14 @@ jobs:
           key: ${{ runner.os }}-cargo-nostd-${{ hashFiles('**/Cargo.lock') }}
 
       # Only the crates that are no_std-compatible
-      - name: Build motus-core (no_std)
-        run: cargo build -p motus-core --target thumbv7m-none-eabi --no-default-features
+      - name: Build animato-core (no_std)
+        run: cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
 
-      - name: Build motus-tween (no_std)
-        run: cargo build -p motus-tween --target thumbv7m-none-eabi --no-default-features
+      - name: Build animato-tween (no_std)
+        run: cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
 
-      - name: Build motus-spring (no_std)
-        run: cargo build -p motus-spring --target thumbv7m-none-eabi --no-default-features
+      - name: Build animato-spring (no_std)
+        run: cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features
 
   # ── Security audit ─────────────────────────────────────────────────────────
   audit:

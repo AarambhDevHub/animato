@@ -3,8 +3,8 @@
 //! Run with: `cargo bench --bench tween_update_bench`
 
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use motus_core::{Easing, Update};
-use motus_tween::Tween;
+use animato_core::{Easing, Update};
+use animato_tween::Tween;
 
 const DT: f32 = 1.0 / 60.0;
 

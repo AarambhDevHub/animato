@@ -5,7 +5,7 @@
 //! cargo run --example basic_tween
 //! ```
 
-use motus::{AnimationDriver, Clock, Easing, Loop, Tween, Update, WallClock};
+use animato::{AnimationDriver, Clock, Easing, Loop, Tween, Update, WallClock};
 
 fn render_bar(value: f32, width: usize) {
     let filled = ((value / 100.0) * width as f32).round() as usize;
@@ -18,7 +18,7 @@ fn render_bar(value: f32, width: usize) {
 }
 
 fn main() {
-    println!("Motus v0.1.0 — basic_tween example");
+    println!("Animato v0.1.0 — basic_tween example");
     println!("  Animating 0 → 100 over 2.0s with EaseOutCubic\n");
 
     // ── Build a tween ────────────────────────────────────────────────────────

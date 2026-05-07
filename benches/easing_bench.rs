@@ -3,7 +3,7 @@
 //! Run with: `cargo bench --bench easing_bench`
 
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
-use motus_core::Easing;
+use animato_core::Easing;
 
 fn bench_all_named(c: &mut Criterion) {
     let mut group = c.benchmark_group("easing/named");
@@ -26,7 +26,7 @@ fn bench_all_named(c: &mut Criterion) {
 }
 
 fn bench_free_functions(c: &mut Criterion) {
-    use motus_core::easing::*;
+    use animato_core::easing::*;
     let mut group = c.benchmark_group("easing/free_fn");
 
     macro_rules! bench_fn {

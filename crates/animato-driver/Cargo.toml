@@ -1,0 +1,23 @@
+[package]
+name        = "animato-driver"
+description = "AnimationDriver and Clock abstractions for the Animato animation library."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "driver", "clock", "game-loop"]
+categories  = ["game-development"]
+
+[features]
+default = ["std"]
+std     = ["animato-core/std"]
+
+[dependencies]
+animato-core = { workspace = true }
+
+[dev-dependencies]
+animato-tween  = { workspace = true }
+animato-core   = { workspace = true }

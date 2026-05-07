@@ -1,7 +1,7 @@
 //! Integration test: spring settles for all presets.
 
-use motus_core::Update;
-use motus_spring::{Spring, SpringConfig, SpringN};
+use animato_core::Update;
+use animato_spring::{Spring, SpringConfig, SpringN};
 
 const DT: f32 = 1.0 / 60.0;
 const MAX_STEPS: usize = 10_000;

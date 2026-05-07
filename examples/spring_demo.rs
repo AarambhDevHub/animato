@@ -5,7 +5,7 @@
 //! cargo run --example spring_demo
 //! ```
 
-use motus::{Clock, Spring, SpringConfig, Update, WallClock};
+use animato::{Clock, Spring, SpringConfig, Update, WallClock};
 
 fn render_position(position: f32, target: f32, range: f32) {
     let width = 60usize;
@@ -57,7 +57,7 @@ fn run_preset(label: &str, config: SpringConfig, target: f32) {
 }
 
 fn main() {
-    println!("Motus v0.1.0 — spring_demo example");
+    println!("Animato v0.1.0 — spring_demo example");
     println!("  Target: 100.0  |  Legend: │=target  ●=position\n");
 
     let target = 100.0_f32;
@@ -69,7 +69,7 @@ fn main() {
     run_preset("snappy  (near-instant)", SpringConfig::snappy(), target);
 
     // ── SpringN<[f32; 3]> demo ───────────────────────────────────────────────
-    use motus::SpringN;
+    use animato::SpringN;
     println!("  ── SpringN<[f32; 3]> targeting [100, 200, 300] ──");
     let mut sn: SpringN<[f32; 3]> = SpringN::new(SpringConfig::stiff(), [0.0; 3]);
     sn.set_target([100.0, 200.0, 300.0]);
