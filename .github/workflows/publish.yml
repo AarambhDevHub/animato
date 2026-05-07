@@ -34,8 +34,8 @@ jobs:
       - name: Run full test suite
         run: cargo test --workspace --all-features
 
-      - name: Run no_std check
-        run: cargo test --workspace --no-default-features
+      - name: Run no_std check (no_std-compatible crates only)
+        run: cargo test -p motus-core -p motus-tween -p motus-spring --no-default-features
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
