@@ -1,6 +1,7 @@
 [package]
 name        = "motus-tween"
 description = "Tween<T> single-value animation for the Motus animation library."
+readme.workspace  = true
 version.workspace     = true
 edition.workspace     = true
 license.workspace     = true
