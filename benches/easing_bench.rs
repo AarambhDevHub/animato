@@ -2,8 +2,8 @@
 //!
 //! Run with: `cargo bench --bench easing_bench`
 
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use animato_core::Easing;
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 
 fn bench_all_named(c: &mut Criterion) {
     let mut group = c.benchmark_group("easing/named");

@@ -1,6 +1,6 @@
 # Animato — Project Roadmap
 
-> Latin: mōtus — motion, movement, impulse.  
+> *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
 This roadmap tracks every planned release from `v0.1.0` through `v1.0.0`.  

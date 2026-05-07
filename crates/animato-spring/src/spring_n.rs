@@ -4,8 +4,8 @@ use crate::config::SpringConfig;
 use crate::decompose::Decompose;
 use crate::spring::Spring;
 use alloc::vec::Vec;
-use core::marker::PhantomData;
 use animato_core::Update;
+use core::marker::PhantomData;
 
 /// A multi-dimensional spring that animates any type that can be decomposed
 /// into independent `f32` components (see the sealed `Decompose` trait).

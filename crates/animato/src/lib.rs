@@ -1,6 +1,6 @@
 //! # Animato
 //!
-//! > *Latin: mōtus — motion, movement, impulse.*
+//! > *Italian: animato — animated, lively, with life and movement.*
 //!
 //! A professional-grade, renderer-agnostic animation library for Rust.
 //! Zero mandatory dependencies. `no_std`-ready.

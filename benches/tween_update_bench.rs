@@ -2,9 +2,9 @@
 //!
 //! Run with: `cargo bench --bench tween_update_bench`
 
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use animato_core::{Easing, Update};
 use animato_tween::Tween;
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 
 const DT: f32 = 1.0 / 60.0;
 

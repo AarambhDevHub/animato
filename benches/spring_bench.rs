@@ -2,9 +2,9 @@
 //!
 //! Run with: `cargo bench --bench spring_bench`
 
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 use animato_core::Update;
 use animato_spring::{Spring, SpringConfig};
+use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 
 const DT: f32 = 1.0 / 60.0;
 

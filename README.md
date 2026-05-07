@@ -1,6 +1,6 @@
 # Animato
 
-> *Latin: mōtus — motion, movement, impulse.*
+> *Italian: animato — animated, lively, with life and movement.*
 
 [![Crates.io](https://img.shields.io/crates/v/animato.svg)](https://crates.io/crates/animato)
 [![Docs.rs](https://docs.rs/animato/badge.svg)](https://docs.rs/animato)
