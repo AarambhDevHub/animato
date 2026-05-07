@@ -206,7 +206,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 *`bezier.rs`*
 - [ ] `QuadBezier` — quadratic Bezier curve with `position(t)` and `tangent(t)`
-- [ ] `CubicBezier` — cubic Bezier curve
+- [ ] `CubicBezierCurve` — cubic Bezier path curve with `position(t)` and `tangent(t)`
 - [ ] `CatmullRomSpline` — smooth interpolating spline through control points
 - [ ] `PathEvaluate` trait: `position(t)`, `tangent(t)`, `rotation_deg(t)`, `arc_length()`
 - [ ] Arc-length parameterization via numerical integration (uniform `t` → uniform distance)
@@ -309,7 +309,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 **`animato-bevy`**
 - [ ] `AnimatoPlugin` — registers all systems and events
-- [ ] `tick_tweens` system — runs in `Update`, calls `.update(time.delta_seconds())`
+- [ ] `tick_tweens` system — runs in `Update`, calls `.update(time.delta_secs())`
 - [ ] `tick_springs` system — same pattern for `SpringN<T>`
 - [ ] `TweenCompleted` event — fired when a `Tween` component finishes
 - [ ] `SpringSettled` event — fired when a `SpringN` component settles
@@ -380,7 +380,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 **`animato-gpu`**
 - [ ] `GpuAnimationBatch` — uploads tween state to GPU, dispatches WGSL compute shader, reads back results
-- [ ] `shaders/tween.wgsl` — evaluates all 31 classic easings on GPU
+- [ ] `shaders/tween.wgsl` — evaluates all classic easing variants on GPU
 - [ ] CPU fallback mode when GPU is unavailable (`new_auto()`)
 - [ ] Benchmark: 10,000 tweens per frame on GPU vs CPU
 
@@ -390,7 +390,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 - [ ] Binary size measurement: `no_std` build of core + tween + spring < 10 KB `.text`
 
 **Benchmarks**
-- [ ] `benches/easing_bench.rs` — all 43 variants via criterion
+- [ ] `benches/easing_bench.rs` — all easing variants via criterion
 - [ ] `benches/tween_update_bench.rs` — 1, 100, 10,000 tweens per tick
 - [ ] `benches/spring_bench.rs` — settle time for all presets
 - [ ] `benches/timeline_bench.rs` — 10-entry timeline tick throughput
