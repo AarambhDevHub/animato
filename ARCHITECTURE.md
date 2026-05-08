@@ -243,7 +243,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.3.0"
+version      = "0.4.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -252,11 +252,12 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.3" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.3" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.3" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.3" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.3" }
+animato-core     = { path = "crates/animato-core",     version = "0.4" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.4" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.4" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.4" }
+animato-path     = { path = "crates/animato-path",     version = "0.4" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.4" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -1055,18 +1056,18 @@ impl RafDriver {
 ```toml
 [features]
 default  = ["std", "tween", "timeline", "spring", "driver"]
-std      = ["animato-core/std", "animato-driver/std"]
+std      = ["animato-core/std", "animato-driver/std", "animato-path?/std"]
 tween    = ["dep:animato-tween"]
 timeline = ["dep:animato-timeline"]
 spring   = ["dep:animato-spring"]
-path     = ["dep:animato-path"]
+path     = ["dep:animato-path", "animato-path/std"]
 physics  = ["dep:animato-physics"]
 color    = ["dep:animato-color", "dep:palette"]
 driver   = ["dep:animato-driver"]
 gpu      = ["dep:animato-gpu"]
 bevy     = ["dep:animato-bevy"]
 wasm     = ["dep:animato-wasm"]
-serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde"]
+serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde"]
 tokio    = ["animato-timeline/tokio"]
 no_std   = []
 ```
@@ -1443,12 +1444,13 @@ fn on_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.3", default-features = false }
-animato-tween = { version = "0.3", default-features = false }
-animato-spring = { version = "0.3", default-features = false }
+animato-core  = { version = "0.4", default-features = false }
+animato-tween = { version = "0.4", default-features = false }
+animato-spring = { version = "0.4", default-features = false }
+animato-path = { version = "0.4", default-features = false }
 ```
 
-Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, all `Interpolate` blanket impls.
+Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, all `Interpolate` blanket impls.
 
 ---
 
@@ -1552,5 +1554,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.3.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.4.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

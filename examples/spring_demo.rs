@@ -57,7 +57,7 @@ fn run_preset(label: &str, config: SpringConfig, target: f32) {
 }
 
 fn main() {
-    println!("Animato v0.3.0 — spring_demo example");
+    println!("Animato v0.4.0 — spring_demo example");
     println!("  Target: 100.0  |  Legend: │=target  ●=position\n");
 
     let target = 100.0_f32;

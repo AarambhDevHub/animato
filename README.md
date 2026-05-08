@@ -32,7 +32,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.3.0:**
+**Shipped in v0.4.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
@@ -40,6 +40,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 | [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState`, `TweenBuilder` | alloc |
 | [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, callbacks, time scale, async wait | alloc |
 | [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
+| [`animato-path`](./crates/animato-path) | Bezier curves, CatmullRom splines, motion paths, SVG path parsing | core no_std |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
 | [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
 
@@ -47,7 +48,6 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 | Crate | Version | Description |
 |-------|---------|-------------|
-| `animato-path` | v0.4.0 | Bezier, CatmullRom, SVG path parser, shape morph |
 | `animato-physics` | v0.5.0 | Inertia, `DragState`, `GestureRecognizer` |
 | `animato-color` | v0.6.0 | Perceptual color interpolation (Lab, Oklch, Linear) |
 | `animato-bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
@@ -58,7 +58,7 @@ Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.3"
+animato = "0.4"
 ```
 
 ---
@@ -196,16 +196,44 @@ assert_eq!(timeline.get::<Tween<f32>>("fade").unwrap().value(), 0.5);
 
 With the `tokio` feature, `timeline.wait().await` resolves when another task or loop drives the timeline to completion.
 
+### Motion paths
+
+```toml
+[dependencies]
+animato = { version = "0.4", features = ["path"] }
+```
+
+```rust
+use animato::{CubicBezierCurve, Easing, MotionPathTween, Update};
+
+let curve = CubicBezierCurve::new(
+    [0.0, 0.0],
+    [40.0, 90.0],
+    [140.0, -90.0],
+    [200.0, 0.0],
+);
+
+let mut motion = MotionPathTween::new(curve)
+    .duration(1.0)
+    .easing(Easing::EaseInOutSine)
+    .auto_rotate(true)
+    .build();
+
+motion.update(0.5);
+let [x, y] = motion.value();
+let rotation = motion.rotation_deg();
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.3", features = ["serde"] }
+animato = { version = "0.4", features = ["serde"] }
 ```
 
-**v0.3.0 features:**
+**v0.4.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
@@ -214,6 +242,7 @@ animato = { version = "0.3", features = ["serde"] }
 | `tween` | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState` |
 | `timeline` | `Timeline`, `Sequence`, `stagger`, time scale |
 | `spring` | `Spring`, `SpringN<T>`, all presets |
+| `path` | `QuadBezier`, `CubicBezierCurve`, `CatmullRomSpline`, `MotionPathTween`, `SvgPathParser` |
 | `driver` | `AnimationDriver`, `Clock` variants |
 | `serde` | `Serialize`/`Deserialize` on supported concrete public types |
 | `tokio` | `.wait().await` on `Timeline` completion |
@@ -222,7 +251,6 @@ animato = { version = "0.3", features = ["serde"] }
 
 | Feature | Version | What it adds |
 |---------|---------|--------------|
-| `path` | v0.4.0 | Bezier, MotionPath, SVG parser |
 | `physics` | v0.5.0 | Inertia, DragState, GestureRecognizer |
 | `color` | v0.6.0 | Perceptual color interpolation via `palette` |
 | `bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
@@ -233,12 +261,13 @@ animato = { version = "0.3", features = ["serde"] }
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.3", default-features = false }
-animato-tween  = { version = "0.3", default-features = false }
-animato-spring = { version = "0.3", default-features = false }
+animato-core   = { version = "0.4", default-features = false }
+animato-tween  = { version = "0.4", default-features = false }
+animato-spring = { version = "0.4", default-features = false }
+animato-path   = { version = "0.4", default-features = false }
 ```
 
-Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, and `SpringN<T>` require allocation.
+Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, and SVG parsing require allocation.
 
 ---
 
@@ -354,9 +383,9 @@ cargo run --example basic_tween
 cargo run --example spring_demo
 cargo run --example keyframe_track
 cargo run --example timeline_sequence
+cargo run --example motion_path --features path
 
 # Coming in future versions:
-# cargo run --example motion_path         # v0.4.0
 # cargo run --example color_animation     # v0.6.0
 # cargo run --example tui_progress        # v0.7.0
 ```
@@ -370,7 +399,7 @@ cargo run --example timeline_sequence
 cargo test --workspace --all-features
 
 # no_std check:
-cargo test -p animato-core -p animato-tween -p animato-spring --no-default-features
+cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path --no-default-features
 
 # Benchmarks:
 cargo bench
@@ -385,11 +414,10 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.3.0 — Control` shipped**
+**Current status: `v0.4.0 — Paths` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.4.0` | Paths — Bezier, SVG, motion paths |
 | `v0.5.0` | Physics — inertia, drag, gesture recognition |
 
 ---

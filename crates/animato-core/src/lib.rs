@@ -28,7 +28,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core = { version = "0.3", default-features = false }
+//! animato-core = { version = "0.4", default-features = false }
 //! ```
 //!
 //! All items in this crate are available in `no_std` environments.

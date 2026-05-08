@@ -26,7 +26,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.1.0` | Foundation | Core traits, easing, tween, spring, driver | ✅ |
 | `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | ✅ |
 | `v0.3.0` | Control | Time scale, callbacks, advanced easing | ✅ |
-| `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | 📋 |
+| `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | ✅ |
 | `v0.5.0` | Physics | Inertia, drag, gesture recognition | 📋 |
 | `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | 📋 |
 | `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | 📋 |
@@ -205,32 +205,32 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 **`animato-path`**
 
 *`bezier.rs`*
-- [ ] `QuadBezier` — quadratic Bezier curve with `position(t)` and `tangent(t)`
-- [ ] `CubicBezierCurve` — cubic Bezier path curve with `position(t)` and `tangent(t)`
-- [ ] `CatmullRomSpline` — smooth interpolating spline through control points
-- [ ] `PathEvaluate` trait: `position(t)`, `tangent(t)`, `rotation_deg(t)`, `arc_length()`
-- [ ] Arc-length parameterization via numerical integration (uniform `t` → uniform distance)
+- [x] `QuadBezier` — quadratic Bezier curve with `position(t)` and `tangent(t)`
+- [x] `CubicBezierCurve` — cubic Bezier path curve with `position(t)` and `tangent(t)`
+- [x] `CatmullRomSpline` — smooth interpolating spline through control points
+- [x] `PathEvaluate` trait: `position(t)`, `tangent(t)`, `rotation_deg(t)`, `arc_length()`
+- [x] Arc-length parameterization via numerical integration (uniform `t` → uniform distance)
 
 *`motion.rs`*
-- [ ] `MotionPath` — chain of `PathEvaluate` segments into one unified path
-- [ ] `MotionPathTween` — drives `t ∈ [0, 1]` via an internal `Tween<f32>`, returns `[f32; 2]`
-- [ ] Auto-rotate: `.auto_rotate(true)` aligns the object's heading to the path tangent
-- [ ] Start/end offsets: `.start_offset(0.1).end_offset(0.9)` trims the path
+- [x] `MotionPath` — chain of `PathEvaluate` segments into one unified path
+- [x] `MotionPathTween` — drives `t ∈ [0, 1]` via an internal `Tween<f32>`, returns `[f32; 2]`
+- [x] Auto-rotate: `.auto_rotate(true)` aligns the object's heading to the path tangent
+- [x] Start/end offsets: `.start_offset(0.1).end_offset(0.9)` trims the path
 
 *`poly.rs`*
-- [ ] `PolyPath` — smooth path through arbitrary points via CatmullRom + arc-length param
-- [ ] `CompoundPath` — sequence of heterogeneous segments (line, quad, cubic, arc)
-- [ ] `PathCommand` enum used internally by `SvgPathParser` and `CompoundPath`
+- [x] `PolyPath` — smooth path through arbitrary points via CatmullRom + arc-length param
+- [x] `CompoundPath` — sequence of heterogeneous segments (line, quad, cubic, arc)
+- [x] `PathCommand` enum used internally by `SvgPathParser` and `CompoundPath`
 
 *`svg.rs`*
-- [ ] `SvgPathParser::parse(d: &str) -> Vec<PathCommand>`
-- [ ] Support for `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z` commands
-- [ ] Support for relative (lowercase) variants of all commands
+- [x] `SvgPathParser::parse(d: &str) -> Vec<PathCommand>`
+- [x] Support for `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z` commands
+- [x] Support for relative (lowercase) variants of all commands
 
 **`animato` facade**
-- [ ] `path` feature flag
-- [ ] `examples/motion_path.rs` — object moves along a Bezier curve
-- [ ] `tests/path_arc_length.rs` — arc-length monotonicity and endpoint tests
+- [x] `path` feature flag
+- [x] `examples/motion_path.rs` — object moves along a Bezier curve
+- [x] `tests/path_arc_length.rs` — arc-length monotonicity and endpoint tests
 
 ---
 
@@ -466,10 +466,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.4.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.5.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.3.0 — last updated May 2026*  
-*v0.3.0 shipped — next milestone: v0.4.0 — Paths*  
+*Roadmap version: 0.4.0 — last updated May 2026*  
+*v0.4.0 shipped — next milestone: v0.5.0 — Physics*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

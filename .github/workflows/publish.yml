@@ -35,7 +35,7 @@ jobs:
         run: cargo test --workspace --all-features
 
       - name: Run no_std check (no_std-compatible crates only)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring --no-default-features
+        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path --no-default-features
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
@@ -52,8 +52,7 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.3.0 scope: animato-core → animato-tween → animato-spring → animato-driver → animato-timeline → animato
-  # (no new crates in v0.3.0 — features added to existing crates)
+  # v0.4.0 scope: animato-core → animato-tween → animato-spring → animato-path → animato-driver → animato-timeline → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -92,6 +91,12 @@ jobs:
       - name: Wait for registry index
         run: sleep 30
 
+      - name: Publish animato-path
+        run: cargo publish -p animato-path --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
       - name: Publish animato-driver
         run: cargo publish -p animato-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
@@ -120,17 +125,19 @@ jobs:
 
       - name: Extract version from tag
         id: version
-        run: echo "VERSION=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+        run: |
+          echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref_name }}
-          name: "Animato ${{ steps.version.outputs.VERSION }} — Control"
+          tag_name: ${{ steps.version.outputs.TAG }}
+          name: "Animato ${{ steps.version.outputs.TAG }} — Paths"
           body: |
-            ## Animato ${{ steps.version.outputs.VERSION }} — Control
+            ## Animato ${{ steps.version.outputs.TAG }} — Paths
 
-            The third release of the Animato animation library for Rust, adding runtime control, callbacks, async completion waiting, and CSS-compatible easing.
+            The fourth release of the Animato animation library for Rust, adding Bezier curves, motion paths, CatmullRom splines, and SVG path parsing.
 
             ### Crates published to crates.io
 
@@ -139,6 +146,7 @@ jobs:
             | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 33 easing variants, `no_std` |
             | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack`, serde |
             | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
+            | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | Bezier curves, CatmullRom splines, motion paths, SVG parser |
             | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
             | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, time scale, callbacks, async wait |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
@@ -147,37 +155,41 @@ jobs:
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["timeline", "tokio"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["path"] }
             ```
 
             ```rust
-            use animato::{At, Timeline, Tween, Easing, Update};
+            use animato::{CubicBezierCurve, MotionPathTween, Easing, Update};
 
-            let tween = Tween::new(0.0_f32, 100.0)
+            let curve = CubicBezierCurve::new(
+                [0.0, 0.0],
+                [40.0, 90.0],
+                [140.0, -90.0],
+                [200.0, 0.0],
+            );
+
+            let mut motion = MotionPathTween::new(curve)
                 .duration(1.0)
-                .easing(Easing::EaseOutCubic)
+                .easing(Easing::EaseInOutSine)
+                .auto_rotate(true)
                 .build();
 
-            let mut timeline = Timeline::new()
-                .add("move", tween, At::Start)
-                .time_scale(1.0)
-                .on_complete(|| println!("timeline complete"));
-
-            timeline.play();
-            timeline.update(0.016);
+            motion.update(0.016);
+            let position = motion.value();
             ```
 
-            ### What's New in v0.3.0
-            - ✅ Timeline time scale via `.time_scale()` and `.set_time_scale()`
-            - ✅ Timeline callbacks via `.on_entry_complete()` and `.on_complete()`
-            - ✅ Tokio completion waiting via `.wait().await`
-            - ✅ CSS-compatible `CubicBezier(...)` and `Steps(...)` easing variants
-            - ✅ Serde trait re-exports and expanded serde coverage
-            - ✅ 200+ tests passing across all crates
+            ### What's New in v0.4.0
+            - ✅ New `animato-path` crate
+            - ✅ `QuadBezier`, `CubicBezierCurve`, and `CatmullRomSpline`
+            - ✅ Arc-length-normalized path evaluation
+            - ✅ `MotionPath` and `MotionPathTween` with auto-rotate and offsets
+            - ✅ `CompoundPath`, `PathCommand`, lines, quadratic/cubic curves, and SVG arcs
+            - ✅ `SvgPathParser` for `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z` plus lowercase relative variants
+            - ✅ `path` facade feature, motion path example, tests, and benchmarks
 
             ### What's Included
-            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`
-            - ✅ Criterion benchmarks for easing, tween, spring, and timeline
+            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, and fixed path curves in `animato-path`
+            - ✅ Criterion benchmarks for easing, tween, spring, timeline, and paths
             - ✅ CI: stable + beta + nightly toolchains
 
             See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.
