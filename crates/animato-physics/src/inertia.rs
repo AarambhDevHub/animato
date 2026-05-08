@@ -291,6 +291,7 @@ impl<T: Decompose> InertiaN<T> {
     }
 
     /// Start inertia from a multi-dimensional velocity.
+    #[allow(clippy::useless_conversion)]
     pub fn kick(&mut self, velocity: T) {
         let count = T::component_count();
         let mut velocity_components = alloc::vec![0.0; count];
@@ -325,6 +326,7 @@ impl<T: Decompose> InertiaN<T> {
     }
 
     /// Teleport to `position` and clear all component velocities.
+    #[allow(clippy::useless_conversion)]
     pub fn snap_to(&mut self, position: T) {
         let count = T::component_count();
         let mut position_components = alloc::vec![0.0; count];
