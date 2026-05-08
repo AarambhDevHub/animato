@@ -247,7 +247,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.5.0"
+version      = "0.6.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -256,17 +256,18 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.5" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.5" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.5" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.5" }
-animato-path     = { path = "crates/animato-path",     version = "0.5" }
-animato-physics  = { path = "crates/animato-physics",  version = "0.5" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.5" }
+animato-core     = { path = "crates/animato-core",     version = "0.6" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.6" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.6" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.6" }
+animato-path     = { path = "crates/animato-path",     version = "0.6" }
+animato-physics  = { path = "crates/animato-physics",  version = "0.6" }
+animato-color    = { path = "crates/animato-color",    version = "0.6" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.6" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
-palette      = { version = "0.7" }
+palette      = { version = "0.7", default-features = false, features = ["libm"] }
 wasm-bindgen = { version = "0.2" }
 js-sys       = { version = "0.3" }
 web-sys      = { version = "0.3" }
@@ -895,7 +896,7 @@ two-pointer pinch and rotation.
 
 ### 4.7 `animato-color`
 
-**Responsibility:** Perceptual color interpolation by wrapping the `palette` crate. Only meaningful with `features = ["palette"]`.
+**Responsibility:** Perceptual color interpolation by wrapping the `palette` crate. Enabled from the facade with `features = ["color"]`.
 
 **Depends on:** `animato-core`, `palette`
 
@@ -906,9 +907,12 @@ pub struct InOklch<C>(pub C);    // Oklch — modern perceptual space
 pub struct InLinear<C>(pub C);   // linear light (gamma-correct sRGB lerp)
 
 // Example: interpolating in Lab space
-impl<C: palette::Mix + Clone + 'static> Interpolate for InLab<C> {
+impl<C> Interpolate for InLab<C>
+where
+    C: palette::IntoColor<palette::Lab> + palette::FromColor<palette::Lab> + Clone + 'static,
+{
     fn lerp(&self, other: &Self, t: f32) -> Self {
-        // convert both to Lab, lerp, convert back
+        // clamp t, convert both colors to Lab, mix, convert back
     }
 }
 ```
@@ -1104,7 +1108,7 @@ impl RafDriver {
 ```toml
 [features]
 default  = ["std", "tween", "timeline", "spring", "driver"]
-std      = ["animato-core/std", "animato-driver/std", "animato-path?/std"]
+std      = ["animato-core/std", "animato-driver/std", "animato-path?/std", "animato-color?/std"]
 tween    = ["dep:animato-tween"]
 timeline = ["dep:animato-timeline"]
 spring   = ["dep:animato-spring"]
@@ -1115,7 +1119,7 @@ driver   = ["dep:animato-driver"]
 gpu      = ["dep:animato-gpu"]
 bevy     = ["dep:animato-bevy"]
 wasm     = ["dep:animato-wasm"]
-serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde"]
+serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde", "animato-color?/serde"]
 tokio    = ["animato-timeline/tokio"]
 no_std   = []
 ```
@@ -1499,14 +1503,15 @@ fn on_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.5", default-features = false }
-animato-tween = { version = "0.5", default-features = false }
-animato-spring = { version = "0.5", default-features = false }
-animato-path = { version = "0.5", default-features = false }
-animato-physics = { version = "0.5", default-features = false }
+animato-core  = { version = "0.6", default-features = false }
+animato-tween = { version = "0.6", default-features = false }
+animato-spring = { version = "0.6", default-features = false }
+animato-path = { version = "0.6", default-features = false }
+animato-physics = { version = "0.6", default-features = false }
+animato-color = { version = "0.6", default-features = false }
 ```
 
-Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, and all `Interpolate` blanket impls.
+Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
 
 ---
 
@@ -1610,5 +1615,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.5.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.6.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

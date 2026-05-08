@@ -8,7 +8,7 @@
 use animato::{CubicBezierCurve, Easing, MotionPathTween, Update};
 
 fn main() {
-    println!("Animato v0.4.0 - motion_path example\n");
+    println!("Animato v0.6.0 - motion_path example\n");
 
     let curve = CubicBezierCurve::new([0.0, 0.0], [40.0, 90.0], [140.0, -90.0], [200.0, 0.0]);
 

@@ -66,10 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.5", default-features = false }
-//! animato-tween  = { version = "0.5", default-features = false }
-//! animato-spring = { version = "0.5", default-features = false }
-//! animato-physics = { version = "0.5", default-features = false }
+//! animato-core   = { version = "0.6", default-features = false }
+//! animato-tween  = { version = "0.6", default-features = false }
+//! animato-spring = { version = "0.6", default-features = false }
+//! animato-physics = { version = "0.6", default-features = false }
+//! animato-color = { version = "0.6", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -83,6 +84,7 @@
 //! | `spring` | [`Spring`], [`SpringConfig`], [`SpringN<T>`] |
 //! | `path` | [`MotionPath`], [`MotionPathTween`], [`SvgPathParser`] |
 //! | `physics` | [`Inertia`], [`DragState`], [`GestureRecognizer`] |
+//! | `color` | [`InLab<T>`], [`InOklch<T>`], [`InLinear<T>`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
@@ -133,6 +135,12 @@ pub use animato_physics::{
     DragAxis, DragConstraints, DragState, Gesture, GestureConfig, GestureRecognizer, Inertia,
     InertiaBounds, InertiaConfig, InertiaN, PointerData, SwipeDirection,
 };
+
+// ── Color ───────────────────────────────────────────────────────────────────
+#[cfg(feature = "color")]
+pub use animato_color::{InLab, InLinear, InOklch};
+#[cfg(feature = "color")]
+pub use palette;
 
 // ── Driver ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "driver")]

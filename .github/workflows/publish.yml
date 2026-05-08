@@ -35,7 +35,7 @@ jobs:
         run: cargo test --workspace --all-features
 
       - name: Run no_std check (no_std-compatible crates only)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics --no-default-features
+        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
@@ -52,7 +52,7 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.5.0 scope: animato-core → animato-tween → animato-spring → animato-path → animato-physics → animato-driver → animato-timeline → animato
+  # v0.6.0 scope: animato-core → animato-color → animato-tween → animato-spring → animato-path → animato-physics → animato-driver → animato-timeline → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -75,6 +75,12 @@ jobs:
 
       - name: Publish animato-core
         run: cargo publish -p animato-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
+      - name: Publish animato-color
+        run: cargo publish -p animato-color --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
       - name: Wait for registry index
         run: sleep 30
@@ -139,17 +145,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Physics"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Color"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Physics
+            ## Animato ${{ steps.version.outputs.TAG }} — Color
 
-            The fifth release of the Animato animation library for Rust, adding input-driven physics: inertia, drag tracking, gesture recognition, pinch, and rotation.
+            The sixth release of the Animato animation library for Rust, adding perceptual color interpolation through Lab, Oklch, and linear-light sRGB.
 
             ### Crates published to crates.io
 
             | Crate | Version | Description |
             |-------|---------|-------------|
             | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 33 easing variants, `no_std` |
+            | [`animato-color`](https://crates.io/crates/animato-color) | `${{ steps.version.outputs.VERSION }}` | `InLab<C>`, `InOklch<C>`, and `InLinear<C>` perceptual color wrappers |
             | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack`, serde |
             | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
             | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | Bezier curves, CatmullRom splines, motion paths, SVG parser |
@@ -162,28 +169,32 @@ jobs:
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["physics"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["color"] }
             ```
 
             ```rust
-            use animato::{Inertia, InertiaConfig, Update};
+            use animato::{InLab, Tween, Update, palette::Srgb};
 
-            let mut inertia = Inertia::new(InertiaConfig::smooth());
-            inertia.kick(800.0);
+            let mut tween = Tween::new(
+                InLab::new(Srgb::new(1.0, 0.0, 0.0)),
+                InLab::new(Srgb::new(0.0, 0.0, 1.0)),
+            )
+            .duration(1.0)
+            .build();
 
-            while inertia.update(1.0 / 60.0) {}
-            let final_position = inertia.position();
+            tween.update(0.5);
+            let midpoint = tween.value().into_inner();
             ```
 
-            ### What's New in v0.5.0
-            - ✅ New `animato-physics` crate
-            - ✅ `Inertia` and `InertiaN<T>` with friction deceleration and clamp-and-stop bounds
-            - ✅ `DragState` with pointer capture, axis locks, constraints, grid snap, and velocity EMA
-            - ✅ `GestureRecognizer` for tap, double tap, long press, swipe, pinch, and rotation
-            - ✅ `physics` facade feature, drag example, tests, and benchmarks
+            ### What's New in v0.6.0
+            - ✅ New `animato-color` crate
+            - ✅ `InLab<C>` for CIE L*a*b* interpolation
+            - ✅ `InOklch<C>` for modern perceptual Oklch interpolation
+            - ✅ `InLinear<C>` for gamma-correct linear-light sRGB interpolation
+            - ✅ `color` facade feature, color example, and integration tests
 
             ### What's Included
-            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, fixed path curves in `animato-path`, and 1D inertia/gestures in `animato-physics`
+            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, fixed path curves in `animato-path`, 1D inertia/gestures in `animato-physics`, and `animato-color`
             - ✅ Criterion benchmarks for easing, tween, spring, timeline, paths, and physics
             - ✅ CI: stable + beta + nightly toolchains
 

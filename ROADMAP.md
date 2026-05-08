@@ -28,7 +28,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.3.0` | Control | Time scale, callbacks, advanced easing | ✅ |
 | `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | ✅ |
 | `v0.5.0` | Physics | Inertia, drag, gesture recognition | ✅ |
-| `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | 📋 |
+| `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | ✅ |
 | `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | 📋 |
 | `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | 📋 |
 | `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | 📋 |
@@ -283,16 +283,16 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-color`**
-- [ ] `InLab<C>` wrapper — interpolates in CIE L\*a\*b\* space
-- [ ] `InOklch<C>` wrapper — interpolates in Oklch (modern perceptual space)
-- [ ] `InLinear<C>` wrapper — interpolates in linear light (gamma-correct sRGB lerp)
-- [ ] `Interpolate` implemented for each wrapper via the `palette` crate
-- [ ] Tests: `InLab` red-to-blue midpoint is not a muddy brown
-- [ ] Tests: `InLinear` vs `InLab` produce different midpoints (proof the wrapper matters)
+- [x] `InLab<C>` wrapper — interpolates in CIE L\*a\*b\* space
+- [x] `InOklch<C>` wrapper — interpolates in Oklch (modern perceptual space)
+- [x] `InLinear<C>` wrapper — interpolates in linear light (gamma-correct sRGB lerp)
+- [x] `Interpolate` implemented for each wrapper via the `palette` crate
+- [x] Tests: `InLab` red-to-blue midpoint is not a muddy brown
+- [x] Tests: `InLinear` vs `InLab` produce different midpoints (proof the wrapper matters)
 
 **`animato` facade**
-- [ ] `color` feature flag (enables `dep:animato-color`, `dep:palette`)
-- [ ] `examples/color_animation.rs` — animate background color in Lab space
+- [x] `color` feature flag (enables `dep:animato-color`, `dep:palette`)
+- [x] `examples/color_animation.rs` — animate background color in Lab space
 
 ---
 
@@ -466,10 +466,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.6.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.7.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.5.0 — last updated May 2026*  
-*v0.5.0 shipped — next milestone: v0.6.0 — Color*  
+*Roadmap version: 0.6.0 — last updated May 2026*  
+*v0.6.0 shipped — next milestone: v0.7.0 — Integrations*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
