@@ -7,6 +7,28 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.5.0] — 2026-05-08 — Physics
+
+### Added
+- `animato-physics`: new crate for input-driven physics, drag tracking, and gesture recognition.
+- `animato-physics`: `InertiaConfig`, `InertiaBounds`, `Inertia`, and `InertiaN<T>` with friction deceleration.
+- `animato-physics`: presets `smooth()`, `snappy()`, and `heavy()`.
+- `animato-physics`: clamp-and-stop bounds for 1D and multi-dimensional inertia.
+- `animato-physics`: `PointerData`, `DragAxis`, `DragConstraints`, and `DragState`.
+- `animato-physics`: pointer capture, axis locks, rectangular constraints, grid snap, and velocity EMA.
+- `animato-physics`: `GestureConfig`, `Gesture`, `SwipeDirection`, and `GestureRecognizer`.
+- `animato-physics`: tap, double tap, long press, swipe, pinch, and rotation recognition.
+- `animato` facade: `physics` feature flag and physics API re-exports.
+- Example: `physics_drag.rs`.
+- Integration tests for physics facade exports, bounded inertia, drag release, swipe, pinch, and rotation.
+- Benchmark: `physics_bench.rs`.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins to `0.5.0`.
+- Updated README, roadmap, architecture snippets, CI, and publish workflow for `v0.5.0 — Physics`.
+
+---
+
 ## [0.4.0] — 2026-05-08 — Paths
 
 ### Added
@@ -96,7 +118,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/AarambhDevHub/animato/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AarambhDevHub/animato/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AarambhDevHub/animato/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AarambhDevHub/animato/compare/v0.1.0...v0.2.0

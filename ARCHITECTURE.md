@@ -203,6 +203,7 @@ animato/
 │   ├── keyframe_track.rs
 │   ├── timeline_sequence.rs
 │   ├── motion_path.rs
+│   ├── physics_drag.rs
 │   ├── color_animation.rs
 │   ├── tui_progress.rs
 │   ├── tui_spinner.rs
@@ -213,13 +214,16 @@ animato/
 ├── benches/
 │   ├── easing_bench.rs
 │   ├── tween_update_bench.rs
-│   └── spring_bench.rs
+│   ├── spring_bench.rs
+│   ├── path_bench.rs
+│   └── physics_bench.rs
 │
 └── tests/
     ├── tween_lifecycle.rs
     ├── spring_settles.rs
     ├── keyframe_looping.rs
-    └── timeline_sequence.rs
+    ├── timeline_sequence.rs
+    └── physics_input.rs
 ```
 
 ### Root `Cargo.toml`
@@ -243,7 +247,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.4.0"
+version      = "0.5.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -252,12 +256,13 @@ rust-version = "1.85"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.4" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.4" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.4" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.4" }
-animato-path     = { path = "crates/animato-path",     version = "0.4" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.4" }
+animato-core     = { path = "crates/animato-core",     version = "0.5" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.5" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.5" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.5" }
+animato-path     = { path = "crates/animato-path",     version = "0.5" }
+animato-physics  = { path = "crates/animato-physics",  version = "0.5" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.5" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -831,8 +836,44 @@ impl MotionPathTween {
 | `drag.rs` | `DragState`, `DragConstraints`, `DragAxis`, `PointerData` |
 | `gesture.rs` | `GestureRecognizer`, `Gesture` enum, `GestureConfig` |
 
+#### Key types
+
 ```rust
-// gesture.rs
+pub struct InertiaConfig<T = f32> {
+    pub friction: f32,
+    pub min_velocity: f32,
+    pub bounds: Option<InertiaBounds<T>>,
+}
+
+pub struct InertiaBounds<T = f32> {
+    pub min: T,
+    pub max: T,
+}
+
+pub struct Inertia {
+    pub config: InertiaConfig<f32>,
+    position: f32,
+    velocity: f32,
+}
+
+impl Inertia {
+    pub fn new(config: InertiaConfig<f32>) -> Self;
+    pub fn with_position(config: InertiaConfig<f32>, position: f32) -> Self;
+    pub fn kick(&mut self, velocity: f32);
+    pub fn position(&self) -> f32;
+    pub fn velocity(&self) -> f32;
+    pub fn snap_to(&mut self, position: f32);
+    pub fn is_settled(&self) -> bool;
+}
+
+pub struct DragState;
+impl DragState {
+    pub fn new(position: [f32; 2]) -> Self;
+    pub fn on_pointer_down(&mut self, data: PointerData);
+    pub fn on_pointer_move(&mut self, data: PointerData, dt: f32);
+    pub fn on_pointer_up(&mut self, data: PointerData) -> Option<InertiaN<[f32; 2]>>;
+}
+
 pub enum Gesture {
     Tap { position: [f32; 2] },
     DoubleTap { position: [f32; 2] },
@@ -842,6 +883,13 @@ pub enum Gesture {
     Rotation { angle_delta: f32, center: [f32; 2] },
 }
 ```
+
+`Inertia` uses constant friction deceleration and performs no heap allocation.
+`InertiaN<T>` uses one 1D inertia per component and supports `f32`,
+`[f32; 2]`, `[f32; 3]`, and `[f32; 4]` behind `alloc`.
+When optional bounds are reached, position is clamped and velocity on that axis
+is set to zero. `GestureRecognizer` supports single-pointer gestures plus
+two-pointer pinch and rotation.
 
 ---
 
@@ -1192,10 +1240,11 @@ Available in no_std:
   animato-core  → Easing, Interpolate, Animatable, Update
   animato-tween → Tween<T> (stack allocated), Loop, TweenState
   animato-spring → Spring (stack allocated), SpringConfig
+  animato-physics → Inertia, GestureRecognizer, PointerData
 
 NOT available in no_std (require allocation):
   KeyframeTrack<T>, Timeline, Sequence, AnimationDriver,
-  WallClock, callbacks, AnimatoPlugin, RafDriver
+  WallClock, callbacks, InertiaN<T>, DragState, AnimatoPlugin, RafDriver
 ```
 
 ---
@@ -1245,6 +1294,7 @@ Animato uses **no `Result` in hot paths**. Animation update functions never fail
 | `KeyframeTrack` with 0 frames | Returns `None` |
 | `KeyframeTrack` with 1 frame | Returns that frame's value always |
 | Spring with `stiffness = 0.0` | Returns `target` immediately |
+| Inertia reaches bounds | Position clamps to bounds and velocity becomes `0.0` |
 | `seek()` with `t > 1.0` | Clamped to `1.0` |
 
 `Result` is only returned by builders that validate user-provided data at construction time (e.g. if `duration < 0.0` is given, `TweenBuilder::build()` can return `Err(AnimatoError::InvalidDuration)`).
@@ -1268,6 +1318,9 @@ Every module has `#[cfg(test)]` at the bottom. Required tests:
 | `animato-driver / driver.rs` | Completed removed automatically, cancel mid-animation, `active_count`, thread-safe add |
 | `animato-driver / clock.rs` | MockClock returns correct fixed dt, ManualClock advance+delta |
 | `animato-path / bezier.rs` | position(0)=start, position(1)=end, arc-length monotonicity |
+| `animato-physics / inertia.rs` | friction settle, negative dt, bounds clamp/stop, multi-axis inertia |
+| `animato-physics / drag.rs` | axis constraints, pointer id capture, velocity EMA, grid snap |
+| `animato-physics / gesture.rs` | tap, double tap, long press, swipe, pinch, rotation |
 
 ### Integration tests — `tests/` at workspace root
 
@@ -1276,7 +1329,8 @@ tests/
 ├── tween_lifecycle.rs         — full tween lifecycle using MockClock
 ├── spring_settles.rs          — spring reaches target within N steps, all presets
 ├── keyframe_looping.rs        — long-running looping track stays in bounds
-└── timeline_sequence.rs       — multi-step sequence completes in correct order
+├── timeline_sequence.rs       — multi-step sequence completes in correct order
+└── physics_input.rs           — drag, inertia, swipe, pinch, rotation via facade
 ```
 
 ### Benchmark suite — `benches/`
@@ -1285,7 +1339,8 @@ tests/
 benches/
 ├── easing_bench.rs            — all shipped easing variants via criterion
 ├── tween_update_bench.rs      — update() throughput, 1 and 10,000 tweens
-└── spring_bench.rs            — spring settle time across all presets
+├── spring_bench.rs            — spring settle time across all presets
+└── physics_bench.rs           — inertia, drag, and gesture throughput
 ```
 
 Run with: `cargo bench`
@@ -1444,13 +1499,14 @@ fn on_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.4", default-features = false }
-animato-tween = { version = "0.4", default-features = false }
-animato-spring = { version = "0.4", default-features = false }
-animato-path = { version = "0.4", default-features = false }
+animato-core  = { version = "0.5", default-features = false }
+animato-tween = { version = "0.5", default-features = false }
+animato-spring = { version = "0.5", default-features = false }
+animato-path = { version = "0.5", default-features = false }
+animato-physics = { version = "0.5", default-features = false }
 ```
 
-Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, all `Interpolate` blanket impls.
+Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, and all `Interpolate` blanket impls.
 
 ---
 
@@ -1554,5 +1610,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.4.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.5.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

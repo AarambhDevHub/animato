@@ -35,7 +35,7 @@ jobs:
         run: cargo test --workspace --all-features
 
       - name: Run no_std check (no_std-compatible crates only)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path --no-default-features
+        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics --no-default-features
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
@@ -52,7 +52,7 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.4.0 scope: animato-core → animato-tween → animato-spring → animato-path → animato-driver → animato-timeline → animato
+  # v0.5.0 scope: animato-core → animato-tween → animato-spring → animato-path → animato-physics → animato-driver → animato-timeline → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -97,6 +97,12 @@ jobs:
       - name: Wait for registry index
         run: sleep 30
 
+      - name: Publish animato-physics
+        run: cargo publish -p animato-physics --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
       - name: Publish animato-driver
         run: cargo publish -p animato-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
@@ -133,11 +139,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Paths"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Physics"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Paths
+            ## Animato ${{ steps.version.outputs.TAG }} — Physics
 
-            The fourth release of the Animato animation library for Rust, adding Bezier curves, motion paths, CatmullRom splines, and SVG path parsing.
+            The fifth release of the Animato animation library for Rust, adding input-driven physics: inertia, drag tracking, gesture recognition, pinch, and rotation.
 
             ### Crates published to crates.io
 
@@ -147,6 +153,7 @@ jobs:
             | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack`, serde |
             | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
             | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | Bezier curves, CatmullRom splines, motion paths, SVG parser |
+            | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation |
             | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
             | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, time scale, callbacks, async wait |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
@@ -155,41 +162,29 @@ jobs:
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["path"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["physics"] }
             ```
 
             ```rust
-            use animato::{CubicBezierCurve, MotionPathTween, Easing, Update};
+            use animato::{Inertia, InertiaConfig, Update};
 
-            let curve = CubicBezierCurve::new(
-                [0.0, 0.0],
-                [40.0, 90.0],
-                [140.0, -90.0],
-                [200.0, 0.0],
-            );
+            let mut inertia = Inertia::new(InertiaConfig::smooth());
+            inertia.kick(800.0);
 
-            let mut motion = MotionPathTween::new(curve)
-                .duration(1.0)
-                .easing(Easing::EaseInOutSine)
-                .auto_rotate(true)
-                .build();
-
-            motion.update(0.016);
-            let position = motion.value();
+            while inertia.update(1.0 / 60.0) {}
+            let final_position = inertia.position();
             ```
 
-            ### What's New in v0.4.0
-            - ✅ New `animato-path` crate
-            - ✅ `QuadBezier`, `CubicBezierCurve`, and `CatmullRomSpline`
-            - ✅ Arc-length-normalized path evaluation
-            - ✅ `MotionPath` and `MotionPathTween` with auto-rotate and offsets
-            - ✅ `CompoundPath`, `PathCommand`, lines, quadratic/cubic curves, and SVG arcs
-            - ✅ `SvgPathParser` for `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z` plus lowercase relative variants
-            - ✅ `path` facade feature, motion path example, tests, and benchmarks
+            ### What's New in v0.5.0
+            - ✅ New `animato-physics` crate
+            - ✅ `Inertia` and `InertiaN<T>` with friction deceleration and clamp-and-stop bounds
+            - ✅ `DragState` with pointer capture, axis locks, constraints, grid snap, and velocity EMA
+            - ✅ `GestureRecognizer` for tap, double tap, long press, swipe, pinch, and rotation
+            - ✅ `physics` facade feature, drag example, tests, and benchmarks
 
             ### What's Included
-            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, and fixed path curves in `animato-path`
-            - ✅ Criterion benchmarks for easing, tween, spring, timeline, and paths
+            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, fixed path curves in `animato-path`, and 1D inertia/gestures in `animato-physics`
+            - ✅ Criterion benchmarks for easing, tween, spring, timeline, paths, and physics
             - ✅ CI: stable + beta + nightly toolchains
 
             See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.

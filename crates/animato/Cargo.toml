@@ -11,15 +11,15 @@ rust-version.workspace = true
 keywords    = ["animation", "tween", "spring", "easing", "game-development"]
 categories  = ["game-development", "graphics", "no-std"]
 
-# For no_std targets, depend on animato-core / animato-tween / animato-spring directly.
-# The facade crate always enables std features.
+# For no_std targets, prefer the focused sub-crates directly.
 [features]
 default = ["std", "tween", "timeline", "spring", "driver"]
-std     = ["animato-core/std", "dep:animato-driver", "animato-tween?/std", "animato-timeline?/std", "animato-spring?/std", "animato-path?/std"]
+std     = ["animato-core/std", "dep:animato-driver", "animato-tween?/std", "animato-timeline?/std", "animato-spring?/std", "animato-path?/std", "animato-physics?/std"]
 tween   = ["dep:animato-tween", "animato-tween/alloc"]
 timeline = ["dep:animato-timeline"]
 spring  = ["dep:animato-spring", "animato-spring?/alloc"]
 path    = ["dep:animato-path", "animato-path/std"]
+physics = ["dep:animato-physics", "animato-physics/alloc"]
 driver  = ["dep:animato-driver"]
 tokio   = ["timeline", "animato-timeline/tokio"]
 serde   = [
@@ -29,6 +29,7 @@ serde   = [
     "animato-timeline?/serde",
     "animato-spring?/serde",
     "animato-path?/serde",
+    "animato-physics?/serde",
 ]
 
 [dependencies]
@@ -37,6 +38,7 @@ animato-tween  = { workspace = true, optional = true }
 animato-timeline = { workspace = true, optional = true }
 animato-spring = { workspace = true, optional = true }
 animato-path   = { workspace = true, optional = true }
+animato-physics = { workspace = true, optional = true }
 animato-driver = { workspace = true, optional = true }
 serde          = { workspace = true, optional = true }
 
@@ -47,6 +49,7 @@ animato-tween  = { workspace = true, features = ["alloc"] }
 animato-timeline = { workspace = true }
 animato-spring = { workspace = true, features = ["alloc"] }
 animato-path   = { workspace = true, features = ["std"] }
+animato-physics = { workspace = true, features = ["alloc"] }
 animato-driver = { workspace = true }
 
 # ── Integration tests ────────────────────────────────────────────────────────
@@ -92,6 +95,11 @@ name = "svg_path_parser"
 path = "../../tests/svg_path_parser.rs"
 required-features = ["path"]
 
+[[test]]
+name = "physics_input"
+path = "../../tests/physics_input.rs"
+required-features = ["physics"]
+
 # ── Benchmarks ───────────────────────────────────────────────────────────────
 [[bench]]
 name    = "easing_bench"
@@ -111,6 +119,11 @@ harness = false
 [[bench]]
 name    = "path_bench"
 path    = "../../benches/path_bench.rs"
+harness = false
+
+[[bench]]
+name    = "physics_bench"
+path    = "../../benches/physics_bench.rs"
 harness = false
 
 # ── Examples ─────────────────────────────────────────────────────────────────
@@ -138,3 +151,8 @@ required-features = ["tween", "timeline"]
 name = "motion_path"
 path = "../../examples/motion_path.rs"
 required-features = ["path"]
+
+[[example]]
+name = "physics_drag"
+path = "../../examples/physics_drag.rs"
+required-features = ["physics"]

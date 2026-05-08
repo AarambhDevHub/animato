@@ -32,7 +32,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.4.0:**
+**Shipped in v0.5.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
@@ -41,6 +41,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 | [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, callbacks, time scale, async wait | alloc |
 | [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
 | [`animato-path`](./crates/animato-path) | Bezier curves, CatmullRom splines, motion paths, SVG path parsing | core no_std |
+| [`animato-physics`](./crates/animato-physics) | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation | core no_std |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
 | [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
 
@@ -48,7 +49,6 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 | Crate | Version | Description |
 |-------|---------|-------------|
-| `animato-physics` | v0.5.0 | Inertia, `DragState`, `GestureRecognizer` |
 | `animato-color` | v0.6.0 | Perceptual color interpolation (Lab, Oklch, Linear) |
 | `animato-bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
 | `animato-wasm` | v0.7.0 | `RafDriver`, FLIP, SplitText, ScrollSmoother |
@@ -58,7 +58,7 @@ Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.4"
+animato = "0.5"
 ```
 
 ---
@@ -200,7 +200,7 @@ With the `tokio` feature, `timeline.wait().await` resolves when another task or 
 
 ```toml
 [dependencies]
-animato = { version = "0.4", features = ["path"] }
+animato = { version = "0.5", features = ["path"] }
 ```
 
 ```rust
@@ -224,16 +224,42 @@ let [x, y] = motion.value();
 let rotation = motion.rotation_deg();
 ```
 
+### Input physics
+
+```toml
+[dependencies]
+animato = { version = "0.5", features = ["physics"] }
+```
+
+```rust
+use animato::{DragConstraints, DragState, Gesture, GestureRecognizer, Inertia, InertiaConfig, PointerData, Update};
+
+let mut inertia = Inertia::new(InertiaConfig::smooth());
+inertia.kick(800.0);
+while inertia.update(1.0 / 60.0) {}
+
+let mut drag = DragState::new([0.0, 0.0])
+    .constraints(DragConstraints::bounded(0.0, 300.0, 0.0, 200.0));
+drag.on_pointer_down(PointerData::new(0.0, 0.0, 1));
+drag.on_pointer_move(PointerData::new(120.0, 40.0, 1), 1.0 / 60.0);
+let maybe_inertia = drag.on_pointer_up(PointerData::new(120.0, 40.0, 1));
+
+let mut gestures = GestureRecognizer::default();
+gestures.on_pointer_down(PointerData::new(0.0, 0.0, 1), 0.0);
+let gesture = gestures.on_pointer_up(PointerData::new(80.0, 0.0, 1), 0.2);
+assert!(matches!(gesture, Some(Gesture::Swipe { .. })));
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.4", features = ["serde"] }
+animato = { version = "0.5", features = ["serde"] }
 ```
 
-**v0.4.0 features:**
+**v0.5.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
@@ -243,6 +269,7 @@ animato = { version = "0.4", features = ["serde"] }
 | `timeline` | `Timeline`, `Sequence`, `stagger`, time scale |
 | `spring` | `Spring`, `SpringN<T>`, all presets |
 | `path` | `QuadBezier`, `CubicBezierCurve`, `CatmullRomSpline`, `MotionPathTween`, `SvgPathParser` |
+| `physics` | `Inertia`, `InertiaN<T>`, `DragState`, `GestureRecognizer` |
 | `driver` | `AnimationDriver`, `Clock` variants |
 | `serde` | `Serialize`/`Deserialize` on supported concrete public types |
 | `tokio` | `.wait().await` on `Timeline` completion |
@@ -251,7 +278,6 @@ animato = { version = "0.4", features = ["serde"] }
 
 | Feature | Version | What it adds |
 |---------|---------|--------------|
-| `physics` | v0.5.0 | Inertia, DragState, GestureRecognizer |
 | `color` | v0.6.0 | Perceptual color interpolation via `palette` |
 | `bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
 | `wasm` | v0.7.0 | `RafDriver` + WASM bindings |
@@ -261,13 +287,14 @@ animato = { version = "0.4", features = ["serde"] }
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.4", default-features = false }
-animato-tween  = { version = "0.4", default-features = false }
-animato-spring = { version = "0.4", default-features = false }
-animato-path   = { version = "0.4", default-features = false }
+animato-core   = { version = "0.5", default-features = false }
+animato-tween  = { version = "0.5", default-features = false }
+animato-spring = { version = "0.5", default-features = false }
+animato-path   = { version = "0.5", default-features = false }
+animato-physics = { version = "0.5", default-features = false }
 ```
 
-Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, and SVG parsing require allocation.
+Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, and all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, SVG parsing, `InertiaN<T>`, and `DragState` require allocation.
 
 ---
 
@@ -384,6 +411,7 @@ cargo run --example spring_demo
 cargo run --example keyframe_track
 cargo run --example timeline_sequence
 cargo run --example motion_path --features path
+cargo run --example physics_drag --features physics
 
 # Coming in future versions:
 # cargo run --example color_animation     # v0.6.0
@@ -399,7 +427,7 @@ cargo run --example motion_path --features path
 cargo test --workspace --all-features
 
 # no_std check:
-cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path --no-default-features
+cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics --no-default-features
 
 # Benchmarks:
 cargo bench
@@ -414,11 +442,11 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.4.0 — Paths` shipped**
+**Current status: `v0.5.0 — Physics` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.5.0` | Physics — inertia, drag, gesture recognition |
+| `v0.6.0` | Color — perceptual color interpolation |
 
 ---
 
