@@ -49,7 +49,7 @@ jobs:
       # Only test no_std-compatible crates without default features.
       # animato-driver requires std (WallClock uses std::time::Instant).
       - name: Test no_std crates (no default features)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics --no-default-features
+        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
 
   # ── Lint ───────────────────────────────────────────────────────────────────
   lint:
@@ -164,6 +164,9 @@ jobs:
 
       - name: Build animato-physics (no_std)
         run: cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features
+
+      - name: Build animato-color (no_std)
+        run: cargo build -p animato-color --target thumbv7m-none-eabi --no-default-features
 
   # ── Security audit ─────────────────────────────────────────────────────────
   audit:

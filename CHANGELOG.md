@@ -7,6 +7,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.6.0] — 2026-05-08 — Color
+
+### Added
+- `animato-color`: new crate for perceptual color interpolation.
+- `animato-color`: `InLab<C>` wrapper for CIE L\*a\*b\* interpolation.
+- `animato-color`: `InOklch<C>` wrapper for modern perceptual Oklch interpolation.
+- `animato-color`: `InLinear<C>` wrapper for linear-light sRGB interpolation.
+- `animato-color`: `Interpolate` implementations backed by `palette` conversions and `Mix`.
+- `animato` facade: `color` feature flag, color wrapper re-exports, and `palette` re-export.
+- Example: `color_animation.rs`.
+- Integration tests for facade color exports and `Tween<InLab<Srgb>>`.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins to `0.6.0`.
+- Updated README, roadmap, architecture snippets, CI, and publish workflow for `v0.6.0 — Color`.
+
+---
+
 ## [0.5.0] — 2026-05-08 — Physics
 
 ### Added
@@ -118,7 +136,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/AarambhDevHub/animato/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AarambhDevHub/animato/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AarambhDevHub/animato/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AarambhDevHub/animato/compare/v0.2.0...v0.3.0

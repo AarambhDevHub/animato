@@ -32,7 +32,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.5.0:**
+**Shipped in v0.6.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
@@ -42,6 +42,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 | [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
 | [`animato-path`](./crates/animato-path) | Bezier curves, CatmullRom splines, motion paths, SVG path parsing | core no_std |
 | [`animato-physics`](./crates/animato-physics) | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation | core no_std |
+| [`animato-color`](./crates/animato-color) | Perceptual color interpolation in Lab, Oklch, and linear-light sRGB | yes |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
 | [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
 
@@ -49,7 +50,6 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 | Crate | Version | Description |
 |-------|---------|-------------|
-| `animato-color` | v0.6.0 | Perceptual color interpolation (Lab, Oklch, Linear) |
 | `animato-bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
 | `animato-wasm` | v0.7.0 | `RafDriver`, FLIP, SplitText, ScrollSmoother |
 | `animato-gpu` | v0.9.0 | `GpuAnimationBatch` — 10K+ tweens per frame on GPU |
@@ -58,7 +58,7 @@ Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.5"
+animato = "0.6"
 ```
 
 ---
@@ -200,7 +200,7 @@ With the `tokio` feature, `timeline.wait().await` resolves when another task or 
 
 ```toml
 [dependencies]
-animato = { version = "0.5", features = ["path"] }
+animato = { version = "0.6", features = ["path"] }
 ```
 
 ```rust
@@ -228,7 +228,7 @@ let rotation = motion.rotation_deg();
 
 ```toml
 [dependencies]
-animato = { version = "0.5", features = ["physics"] }
+animato = { version = "0.6", features = ["physics"] }
 ```
 
 ```rust
@@ -250,16 +250,38 @@ let gesture = gestures.on_pointer_up(PointerData::new(80.0, 0.0, 1), 0.2);
 assert!(matches!(gesture, Some(Gesture::Swipe { .. })));
 ```
 
+### Color interpolation
+
+```toml
+[dependencies]
+animato = { version = "0.6", features = ["color"] }
+```
+
+```rust
+use animato::{InLab, Tween, Update, palette::Srgb};
+
+let mut tween = Tween::new(
+    InLab::new(Srgb::new(1.0, 0.0, 0.0)),
+    InLab::new(Srgb::new(0.0, 0.0, 1.0)),
+)
+.duration(1.0)
+.build();
+
+tween.update(0.5);
+let midpoint = tween.value().into_inner();
+assert!(midpoint.red > 0.0 && midpoint.blue > 0.0);
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.5", features = ["serde"] }
+animato = { version = "0.6", features = ["serde"] }
 ```
 
-**v0.5.0 features:**
+**v0.6.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
@@ -270,6 +292,7 @@ animato = { version = "0.5", features = ["serde"] }
 | `spring` | `Spring`, `SpringN<T>`, all presets |
 | `path` | `QuadBezier`, `CubicBezierCurve`, `CatmullRomSpline`, `MotionPathTween`, `SvgPathParser` |
 | `physics` | `Inertia`, `InertiaN<T>`, `DragState`, `GestureRecognizer` |
+| `color` | `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and the `palette` re-export |
 | `driver` | `AnimationDriver`, `Clock` variants |
 | `serde` | `Serialize`/`Deserialize` on supported concrete public types |
 | `tokio` | `.wait().await` on `Timeline` completion |
@@ -278,7 +301,6 @@ animato = { version = "0.5", features = ["serde"] }
 
 | Feature | Version | What it adds |
 |---------|---------|--------------|
-| `color` | v0.6.0 | Perceptual color interpolation via `palette` |
 | `bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
 | `wasm` | v0.7.0 | `RafDriver` + WASM bindings |
 | `gpu` | v0.9.0 | `GpuAnimationBatch` via `wgpu` |
@@ -287,14 +309,15 @@ animato = { version = "0.5", features = ["serde"] }
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.5", default-features = false }
-animato-tween  = { version = "0.5", default-features = false }
-animato-spring = { version = "0.5", default-features = false }
-animato-path   = { version = "0.5", default-features = false }
-animato-physics = { version = "0.5", default-features = false }
+animato-core   = { version = "0.6", default-features = false }
+animato-tween  = { version = "0.6", default-features = false }
+animato-spring = { version = "0.6", default-features = false }
+animato-path   = { version = "0.6", default-features = false }
+animato-physics = { version = "0.6", default-features = false }
+animato-color  = { version = "0.6", default-features = false }
 ```
 
-Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, and all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, SVG parsing, `InertiaN<T>`, and `DragState` require allocation.
+Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, SVG parsing, `InertiaN<T>`, and `DragState` require allocation.
 
 ---
 
@@ -412,9 +435,9 @@ cargo run --example keyframe_track
 cargo run --example timeline_sequence
 cargo run --example motion_path --features path
 cargo run --example physics_drag --features physics
+cargo run --example color_animation --features color
 
 # Coming in future versions:
-# cargo run --example color_animation     # v0.6.0
 # cargo run --example tui_progress        # v0.7.0
 ```
 
@@ -427,7 +450,7 @@ cargo run --example physics_drag --features physics
 cargo test --workspace --all-features
 
 # no_std check:
-cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics --no-default-features
+cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
 
 # Benchmarks:
 cargo bench
@@ -442,11 +465,11 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.5.0 — Physics` shipped**
+**Current status: `v0.6.0 — Color` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.6.0` | Color — perceptual color interpolation |
+| `v0.7.0` | Integrations — Bevy, WASM, and TUI examples |
 
 ---
 

@@ -14,12 +14,13 @@ categories  = ["game-development", "graphics", "no-std"]
 # For no_std targets, prefer the focused sub-crates directly.
 [features]
 default = ["std", "tween", "timeline", "spring", "driver"]
-std     = ["animato-core/std", "dep:animato-driver", "animato-tween?/std", "animato-timeline?/std", "animato-spring?/std", "animato-path?/std", "animato-physics?/std"]
+std     = ["animato-core/std", "dep:animato-driver", "animato-tween?/std", "animato-timeline?/std", "animato-spring?/std", "animato-path?/std", "animato-physics?/std", "animato-color?/std", "palette?/std"]
 tween   = ["dep:animato-tween", "animato-tween/alloc"]
 timeline = ["dep:animato-timeline"]
 spring  = ["dep:animato-spring", "animato-spring?/alloc"]
 path    = ["dep:animato-path", "animato-path/std"]
 physics = ["dep:animato-physics", "animato-physics/alloc"]
+color   = ["dep:animato-color", "dep:palette"]
 driver  = ["dep:animato-driver"]
 tokio   = ["timeline", "animato-timeline/tokio"]
 serde   = [
@@ -30,6 +31,7 @@ serde   = [
     "animato-spring?/serde",
     "animato-path?/serde",
     "animato-physics?/serde",
+    "animato-color?/serde",
 ]
 
 [dependencies]
@@ -39,7 +41,9 @@ animato-timeline = { workspace = true, optional = true }
 animato-spring = { workspace = true, optional = true }
 animato-path   = { workspace = true, optional = true }
 animato-physics = { workspace = true, optional = true }
+animato-color  = { workspace = true, optional = true }
 animato-driver = { workspace = true, optional = true }
+palette        = { workspace = true, optional = true }
 serde          = { workspace = true, optional = true }
 
 [dev-dependencies]
@@ -50,6 +54,7 @@ animato-timeline = { workspace = true }
 animato-spring = { workspace = true, features = ["alloc"] }
 animato-path   = { workspace = true, features = ["std"] }
 animato-physics = { workspace = true, features = ["alloc"] }
+animato-color  = { workspace = true }
 animato-driver = { workspace = true }
 
 # ── Integration tests ────────────────────────────────────────────────────────
@@ -99,6 +104,11 @@ required-features = ["path"]
 name = "physics_input"
 path = "../../tests/physics_input.rs"
 required-features = ["physics"]
+
+[[test]]
+name = "color_interpolation"
+path = "../../tests/color_interpolation.rs"
+required-features = ["color", "tween"]
 
 # ── Benchmarks ───────────────────────────────────────────────────────────────
 [[bench]]
@@ -156,3 +166,8 @@ required-features = ["path"]
 name = "physics_drag"
 path = "../../examples/physics_drag.rs"
 required-features = ["physics"]
+
+[[example]]
+name = "color_animation"
+path = "../../examples/color_animation.rs"
+required-features = ["color", "tween"]

@@ -28,7 +28,7 @@ pub enum SvgPathError {
         /// Byte offset where the flag was expected.
         at: usize,
     },
-    /// The input used a command that v0.4.0 does not support.
+    /// The input used a command that this parser does not support.
     UnsupportedCommand {
         /// Unsupported command character.
         command: char,
