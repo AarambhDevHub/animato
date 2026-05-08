@@ -8,7 +8,7 @@
 use animato::{Easing, KeyframeTrack, Loop, Update};
 
 fn main() {
-    println!("Animato v0.3.0 - keyframe_track example");
+    println!("Animato v0.4.0 - keyframe_track example");
     println!("  Three keyframes with Forever and PingPong previews\n");
 
     let mut track = KeyframeTrack::new()
@@ -30,7 +30,7 @@ fn main() {
         .push(1.2, 40.0)
         .looping(Loop::PingPong);
 
-    println!("\nPingPong loop with v0.3.0 easing:");
+    println!("\nPingPong loop with v0.4.0 easing:");
     for frame in 0..90 {
         ping_pong.update(1.0 / 60.0);
         let value = ping_pong.value().unwrap_or(0.0);

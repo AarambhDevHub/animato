@@ -7,6 +7,27 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.4.0] — 2026-05-08 — Paths
+
+### Added
+- `animato-path`: new crate for Bezier curves, CatmullRom splines, compound paths, and SVG path parsing.
+- `animato-path`: `PathEvaluate` trait with `position(t)`, `tangent(t)`, `rotation_deg(t)`, and `arc_length()`.
+- `animato-path`: `QuadBezier` and `CubicBezierCurve` with arc-length-normalized evaluation.
+- `animato-path`: `CatmullRomSpline` and `PolyPath` for smooth paths through arbitrary points.
+- `animato-path`: `CompoundPath`, `PathSegment`, `LineSegment`, `EllipticalArc`, and `PathCommand`.
+- `animato-path`: `SvgPathParser::parse()` and `try_parse()` with `M`, `L`, `H`, `V`, `C`, `Q`, `A`, `Z`, and lowercase relative command support.
+- `animato-path`: `MotionPath`, `MotionPathTween`, auto-rotation, and start/end offsets.
+- `animato` facade: `path` feature flag and path API re-exports.
+- Example: `motion_path.rs`.
+- Integration tests for path arc length, motion path tweening, and SVG parsing.
+- Benchmark: `path_bench.rs`.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins to `0.4.0`.
+- Updated README, roadmap, architecture snippets, CI, and publish workflow for `v0.4.0 — Paths`.
+
+---
+
 ## [0.3.0] — 2026-05-07 — Control
 
 ### Added
@@ -75,7 +96,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/AarambhDevHub/animato/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/AarambhDevHub/animato/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/AarambhDevHub/animato/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/AarambhDevHub/animato/releases/tag/v0.1.0

@@ -1,0 +1,24 @@
+[package]
+name        = "animato-path"
+description = "Bezier curves, motion paths, CatmullRom splines, and SVG path parsing for Animato."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "path", "bezier", "svg", "motion"]
+categories  = ["graphics", "game-development", "no-std"]
+
+[features]
+default = []
+std     = ["alloc", "animato-core/std", "animato-tween/std"]
+alloc   = ["animato-tween/alloc"]
+serde   = ["dep:serde", "animato-core/serde", "animato-tween/serde"]
+
+[dependencies]
+animato-core  = { workspace = true }
+animato-tween = { workspace = true }
+libm          = "0.2"
+serde         = { workspace = true, optional = true }

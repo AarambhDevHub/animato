@@ -56,9 +56,9 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.3", default-features = false }
-//! animato-tween  = { version = "0.3", default-features = false }
-//! animato-spring = { version = "0.3", default-features = false }
+//! animato-core   = { version = "0.4", default-features = false }
+//! animato-tween  = { version = "0.4", default-features = false }
+//! animato-spring = { version = "0.4", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -70,6 +70,7 @@
 //! | `tween` | [`Tween<T>`], [`KeyframeTrack<T>`], [`Loop`] |
 //! | `timeline` | [`Timeline`], [`Sequence`], [`stagger()`] |
 //! | `spring` | [`Spring`], [`SpringConfig`], [`SpringN<T>`] |
+//! | `path` | [`MotionPath`], [`MotionPathTween`], [`SvgPathParser`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
@@ -105,6 +106,14 @@ pub use animato_spring::{Integrator, Spring, SpringConfig};
 
 #[cfg(feature = "spring")]
 pub use animato_spring::SpringN;
+
+// ── Path ─────────────────────────────────────────────────────────────────────
+#[cfg(feature = "path")]
+pub use animato_path::{
+    CatmullRomSpline, CompoundPath, CubicBezierCurve, EllipticalArc, LineSegment, MotionPath,
+    MotionPathTween, MotionPathTweenBuilder, PathCommand, PathEvaluate, PathSegment, PolyPath,
+    QuadBezier, SvgPathError, SvgPathParser,
+};
 
 // ── Driver ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "driver")]
