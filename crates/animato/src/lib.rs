@@ -36,6 +36,16 @@
 //! assert!((spring.position() - 200.0).abs() < 0.01);
 //! ```
 //!
+//! ## Input Physics
+//!
+//! ```rust,ignore
+//! use animato::{Inertia, InertiaConfig, Update};
+//!
+//! let mut inertia = Inertia::new(InertiaConfig::smooth());
+//! inertia.kick(800.0);
+//! while inertia.update(1.0 / 60.0) {}
+//! ```
+//!
 //! ## AnimationDriver
 //!
 //! ```rust,ignore
@@ -56,9 +66,10 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.4", default-features = false }
-//! animato-tween  = { version = "0.4", default-features = false }
-//! animato-spring = { version = "0.4", default-features = false }
+//! animato-core   = { version = "0.5", default-features = false }
+//! animato-tween  = { version = "0.5", default-features = false }
+//! animato-spring = { version = "0.5", default-features = false }
+//! animato-physics = { version = "0.5", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -71,6 +82,7 @@
 //! | `timeline` | [`Timeline`], [`Sequence`], [`stagger()`] |
 //! | `spring` | [`Spring`], [`SpringConfig`], [`SpringN<T>`] |
 //! | `path` | [`MotionPath`], [`MotionPathTween`], [`SvgPathParser`] |
+//! | `physics` | [`Inertia`], [`DragState`], [`GestureRecognizer`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
@@ -113,6 +125,13 @@ pub use animato_path::{
     CatmullRomSpline, CompoundPath, CubicBezierCurve, EllipticalArc, LineSegment, MotionPath,
     MotionPathTween, MotionPathTweenBuilder, PathCommand, PathEvaluate, PathSegment, PolyPath,
     QuadBezier, SvgPathError, SvgPathParser,
+};
+
+// ── Physics ─────────────────────────────────────────────────────────────────
+#[cfg(feature = "physics")]
+pub use animato_physics::{
+    DragAxis, DragConstraints, DragState, Gesture, GestureConfig, GestureRecognizer, Inertia,
+    InertiaBounds, InertiaConfig, InertiaN, PointerData, SwipeDirection,
 };
 
 // ── Driver ───────────────────────────────────────────────────────────────────

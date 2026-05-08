@@ -27,7 +27,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.2.0` | Composition | Keyframe tracks, timeline, sequence, stagger | ✅ |
 | `v0.3.0` | Control | Time scale, callbacks, advanced easing | ✅ |
 | `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | ✅ |
-| `v0.5.0` | Physics | Inertia, drag, gesture recognition | 📋 |
+| `v0.5.0` | Physics | Inertia, drag, gesture recognition | ✅ |
 | `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | 📋 |
 | `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | 📋 |
 | `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | 📋 |
@@ -247,28 +247,28 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 **`animato-physics`**
 
 *`inertia.rs`*
-- [ ] `InertiaConfig` with `friction`, `min_velocity`, and optional `bounds`
-- [ ] Presets: `smooth()`, `snappy()`, `heavy()`
-- [ ] `Inertia` — 1D friction deceleration from an initial velocity
-- [ ] `InertiaN<T: Animatable>` — multi-dimensional inertia
-- [ ] `.kick(velocity)` — start inertia from a velocity value
-- [ ] `.is_settled() -> bool`
+- [x] `InertiaConfig` with `friction`, `min_velocity`, and optional `bounds`
+- [x] Presets: `smooth()`, `snappy()`, `heavy()`
+- [x] `Inertia` — 1D friction deceleration from an initial velocity
+- [x] `InertiaN<T: Animatable>` — multi-dimensional inertia
+- [x] `.kick(velocity)` — start inertia from a velocity value
+- [x] `.is_settled() -> bool`
 
 *`drag.rs`*
-- [ ] `PointerData` struct (`x`, `y`, `pressure`, `pointer_id`)
-- [ ] `DragAxis` enum (`Both`, `X`, `Y`)
-- [ ] `DragConstraints` struct (`min_x`, `max_x`, `min_y`, `max_y`, optional `grid_snap`)
-- [ ] `DragState` — tracks pointer position, velocity EMA, axis lock, constraints
-- [ ] `.on_pointer_down(data)`, `.on_pointer_move(data, dt)`, `.on_pointer_up(data)` → `Option<InertiaN<[f32; 2]>>`
+- [x] `PointerData` struct (`x`, `y`, `pressure`, `pointer_id`)
+- [x] `DragAxis` enum (`Both`, `X`, `Y`)
+- [x] `DragConstraints` struct (`min_x`, `max_x`, `min_y`, `max_y`, optional `grid_snap`)
+- [x] `DragState` — tracks pointer position, velocity EMA, axis lock, constraints
+- [x] `.on_pointer_down(data)`, `.on_pointer_move(data, dt)`, `.on_pointer_up(data)` → `Option<InertiaN<[f32; 2]>>`
 
 *`gesture.rs`*
-- [ ] `GestureConfig` struct (`tap_max_distance`, `tap_max_duration`, `swipe_min_distance`, `long_press_duration`)
-- [ ] `Gesture` enum: `Tap`, `DoubleTap`, `LongPress`, `Swipe`, `Pinch`, `Rotation`
-- [ ] `SwipeDirection` enum: `Up`, `Down`, `Left`, `Right`
-- [ ] `GestureRecognizer` — feeds pointer events, emits `Gesture` on pointer-up
+- [x] `GestureConfig` struct (`tap_max_distance`, `tap_max_duration`, `swipe_min_distance`, `long_press_duration`)
+- [x] `Gesture` enum: `Tap`, `DoubleTap`, `LongPress`, `Swipe`, `Pinch`, `Rotation`
+- [x] `SwipeDirection` enum: `Up`, `Down`, `Left`, `Right`
+- [x] `GestureRecognizer` — feeds pointer events, emits `Gesture` on pointer-up
 
 **`animato` facade**
-- [ ] `physics` feature flag
+- [x] `physics` feature flag
 
 ---
 
@@ -466,10 +466,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.5.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.6.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.4.0 — last updated May 2026*  
-*v0.4.0 shipped — next milestone: v0.5.0 — Physics*  
+*Roadmap version: 0.5.0 — last updated May 2026*  
+*v0.5.0 shipped — next milestone: v0.6.0 — Color*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

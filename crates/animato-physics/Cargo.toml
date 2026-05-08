@@ -1,0 +1,23 @@
+[package]
+name        = "animato-physics"
+description = "Input-driven physics, drag tracking, and gesture recognition for Animato."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "physics", "inertia", "gesture", "no_std"]
+categories  = ["no-std", "game-development", "gui"]
+
+[features]
+default = []
+std     = ["animato-core/std", "alloc"]
+alloc   = []
+serde   = ["dep:serde", "animato-core/serde"]
+
+[dependencies]
+animato-core = { workspace = true }
+libm         = "0.2"
+serde        = { workspace = true, optional = true }
