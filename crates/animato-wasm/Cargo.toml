@@ -8,7 +8,7 @@ license.workspace     = true
 repository.workspace  = true
 authors.workspace     = true
 rust-version.workspace = true
-keywords    = ["animation", "wasm", "web", "dom", "requestanimationframe"]
+keywords    = ["animation", "wasm", "web", "dom", "request-frame"]
 categories  = ["wasm", "web-programming", "gui"]
 
 [features]
