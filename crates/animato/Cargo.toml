@@ -22,6 +22,9 @@ path    = ["dep:animato-path", "animato-path/std"]
 physics = ["dep:animato-physics", "animato-physics/alloc"]
 color   = ["dep:animato-color", "dep:palette"]
 driver  = ["dep:animato-driver"]
+bevy    = ["dep:animato-bevy", "tween", "spring", "std"]
+wasm    = ["dep:animato-wasm", "driver"]
+wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
 tokio   = ["timeline", "animato-timeline/tokio"]
 serde   = [
     "dep:serde",
@@ -43,6 +46,8 @@ animato-path   = { workspace = true, optional = true }
 animato-physics = { workspace = true, optional = true }
 animato-color  = { workspace = true, optional = true }
 animato-driver = { workspace = true, optional = true }
+animato-bevy   = { workspace = true, optional = true }
+animato-wasm   = { workspace = true, optional = true }
 palette        = { workspace = true, optional = true }
 serde          = { workspace = true, optional = true }
 
@@ -56,6 +61,14 @@ animato-path   = { workspace = true, features = ["std"] }
 animato-physics = { workspace = true, features = ["alloc"] }
 animato-color  = { workspace = true }
 animato-driver = { workspace = true }
+animato-bevy   = { workspace = true }
+animato-wasm   = { workspace = true }
+bevy_app       = { workspace = true }
+bevy_ecs       = { workspace = true }
+bevy_time      = { workspace = true }
+bevy_transform = { workspace = true }
+ratatui        = { workspace = true }
+crossterm      = { workspace = true }
 
 # ── Integration tests ────────────────────────────────────────────────────────
 [[test]]
@@ -109,6 +122,16 @@ required-features = ["physics"]
 name = "color_interpolation"
 path = "../../tests/color_interpolation.rs"
 required-features = ["color", "tween"]
+
+[[test]]
+name = "bevy_integration"
+path = "../../tests/bevy_integration.rs"
+required-features = ["bevy"]
+
+[[test]]
+name = "wasm_raf_driver"
+path = "../../tests/wasm_raf_driver.rs"
+required-features = ["wasm", "tween"]
 
 # ── Benchmarks ───────────────────────────────────────────────────────────────
 [[bench]]
@@ -171,3 +194,18 @@ required-features = ["physics"]
 name = "color_animation"
 path = "../../examples/color_animation.rs"
 required-features = ["color", "tween"]
+
+[[example]]
+name = "bevy_transform"
+path = "../../examples/bevy_transform.rs"
+required-features = ["bevy"]
+
+[[example]]
+name = "tui_progress"
+path = "../../examples/tui_progress.rs"
+required-features = ["tween", "driver"]
+
+[[example]]
+name = "tui_spinner"
+path = "../../examples/tui_spinner.rs"
+required-features = ["tween", "driver"]

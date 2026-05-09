@@ -1,0 +1,43 @@
+[package]
+name        = "animato-wasm"
+description = "WASM, requestAnimationFrame, and DOM integration helpers for Animato."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "wasm", "web", "dom", "requestanimationframe"]
+categories  = ["wasm", "web-programming", "gui"]
+
+[features]
+default  = []
+wasm-dom = [
+    "dep:animato-physics",
+    "dep:animato-tween",
+    "dep:wasm-bindgen",
+    "dep:web-sys",
+]
+
+[dependencies]
+animato-core    = { workspace = true }
+animato-driver  = { workspace = true }
+animato-physics = { workspace = true, features = ["alloc"], optional = true }
+animato-tween   = { workspace = true, optional = true }
+wasm-bindgen    = { workspace = true, optional = true }
+web-sys         = { workspace = true, optional = true, features = [
+    "CssStyleDeclaration",
+    "Document",
+    "DomRect",
+    "Element",
+    "EventTarget",
+    "HtmlElement",
+    "Node",
+    "PointerEvent",
+    "Text",
+    "WheelEvent",
+] }
+
+[dev-dependencies]
+animato-tween = { workspace = true }

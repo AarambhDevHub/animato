@@ -240,30 +240,31 @@ members = [
     "crates/animato-physics",
     "crates/animato-color",
     "crates/animato-driver",
-    "crates/animato-gpu",
     "crates/animato-bevy",
     "crates/animato-wasm",
     "crates/animato",
 ]
 
 [workspace.package]
-version      = "0.6.0"
+version      = "0.7.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
 authors      = ["Aarambh Dev Hub"]
-rust-version = "1.85"
+rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.6" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.6" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.6" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.6" }
-animato-path     = { path = "crates/animato-path",     version = "0.6" }
-animato-physics  = { path = "crates/animato-physics",  version = "0.6" }
-animato-color    = { path = "crates/animato-color",    version = "0.6" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.6" }
+animato-core     = { path = "crates/animato-core",     version = "0.7" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.7" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.7" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.7" }
+animato-path     = { path = "crates/animato-path",     version = "0.7" }
+animato-physics  = { path = "crates/animato-physics",  version = "0.7" }
+animato-color    = { path = "crates/animato-color",    version = "0.7" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.7" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "0.7" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "0.7" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -275,9 +276,11 @@ wgpu         = { version = "24" }
 bytemuck     = { version = "1",    features = ["derive"] }
 pollster     = { version = "0.4" }
 tokio        = { version = "1",    features = ["sync"] }
-bevy_app     = { version = "0.15" }
-bevy_ecs     = { version = "0.15" }
-bevy_time    = { version = "0.15" }
+bevy_app     = { version = "0.18.1", default-features = false }
+bevy_ecs     = { version = "0.18.1", default-features = false }
+bevy_math    = { version = "0.18.1", default-features = false, features = ["libm"] }
+bevy_time    = { version = "0.18.1", default-features = false }
+bevy_transform = { version = "0.18.1", default-features = false, features = ["bevy-support", "libm"] }
 approx       = { version = "0.5" }
 criterion    = { version = "0.5",  features = ["html_reports"] }
 ```
@@ -1029,11 +1032,11 @@ The shader receives a buffer of tween state structs `{start, end, duration, elap
 
 ### 4.10 `animato-bevy`
 
-**Responsibility:** Bevy plugin integrating Animato into the Bevy ECS. Component registration, system scheduling, and event types.
+**Responsibility:** Bevy plugin integrating Animato into the Bevy ECS. Component wrappers, system scheduling, transform helpers, and completion messages.
 
-**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `bevy_app`, `bevy_ecs`, `bevy_time`
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `bevy_app`, `bevy_ecs`, `bevy_time`, `bevy_math`, `bevy_transform`
 
-#### `src/plugin.rs`
+#### `src/lib.rs`
 
 ```rust
 pub struct AnimatoPlugin;
@@ -1041,35 +1044,22 @@ pub struct AnimatoPlugin;
 impl bevy_app::Plugin for AnimatoPlugin {
     fn build(&self, app: &mut bevy_app::App) {
         app
-            .add_event::<TweenCompleted>()
-            .add_event::<SpringSettled>()
-            .add_systems(bevy_app::Update, tick_tweens)
-            .add_systems(bevy_app::Update, tick_springs);
+            .add_message::<TweenCompleted>()
+            .add_message::<SpringSettled>()
+            .configure_sets(Update, (AnimatoSet::Tick, AnimatoSet::Apply).chain())
+            .add_systems(Update, tick_tweens::<[f32; 3]>.in_set(AnimatoSet::Tick))
+            .add_systems(Update, apply_transform_vec3_tweens.in_set(AnimatoSet::Apply));
     }
 }
 
-#[derive(Event)]
-pub struct TweenCompleted { pub entity: bevy_ecs::entity::Entity }
+#[derive(Component)]
+pub struct AnimatoTween<T> { tween: Tween<T>, channel: AnimationChannel }
 
-#[derive(Event)]
-pub struct SpringSettled { pub entity: bevy_ecs::entity::Entity }
-```
+#[derive(Message)]
+pub struct TweenCompleted { pub entity: Entity, pub label: Option<AnimationLabel> }
 
-#### `src/systems.rs`
-
-```rust
-fn tick_tweens(
-    time: Res<Time>,
-    mut query: Query<(Entity, &mut Tween<f32>)>,
-    mut events: EventWriter<TweenCompleted>,
-) {
-    for (entity, mut tween) in &mut query {
-        let still_running = tween.update(time.delta_seconds());
-        if !still_running {
-            events.send(TweenCompleted { entity });
-        }
-    }
-}
+#[derive(Message)]
+pub struct SpringSettled { pub entity: Entity, pub label: Option<AnimationLabel> }
 ```
 
 ---
@@ -1078,24 +1068,26 @@ fn tick_tweens(
 
 **Responsibility:** Browser-specific integrations. `requestAnimationFrame` driver, FLIP layout transitions, SplitText, ScrollSmoother, Draggable, Observer.
 
-**Depends on:** `animato-core`, `animato-driver`, `wasm-bindgen`, `js-sys`, `web-sys`
+**Depends on:** `animato-core`, `animato-driver`, optional `animato-tween`, optional `animato-physics`, optional `wasm-bindgen`, optional `web-sys`
 
 #### `src/raf.rs`
 
 ```rust
 pub struct RafDriver {
-    driver:     AnimationDriver,
-    last_ts:    f64,
-    time_scale: f32,
-    paused:     bool,
+    driver:            AnimationDriver,
+    last_timestamp_ms: Option<f64>,
+    time_scale:        f32,
+    max_dt:            f32,
+    paused:            bool,
 }
 
 impl RafDriver {
     pub fn new() -> Self;
-    pub fn tick(&mut self, timestamp_ms: f64);   // call from rAF callback
+    pub fn tick(&mut self, timestamp_ms: f64) -> f32; // returns dt seconds
     pub fn pause(&mut self);
     pub fn resume(&mut self);
     pub fn set_time_scale(&mut self, scale: f32);
+    pub fn set_max_dt(&mut self, max_dt: f32);
 }
 ```
 
@@ -1119,6 +1111,7 @@ driver   = ["dep:animato-driver"]
 gpu      = ["dep:animato-gpu"]
 bevy     = ["dep:animato-bevy"]
 wasm     = ["dep:animato-wasm"]
+wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
 serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde", "animato-color?/serde"]
 tokio    = ["animato-timeline/tokio"]
 no_std   = []
@@ -1162,17 +1155,17 @@ Bevy scheduler (Update stage)
   tick_springs system
        │
        ▼
-  Query<(Entity, &mut Tween<f32>)>
-  Query<(Entity, &mut SpringN<Vec3>)>
+  Query<(Entity, &mut AnimatoTween<T>)>
+  Query<(Entity, &mut AnimatoSpring<T>)>
        │
        ▼
-  .update(time.delta_seconds())
+  .update(time.delta_secs())
        │
        ▼
-  TweenCompleted / SpringSettled events fired
+  TweenCompleted / SpringSettled messages fired
        │
        ▼
-  User systems react to events and apply values
+  User systems react to messages or use built-in transform helpers
 ```
 
 ### WASM / Browser Loop
@@ -1440,7 +1433,7 @@ Build with `wasm-pack build --target web --features wasm`.
 
 ```rust
 use wasm_bindgen::prelude::*;
-use animato::{Tween, Easing};
+use animato::{Tween, Easing, Update};
 use animato_wasm::RafDriver;
 
 #[wasm_bindgen]
@@ -1461,7 +1454,10 @@ impl App {
             driver: RafDriver::new(),
         }
     }
-    pub fn tick(&mut self, ts: f64) { self.driver.tick(ts); }
+    pub fn tick(&mut self, ts: f64) {
+        let dt = self.driver.tick(ts);
+        self.tween.update(dt);
+    }
     pub fn value(&self) -> f32 { self.tween.value() }
 }
 ```
@@ -1471,7 +1467,7 @@ impl App {
 ```rust
 use bevy::prelude::*;
 use animato_bevy::{AnimatoPlugin, TweenCompleted};
-use animato::Tween;
+use animato::{AnimatoTween, Easing, Tween};
 
 fn main() {
     App::new()
@@ -1484,17 +1480,20 @@ fn main() {
 
 fn spawn(mut commands: Commands) {
     commands.spawn((
-        SpriteBundle::default(),
-        Tween::new([0.0_f32, 0.0], [200.0, 0.0])
-            .duration(0.8)
-            .easing(Easing::EaseOutBack)
-            .build(),
+        Sprite::default(),
+        Transform::default(),
+        AnimatoTween::translation(
+            Tween::new([0.0_f32, 0.0, 0.0], [200.0, 0.0, 0.0])
+                .duration(0.8)
+                .easing(Easing::EaseOutBack)
+                .build(),
+        ),
     ));
 }
 
-fn on_done(mut events: EventReader<TweenCompleted>) {
-    for ev in events.read() {
-        println!("Entity {:?} finished animating", ev.entity);
+fn on_done(mut messages: MessageReader<TweenCompleted>) {
+    for message in messages.read() {
+        println!("Entity {:?} finished animating", message.entity);
     }
 }
 ```
@@ -1503,12 +1502,12 @@ fn on_done(mut events: EventReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.6", default-features = false }
-animato-tween = { version = "0.6", default-features = false }
-animato-spring = { version = "0.6", default-features = false }
-animato-path = { version = "0.6", default-features = false }
-animato-physics = { version = "0.6", default-features = false }
-animato-color = { version = "0.6", default-features = false }
+animato-core  = { version = "0.7", default-features = false }
+animato-tween = { version = "0.7", default-features = false }
+animato-spring = { version = "0.7", default-features = false }
+animato-path = { version = "0.7", default-features = false }
+animato-physics = { version = "0.7", default-features = false }
+animato-color = { version = "0.7", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -1615,5 +1614,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.6.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.7.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

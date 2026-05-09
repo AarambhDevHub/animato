@@ -21,6 +21,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy, rustfmt
+          targets: wasm32-unknown-unknown
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -37,6 +38,9 @@ jobs:
       - name: Run no_std check (no_std-compatible crates only)
         run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
 
+      - name: Check WASM integrations
+        run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
 
@@ -52,7 +56,7 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.6.0 scope: animato-core → animato-color → animato-tween → animato-spring → animato-path → animato-physics → animato-driver → animato-timeline → animato
+  # v0.7.0 scope: animato-core → animato-color → animato-tween → animato-spring → animato-path → animato-physics → animato-driver → animato-timeline → animato-wasm → animato-bevy → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -121,6 +125,18 @@ jobs:
       - name: Wait for registry index
         run: sleep 30
 
+      - name: Publish animato-wasm
+        run: cargo publish -p animato-wasm --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
+      - name: Publish animato-bevy
+        run: cargo publish -p animato-bevy --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Wait for registry index
+        run: sleep 30
+
       - name: Publish animato (facade)
         run: cargo publish -p animato --token ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
@@ -145,11 +161,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Color"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Integrations"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Color
+            ## Animato ${{ steps.version.outputs.TAG }} — Integrations
 
-            The sixth release of the Animato animation library for Rust, adding perceptual color interpolation through Lab, Oklch, and linear-light sRGB.
+            The seventh release of the Animato animation library for Rust, adding Bevy, WASM/rAF, DOM, and TUI integrations.
 
             ### Crates published to crates.io
 
@@ -163,40 +179,41 @@ jobs:
             | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation |
             | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
             | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, time scale, callbacks, async wait |
+            | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | `RafDriver`, `ScrollSmoother`, and optional DOM helpers |
+            | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | `AnimatoPlugin`, Bevy tween/spring components, completion messages |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
 
             ### Quick Start
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["color"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["bevy", "wasm"] }
             ```
 
             ```rust
-            use animato::{InLab, Tween, Update, palette::Srgb};
+            use animato::{Easing, RafDriver, Tween, Update};
 
-            let mut tween = Tween::new(
-                InLab::new(Srgb::new(1.0, 0.0, 0.0)),
-                InLab::new(Srgb::new(0.0, 0.0, 1.0)),
-            )
-            .duration(1.0)
-            .build();
+            let mut tween = Tween::new(0.0_f32, 500.0)
+                .duration(1.5)
+                .easing(Easing::EaseOutBounce)
+                .build();
+            let mut driver = RafDriver::new();
 
-            tween.update(0.5);
-            let midpoint = tween.value().into_inner();
+            let dt = driver.tick(1016.0);
+            tween.update(dt);
             ```
 
-            ### What's New in v0.6.0
-            - ✅ New `animato-color` crate
-            - ✅ `InLab<C>` for CIE L*a*b* interpolation
-            - ✅ `InOklch<C>` for modern perceptual Oklch interpolation
-            - ✅ `InLinear<C>` for gamma-correct linear-light sRGB interpolation
-            - ✅ `color` facade feature, color example, and integration tests
+            ### What's New in v0.7.0
+            - ✅ New `animato-bevy` crate for Bevy 0.18.1
+            - ✅ New `animato-wasm` crate with `RafDriver`
+            - ✅ Optional `wasm-dom` helpers for FLIP, SplitText, Draggable, and Observer
+            - ✅ TUI examples using ratatui
+            - ✅ `bevy`, `wasm`, and `wasm-dom` facade features
 
             ### What's Included
             - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, fixed path curves in `animato-path`, 1D inertia/gestures in `animato-physics`, and `animato-color`
             - ✅ Criterion benchmarks for easing, tween, spring, timeline, paths, and physics
-            - ✅ CI: stable + beta + nightly toolchains
+            - ✅ CI: stable + beta + nightly toolchains plus WASM integration check
 
             See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.
           draft: false

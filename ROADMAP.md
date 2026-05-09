@@ -29,7 +29,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.4.0` | Paths | Bezier, motion paths, CatmullRom, SVG parsing | ✅ |
 | `v0.5.0` | Physics | Inertia, drag, gesture recognition | ✅ |
 | `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | ✅ |
-| `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | 📋 |
+| `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | ✅ |
 | `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | 📋 |
 | `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | 📋 |
 | `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | 📋 |
@@ -308,30 +308,30 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-bevy`**
-- [ ] `AnimatoPlugin` — registers all systems and events
-- [ ] `tick_tweens` system — runs in `Update`, calls `.update(time.delta_secs())`
-- [ ] `tick_springs` system — same pattern for `SpringN<T>`
-- [ ] `TweenCompleted` event — fired when a `Tween` component finishes
-- [ ] `SpringSettled` event — fired when a `SpringN` component settles
-- [ ] `AnimationLabel` component — optional label for identifying animations in events
-- [ ] Tests: Bevy integration test with `App::new()` + plugin, asserts event fires
+- [x] `AnimatoPlugin` — registers common tween/spring systems and completion messages
+- [x] `tick_tweens` system — runs in `Update`, calls `.update(time.delta_secs())`
+- [x] `tick_springs` system — same pattern for `SpringN<T>`
+- [x] `TweenCompleted` message — fired when an `AnimatoTween<T>` finishes
+- [x] `SpringSettled` message — fired when an `AnimatoSpring<T>` settles
+- [x] `AnimationLabel` component — optional label for identifying animations in messages
+- [x] Tests: Bevy integration test with `App::new()` + plugin, asserts message fires
 
 **`animato-wasm`**
-- [ ] `RafDriver` — wraps `AnimationDriver`, converts `timestamp_ms: f64` to `dt: f32`
-- [ ] `.pause()`, `.resume()`, `.set_time_scale(f32)`
-- [ ] `FlipState` and `FlipAnimation` — FLIP layout transition helpers (`wasm-dom` sub-feature)
-- [ ] `SplitText` — splits a DOM text node into character/word spans for individual animation
-- [ ] `ScrollSmoother` — momentum scrolling overlay
-- [ ] `Draggable` — DOM element drag binding, emits pointer events to `DragState`
-- [ ] `Observer` — unified pointer/touch/wheel event abstraction
-- [ ] `examples/wasm_counter/` — wasm-pack example with rAF loop
+- [x] `RafDriver` — wraps `AnimationDriver`, converts `timestamp_ms: f64` to `dt: f32`
+- [x] `.pause()`, `.resume()`, `.set_time_scale(f32)`
+- [x] `FlipState` and `FlipAnimation` — FLIP layout transition helpers (`wasm-dom` sub-feature)
+- [x] `SplitText` — splits a DOM text node into character/word spans for individual animation
+- [x] `ScrollSmoother` — momentum scrolling overlay
+- [x] `Draggable` — DOM element drag binding, emits pointer events to `DragState`
+- [x] `Observer` — unified pointer/wheel event abstraction
+- [x] `examples/wasm_counter/` — wasm-pack example with rAF loop
 
 **`animato` facade**
-- [ ] `bevy` feature flag
-- [ ] `wasm` feature flag (enables `animato-wasm` core)
-- [ ] `wasm-dom` sub-feature (enables DOM plugin types)
-- [ ] `examples/tui_progress.rs` — ratatui animated progress bar
-- [ ] `examples/tui_spinner.rs` — braille spinner via KeyframeTrack
+- [x] `bevy` feature flag
+- [x] `wasm` feature flag (enables `animato-wasm` core)
+- [x] `wasm-dom` sub-feature (enables DOM plugin types)
+- [x] `examples/tui_progress.rs` — ratatui animated progress bar
+- [x] `examples/tui_spinner.rs` — braille spinner via KeyframeTrack
 
 ---
 
@@ -466,10 +466,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.7.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v0.8.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.6.0 — last updated May 2026*  
-*v0.6.0 shipped — next milestone: v0.7.0 — Integrations*  
+*Roadmap version: 0.7.0 — last updated May 2026*  
+*v0.7.0 shipped — next milestone: v0.8.0 — Advanced*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
