@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Animato WASM Counter</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        font: 16px/1.4 system-ui, sans-serif;
+        color: #17202a;
+        background: #f4f7f8;
+      }
+
+      output {
+        font-size: 56px;
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+      }
+    </style>
+  </head>
+  <body>
+    <output id="value">0</output>
+    <script type="module">
+      import init, { CounterApp } from "../pkg/animato_wasm_counter.js";
+
+      await init();
+      const app = new CounterApp();
+      const value = document.getElementById("value");
+
+      function frame(timestamp) {
+        app.tick(timestamp);
+        value.textContent = Math.round(app.value()).toString();
+        requestAnimationFrame(frame);
+      }
+
+      requestAnimationFrame(frame);
+    </script>
+  </body>
+</html>

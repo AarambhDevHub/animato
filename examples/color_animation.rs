@@ -8,7 +8,7 @@
 use animato::{Easing, InLab, Tween, Update, palette::Srgb};
 
 fn main() {
-    println!("Animato v0.6.0 - color_animation example\n");
+    println!("Animato v0.7.0 - color_animation example\n");
 
     let start = InLab::new(Srgb::new(1.0, 0.1, 0.0));
     let end = InLab::new(Srgb::new(0.0, 0.2, 1.0));

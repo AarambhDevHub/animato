@@ -45,7 +45,7 @@ You do not need to write code to contribute:
 
 ### Prerequisites
 
-- Rust stable, 1.85 or later
+- Rust stable, 1.89 or later
 - `wasm-pack` (optional — only needed for WASM-related work)
 - `cargo-llvm-cov` (optional — only needed for coverage reports)
 

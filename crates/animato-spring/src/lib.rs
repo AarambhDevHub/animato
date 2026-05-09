@@ -44,7 +44,7 @@ pub mod config;
 pub mod spring;
 
 #[cfg(any(feature = "std", feature = "alloc"))]
-pub(crate) mod decompose;
+mod decompose;
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub mod spring_n;
 
@@ -53,3 +53,6 @@ pub use spring::{Integrator, Spring};
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub use spring_n::SpringN;
+
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub use decompose::Decompose;

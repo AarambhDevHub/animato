@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.6", default-features = false }
-//! animato-tween  = { version = "0.6", default-features = false }
-//! animato-spring = { version = "0.6", default-features = false }
-//! animato-physics = { version = "0.6", default-features = false }
-//! animato-color = { version = "0.6", default-features = false }
+//! animato-core   = { version = "0.7", default-features = false }
+//! animato-tween  = { version = "0.7", default-features = false }
+//! animato-spring = { version = "0.7", default-features = false }
+//! animato-physics = { version = "0.7", default-features = false }
+//! animato-color = { version = "0.7", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -86,6 +86,8 @@
 //! | `physics` | [`Inertia`], [`DragState`], [`GestureRecognizer`] |
 //! | `color` | [`InLab<T>`], [`InOklch<T>`], [`InLinear<T>`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
+//! | `bevy` | [`AnimatoPlugin`], Bevy tween/spring wrapper components |
+//! | `wasm` | [`RafDriver`] for `requestAnimationFrame` loops |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
@@ -145,3 +147,19 @@ pub use palette;
 // ── Driver ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "driver")]
 pub use animato_driver::{AnimationDriver, AnimationId, Clock, ManualClock, MockClock, WallClock};
+
+// ── Bevy ─────────────────────────────────────────────────────────────────────
+#[cfg(feature = "bevy")]
+pub use animato_bevy::{
+    AnimationChannel, AnimationLabel, AnimatoPlugin, AnimatoSet, AnimatoSpring,
+    AnimatoSpringPlugin, AnimatoTween, AnimatoTweenPlugin, SpringSettled, TweenCompleted,
+};
+
+// ── WASM ─────────────────────────────────────────────────────────────────────
+#[cfg(feature = "wasm")]
+pub use animato_wasm::{RafDriver, ScrollSmoother};
+
+#[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
+pub use animato_wasm::{
+    Draggable, FlipAnimation, FlipState, Observer, ObserverEvent, SplitMode, SplitText,
+};

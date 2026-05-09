@@ -8,7 +8,7 @@
 use animato::{Easing, KeyframeTrack, Loop, Update};
 
 fn main() {
-    println!("Animato v0.6.0 - keyframe_track example");
+    println!("Animato v0.7.0 - keyframe_track example");
     println!("  Three keyframes with Forever and PingPong previews\n");
 
     let mut track = KeyframeTrack::new()

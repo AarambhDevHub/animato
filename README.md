@@ -32,7 +32,7 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.6.0:**
+**Shipped in v0.7.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
@@ -44,21 +44,21 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 | [`animato-physics`](./crates/animato-physics) | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation | core no_std |
 | [`animato-color`](./crates/animato-color) | Perceptual color interpolation in Lab, Oklch, and linear-light sRGB | yes |
 | [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
+| [`animato-bevy`](./crates/animato-bevy) | `AnimatoPlugin`, Bevy tween/spring components, completion messages | — |
+| [`animato-wasm`](./crates/animato-wasm) | `RafDriver`, FLIP, SplitText, ScrollSmoother, Draggable, Observer | — |
 | [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
 
 **Planned in future versions (see [ROADMAP.md](./ROADMAP.md)):**
 
 | Crate | Version | Description |
 |-------|---------|-------------|
-| `animato-bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
-| `animato-wasm` | v0.7.0 | `RafDriver`, FLIP, SplitText, ScrollSmoother |
 | `animato-gpu` | v0.9.0 | `GpuAnimationBatch` — 10K+ tweens per frame on GPU |
 
 Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.6"
+animato = "0.7"
 ```
 
 ---
@@ -200,7 +200,7 @@ With the `tokio` feature, `timeline.wait().await` resolves when another task or 
 
 ```toml
 [dependencies]
-animato = { version = "0.6", features = ["path"] }
+animato = { version = "0.7", features = ["path"] }
 ```
 
 ```rust
@@ -228,7 +228,7 @@ let rotation = motion.rotation_deg();
 
 ```toml
 [dependencies]
-animato = { version = "0.6", features = ["physics"] }
+animato = { version = "0.7", features = ["physics"] }
 ```
 
 ```rust
@@ -254,7 +254,7 @@ assert!(matches!(gesture, Some(Gesture::Swipe { .. })));
 
 ```toml
 [dependencies]
-animato = { version = "0.6", features = ["color"] }
+animato = { version = "0.7", features = ["color"] }
 ```
 
 ```rust
@@ -278,10 +278,10 @@ assert!(midpoint.red > 0.0 && midpoint.blue > 0.0);
 
 ```toml
 [dependencies]
-animato = { version = "0.6", features = ["serde"] }
+animato = { version = "0.7", features = ["serde"] }
 ```
 
-**v0.6.0 features:**
+**v0.7.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
@@ -294,6 +294,9 @@ animato = { version = "0.6", features = ["serde"] }
 | `physics` | `Inertia`, `InertiaN<T>`, `DragState`, `GestureRecognizer` |
 | `color` | `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and the `palette` re-export |
 | `driver` | `AnimationDriver`, `Clock` variants |
+| `bevy` | `AnimatoPlugin`, `AnimatoTween<T>`, `AnimatoSpring<T>`, transform helpers, completion messages |
+| `wasm` | `RafDriver` + `ScrollSmoother` |
+| `wasm-dom` | DOM helpers: `FlipAnimation`, `SplitText`, `Draggable`, `Observer` |
 | `serde` | `Serialize`/`Deserialize` on supported concrete public types |
 | `tokio` | `.wait().await` on `Timeline` completion |
 
@@ -301,20 +304,18 @@ animato = { version = "0.6", features = ["serde"] }
 
 | Feature | Version | What it adds |
 |---------|---------|--------------|
-| `bevy` | v0.7.0 | `AnimatoPlugin` for Bevy |
-| `wasm` | v0.7.0 | `RafDriver` + WASM bindings |
 | `gpu` | v0.9.0 | `GpuAnimationBatch` via `wgpu` |
 
 ### `no_std` usage
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.6", default-features = false }
-animato-tween  = { version = "0.6", default-features = false }
-animato-spring = { version = "0.6", default-features = false }
-animato-path   = { version = "0.6", default-features = false }
-animato-physics = { version = "0.6", default-features = false }
-animato-color  = { version = "0.6", default-features = false }
+animato-core   = { version = "0.7", default-features = false }
+animato-tween  = { version = "0.7", default-features = false }
+animato-spring = { version = "0.7", default-features = false }
+animato-path   = { version = "0.7", default-features = false }
+animato-physics = { version = "0.7", default-features = false }
+animato-color  = { version = "0.7", default-features = false }
 ```
 
 Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, SVG parsing, `InertiaN<T>`, and `DragState` require allocation.
@@ -342,14 +343,14 @@ Additional advanced variants (`RoughEase`, `SlowMo`, `Wiggle`, `CustomBounce`, `
 
 ---
 
-## Future Bevy Integration
+## Bevy Integration
 
-Planned for v0.7.0.
+Animato v0.7.0 targets Bevy 0.18.1. The workspace MSRV is Rust 1.89 to match Bevy's published requirement.
 
 ```rust
 use bevy::prelude::*;
 use animato_bevy::{AnimatoPlugin, TweenCompleted};
-use animato::Tween;
+use animato::{AnimatoTween, Easing, Tween};
 
 fn main() {
     App::new()
@@ -364,25 +365,25 @@ fn spawn_animated(mut commands: Commands) {
     commands.spawn((
         Sprite::default(),
         Transform::default(),
-        Tween::new([0.0_f32, 0.0], [300.0, 0.0])
-            .duration(1.0)
-            .easing(Easing::EaseOutBack)
-            .build(),
+        AnimatoTween::translation(
+            Tween::new([0.0_f32, 0.0, 0.0], [300.0, 0.0, 0.0])
+                .duration(1.0)
+                .easing(Easing::EaseOutBack)
+                .build(),
+        ),
     ));
 }
 
-fn on_tween_done(mut events: EventReader<TweenCompleted>) {
-    for ev in events.read() {
-        println!("Entity {:?} finished animating", ev.entity);
+fn on_tween_done(mut messages: MessageReader<TweenCompleted>) {
+    for message in messages.read() {
+        println!("Entity {:?} finished animating", message.entity);
     }
 }
 ```
 
 ---
 
-## Future WASM Integration
-
-Planned for v0.7.0.
+## WASM Integration
 
 ```toml
 [dependencies]
@@ -391,8 +392,7 @@ animato = { version = "0.7", features = ["wasm"] }
 
 ```rust
 use wasm_bindgen::prelude::*;
-use animato::{Tween, Easing};
-use animato::wasm::RafDriver;
+use animato::{Easing, RafDriver, Tween, Update};
 
 #[wasm_bindgen]
 pub struct App {
@@ -410,8 +410,10 @@ impl App {
         }
     }
 
-    // Call from JavaScript requestAnimationFrame callback:
-    pub fn tick(&mut self, timestamp_ms: f64) { self.driver.tick(timestamp_ms); }
+    pub fn tick(&mut self, timestamp_ms: f64) {
+        let dt = self.driver.tick(timestamp_ms);
+        self.tween.update(dt);
+    }
     pub fn value(&self) -> f32 { self.tween.value() }
 }
 ```
@@ -436,9 +438,12 @@ cargo run --example timeline_sequence
 cargo run --example motion_path --features path
 cargo run --example physics_drag --features physics
 cargo run --example color_animation --features color
+cargo run --example bevy_transform --features bevy
+cargo run --example tui_progress
+cargo run --example tui_spinner
 
-# Coming in future versions:
-# cargo run --example tui_progress        # v0.7.0
+# WASM:
+# cd examples/wasm_counter && wasm-pack build --target web
 ```
 
 ---
@@ -465,11 +470,11 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.6.0 — Color` shipped**
+**Current status: `v0.7.0 — Integrations` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.7.0` | Integrations — Bevy, WASM, and TUI examples |
+| `v0.8.0` | Advanced — shape morphing, scroll-linked animation, FLIP layout |
 
 ---
 

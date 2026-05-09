@@ -7,6 +7,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [0.7.0] — 2026-05-09 — Integrations
+
+### Added
+- `animato-bevy`: new crate with `AnimatoPlugin`, `AnimatoTween<T>`, `AnimatoSpring<T>`, `AnimationLabel`, and transform helpers.
+- `animato-bevy`: Bevy 0.18 completion messages `TweenCompleted` and `SpringSettled`.
+- `animato-wasm`: new crate with `RafDriver` for `requestAnimationFrame` timestamps.
+- `animato-wasm`: `ScrollSmoother` and `wasm-dom` helpers for FLIP, SplitText, Draggable, and Observer.
+- `animato` facade: `bevy`, `wasm`, and `wasm-dom` feature flags and re-exports.
+- Examples: `bevy_transform.rs`, `tui_progress.rs`, `tui_spinner.rs`, and `examples/wasm_counter/`.
+- Integration tests for Bevy plugin behavior and facade-level WASM driver exports.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins to `0.7.0`.
+- Bumped workspace MSRV to Rust `1.89` for latest Bevy compatibility.
+- Updated README, roadmap, architecture, CI, and publish workflow for `v0.7.0 — Integrations`.
+
+---
+
 ## [0.6.0] — 2026-05-08 — Color
 
 ### Added
@@ -136,7 +154,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/AarambhDevHub/animato/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AarambhDevHub/animato/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AarambhDevHub/animato/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/AarambhDevHub/animato/compare/v0.3.0...v0.4.0

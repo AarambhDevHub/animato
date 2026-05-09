@@ -1,0 +1,32 @@
+[package]
+name        = "animato-bevy"
+description = "Bevy integration plugin for the Animato animation library."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "bevy", "tween", "spring", "game-development"]
+categories  = ["game-development", "graphics"]
+
+[features]
+default   = ["transform"]
+transform = ["dep:bevy_math", "dep:bevy_transform"]
+
+[dependencies]
+animato-core   = { workspace = true }
+animato-tween  = { workspace = true }
+animato-spring = { workspace = true, features = ["alloc"] }
+bevy_app       = { workspace = true }
+bevy_ecs       = { workspace = true }
+bevy_math      = { workspace = true, optional = true }
+bevy_time      = { workspace = true }
+bevy_transform = { workspace = true, optional = true }
+
+[dev-dependencies]
+bevy_app       = { workspace = true }
+bevy_ecs       = { workspace = true }
+bevy_time      = { workspace = true }
+bevy_transform = { workspace = true }

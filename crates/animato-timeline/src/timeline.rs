@@ -535,10 +535,10 @@ impl Timeline {
 
         let mut cycle = (prev / period).max(0.0) as u32;
         loop {
-            if let Some(max_cycles) = max_cycles {
-                if cycle >= max_cycles {
-                    break;
-                }
+            if let Some(max_cycles) = max_cycles
+                && cycle >= max_cycles
+            {
+                break;
             }
 
             let cycle_start = cycle as f32 * period;

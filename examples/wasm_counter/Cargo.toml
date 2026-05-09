@@ -1,0 +1,12 @@
+[package]
+name = "animato-wasm-counter"
+version = "0.7.0"
+edition = "2024"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+animato = { path = "../../crates/animato", features = ["wasm"] }
+wasm-bindgen = "0.2"
