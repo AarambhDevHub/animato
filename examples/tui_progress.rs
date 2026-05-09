@@ -1,9 +1,9 @@
 use animato::{Easing, Tween, Update};
-use ratatui::layout::{Constraint, Layout};
-use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
-use ratatui::style::Style;
-use ratatui::{Terminal, TerminalOptions, Viewport};
 use ratatui::backend::CrosstermBackend;
+use ratatui::layout::{Constraint, Layout};
+use ratatui::style::Style;
+use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
+use ratatui::{Terminal, TerminalOptions, Viewport};
 
 fn main() {
     let mut tween = Tween::new(0.0_f32, 1.0)
@@ -15,7 +15,9 @@ fn main() {
     let backend = CrosstermBackend::new(&mut stdout);
     let mut terminal = Terminal::with_options(
         backend,
-        TerminalOptions { viewport: Viewport::Inline(4) },
+        TerminalOptions {
+            viewport: Viewport::Inline(4),
+        },
     )
     .unwrap();
 
@@ -24,7 +26,8 @@ fn main() {
         terminal
             .draw(|f| {
                 let area = f.area();
-                let rows = Layout::vertical([Constraint::Length(3), Constraint::Length(1)]).split(area);
+                let rows =
+                    Layout::vertical([Constraint::Length(3), Constraint::Length(1)]).split(area);
                 let cols = Layout::horizontal([
                     Constraint::Min(1),
                     Constraint::Length(52),
@@ -32,7 +35,11 @@ fn main() {
                 ])
                 .split(rows[0]);
                 let gauge = Gauge::default()
-                    .block(Block::default().title(" Animato Progress ").borders(Borders::ALL))
+                    .block(
+                        Block::default()
+                            .title(" Animato Progress ")
+                            .borders(Borders::ALL),
+                    )
                     .ratio(ratio as f64)
                     .label(format!("{:.1}%", ratio * 100.0));
                 f.render_widget(gauge, cols[1]);

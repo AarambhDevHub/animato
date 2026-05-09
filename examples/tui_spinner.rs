@@ -1,9 +1,9 @@
 use animato::{KeyframeTrack, Loop, Update};
-use ratatui::layout::{Constraint, Layout};
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::style::Style;
-use ratatui::{Terminal, TerminalOptions, Viewport};
 use ratatui::backend::CrosstermBackend;
+use ratatui::layout::{Constraint, Layout};
+use ratatui::style::Style;
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::{Terminal, TerminalOptions, Viewport};
 
 fn main() {
     let frames = ["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"];
@@ -19,7 +19,9 @@ fn main() {
     let backend = CrosstermBackend::new(&mut stdout);
     let mut terminal = Terminal::with_options(
         backend,
-        TerminalOptions { viewport: Viewport::Inline(4) },
+        TerminalOptions {
+            viewport: Viewport::Inline(4),
+        },
     )
     .unwrap();
 
@@ -28,7 +30,8 @@ fn main() {
         terminal
             .draw(|f| {
                 let area = f.area();
-                let rows = Layout::vertical([Constraint::Length(3), Constraint::Length(1)]).split(area);
+                let rows =
+                    Layout::vertical([Constraint::Length(3), Constraint::Length(1)]).split(area);
                 let cols = Layout::horizontal([
                     Constraint::Min(1),
                     Constraint::Length(26),
