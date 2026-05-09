@@ -1,18 +1,11 @@
-//! Example: animate a ratatui spinner with a keyframe track.
-//!
-//! Run with:
-//! ```sh
-//! cargo run --example tui_spinner
-//! ```
-
 use animato::{KeyframeTrack, Loop, Update};
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
+use ratatui::layout::{Constraint, Layout};
 use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::style::Style;
+use ratatui::{Terminal, TerminalOptions, Viewport};
+use ratatui::backend::CrosstermBackend;
 
 fn main() {
-    println!("Animato v0.7.0 - tui_spinner example\n");
-
     let frames = ["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"];
     let mut track = frames
         .iter()
@@ -22,22 +15,41 @@ fn main() {
         })
         .looping(Loop::Forever);
 
-    let backend = TestBackend::new(24, 3);
-    let mut terminal = Terminal::new(backend).expect("TestBackend is infallible");
+    let mut stdout = std::io::stdout();
+    let backend = CrosstermBackend::new(&mut stdout);
+    let mut terminal = Terminal::with_options(
+        backend,
+        TerminalOptions { viewport: Viewport::Inline(4) },
+    )
+    .unwrap();
 
-    for frame in 0..16 {
+    for frame in 0..64 {
         let index = track.value().unwrap_or(0).rem_euclid(frames.len() as i32) as usize;
         terminal
             .draw(|f| {
-                let widget = Paragraph::new(frames[index]).block(
+                let area = f.area();
+                let rows = Layout::vertical([Constraint::Length(3), Constraint::Length(1)]).split(area);
+                let cols = Layout::horizontal([
+                    Constraint::Min(1),
+                    Constraint::Length(26),
+                    Constraint::Min(1),
+                ])
+                .split(rows[0]);
+                let widget = Paragraph::new(format!(" {} ", frames[index])).block(
                     Block::default()
-                        .title("Animato spinner")
+                        .title(" Animato Spinner ")
                         .borders(Borders::ALL),
                 );
-                f.render_widget(widget, f.area());
+                f.render_widget(widget, cols[1]);
+                let info = Paragraph::new(format!("  frame {frame:03}   {}", frames[index]))
+                    .style(Style::default().dim());
+                f.render_widget(info, rows[1]);
             })
-            .expect("TestBackend draw is infallible");
-        println!("frame {frame:02}: {}", frames[index]);
+            .unwrap();
         track.update(0.08);
+        std::thread::sleep(std::time::Duration::from_millis(80));
     }
+
+    terminal.clear().unwrap();
+    println!("✓ Done!");
 }

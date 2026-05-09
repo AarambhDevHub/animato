@@ -1,40 +1,50 @@
-//! Example: render an animated ratatui progress bar from a tween.
-//!
-//! Run with:
-//! ```sh
-//! cargo run --example tui_progress
-//! ```
-
 use animato::{Easing, Tween, Update};
-use ratatui::Terminal;
-use ratatui::backend::TestBackend;
-use ratatui::widgets::{Block, Borders, Gauge};
+use ratatui::layout::{Constraint, Layout};
+use ratatui::widgets::{Block, Borders, Gauge, Paragraph};
+use ratatui::style::Style;
+use ratatui::{Terminal, TerminalOptions, Viewport};
+use ratatui::backend::CrosstermBackend;
 
 fn main() {
-    println!("Animato v0.7.0 - tui_progress example\n");
-
-    let backend = TestBackend::new(48, 3);
-    let mut terminal = Terminal::new(backend).expect("TestBackend is infallible");
     let mut tween = Tween::new(0.0_f32, 1.0)
-        .duration(1.0)
+        .duration(2.0)
         .easing(Easing::EaseOutCubic)
         .build();
 
-    for frame in 0..=10 {
+    let mut stdout = std::io::stdout();
+    let backend = CrosstermBackend::new(&mut stdout);
+    let mut terminal = Terminal::with_options(
+        backend,
+        TerminalOptions { viewport: Viewport::Inline(4) },
+    )
+    .unwrap();
+
+    for frame in 0..120 {
         let ratio = tween.value().clamp(0.0, 1.0);
         terminal
             .draw(|f| {
+                let area = f.area();
+                let rows = Layout::vertical([Constraint::Length(3), Constraint::Length(1)]).split(area);
+                let cols = Layout::horizontal([
+                    Constraint::Min(1),
+                    Constraint::Length(52),
+                    Constraint::Min(1),
+                ])
+                .split(rows[0]);
                 let gauge = Gauge::default()
-                    .block(
-                        Block::default()
-                            .title("Animato progress")
-                            .borders(Borders::ALL),
-                    )
-                    .ratio(ratio as f64);
-                f.render_widget(gauge, f.area());
+                    .block(Block::default().title(" Animato Progress ").borders(Borders::ALL))
+                    .ratio(ratio as f64)
+                    .label(format!("{:.1}%", ratio * 100.0));
+                f.render_widget(gauge, cols[1]);
+                let info = Paragraph::new(format!("  frame {frame:03}   {:.1}%", ratio * 100.0))
+                    .style(Style::default().dim());
+                f.render_widget(info, rows[1]);
             })
-            .expect("TestBackend draw is infallible");
-        println!("frame {frame:02}: {:>5.1}%", ratio * 100.0);
-        tween.update(0.1);
+            .unwrap();
+        tween.update(1.0 / 60.0);
+        std::thread::sleep(std::time::Duration::from_millis(16));
     }
+
+    terminal.clear().unwrap();
+    println!("✓ Done!");
 }
