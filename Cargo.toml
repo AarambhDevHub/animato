@@ -15,7 +15,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.7.0"
+version      = "0.8.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 readme       = "README.md"
@@ -25,16 +25,16 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # Internal crates — path + version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.7" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.7" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.7" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.7" }
-animato-path     = { path = "crates/animato-path",     version = "0.7" }
-animato-physics  = { path = "crates/animato-physics",  version = "0.7" }
-animato-color    = { path = "crates/animato-color",    version = "0.7" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.7" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "0.7" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "0.7" }
+animato-core     = { path = "crates/animato-core",     version = "0.8" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.8" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.8" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.8" }
+animato-path     = { path = "crates/animato-path",     version = "0.8" }
+animato-physics  = { path = "crates/animato-physics",  version = "0.8" }
+animato-color    = { path = "crates/animato-color",    version = "0.8" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.8" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "0.8" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "0.8" }
 
 # External crates — shared version pins
 serde        = { version = "1",   features = ["derive"] }

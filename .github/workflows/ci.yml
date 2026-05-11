@@ -48,8 +48,18 @@ jobs:
 
       # Only test no_std-compatible crates without default features.
       # animato-driver requires std (WallClock uses std::time::Instant).
+      # animato-bevy, animato-timeline, and animato-wasm also require std/hosted.
+      # animato-path draw.rs tests are gated on std/alloc (poly module dependency).
       - name: Test no_std crates (no default features)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
+        run: |
+          cargo test \
+            -p animato-core \
+            -p animato-tween \
+            -p animato-spring \
+            -p animato-path \
+            -p animato-physics \
+            -p animato-color \
+            --no-default-features
 
   # ── Lint ───────────────────────────────────────────────────────────────────
   lint:
@@ -72,6 +82,9 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-lint-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-lint-
+            ${{ runner.os }}-cargo-
 
       - name: Check formatting
         run: cargo fmt --check
@@ -98,6 +111,9 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-docs-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-docs-
+            ${{ runner.os }}-cargo-
 
       - name: Build docs
         run: cargo doc --workspace --all-features --no-deps
@@ -123,6 +139,9 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-
+            ${{ runner.os }}-cargo-
 
       - name: Check benches compile
         run: cargo bench --workspace --no-run
@@ -148,8 +167,13 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-nostd-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-nostd-
+            ${{ runner.os }}-cargo-
 
-      # Only the crates that are no_std-compatible
+      # Build all no_std-compatible crates for bare-metal.
+      # animato-driver, animato-bevy, animato-timeline, and animato-wasm are
+      # excluded — they require std or a hosted runtime.
       - name: Build animato-core (no_std)
         run: cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
 
@@ -189,6 +213,9 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-
+            ${{ runner.os }}-cargo-
 
       - name: Check animato-wasm with DOM helpers
         run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom

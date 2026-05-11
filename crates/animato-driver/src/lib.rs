@@ -5,8 +5,10 @@
 //! - [`AnimationDriver`] — owns and ticks many animations; auto-removes completed ones.
 //! - [`Clock`] — trait abstracting time sources.
 //! - [`WallClock`] — real wall-clock time via `std::time::Instant`.
-//! - [`ManualClock`] — caller-driven time for custom loops.
-//! - [`MockClock`] — fixed-step clock for deterministic tests.
+//! - [`ManualClock`] — caller-driven time.
+//! - [`MockClock`] — fixed-step clock for tests.
+//! - [`scroll::ScrollDriver`] — animations driven by scroll position (v0.8.0).
+//! - [`scroll::ScrollClock`] — scroll-backed [`Clock`] implementation (v0.8.0).
 //!
 //! ## Quick Start
 //!
@@ -24,11 +26,10 @@
 //! );
 //!
 //! let mut clock = MockClock::new(1.0 / 60.0);
-//! assert!(driver.is_active(id));
-//! for _ in 0..61 { // 61 × (1/60s) > 1.0s → tween completes and is auto-removed
+//! for _ in 0..61 {
 //!     driver.tick(clock.delta());
 //! }
-//! assert!(!driver.is_active(id)); // auto-removed after completion
+//! assert!(!driver.is_active(id));
 //! ```
 
 #![deny(missing_docs)]
@@ -36,6 +37,8 @@
 
 pub mod clock;
 pub mod driver;
+pub mod scroll;
 
 pub use clock::{Clock, ManualClock, MockClock, WallClock};
 pub use driver::{AnimationDriver, AnimationId};
+pub use scroll::{ScrollClock, ScrollDriver};

@@ -56,7 +56,9 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.7.0 scope: animato-core → animato-color → animato-tween → animato-spring → animato-path → animato-physics → animato-driver → animato-timeline → animato-wasm → animato-bevy → animato
+  # v0.8.0 scope: animato-core → animato-color → animato-tween → animato-spring
+  #               → animato-path → animato-physics → animato-driver
+  #               → animato-timeline → animato-wasm → animato-bevy → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -146,7 +148,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish
     permissions:
-      contents: write   # required to create releases
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
@@ -161,60 +163,61 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Integrations"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Advanced"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Integrations
+            ## Animato ${{ steps.version.outputs.TAG }} — Advanced
 
-            The seventh release of the Animato animation library for Rust, adding Bevy, WASM/rAF, DOM, and TUI integrations.
+            The eighth release of Animato, adding shape morphing, SVG draw animation,
+            scroll-linked animation, five new advanced easing variants, and FLIP layout
+            orchestration helpers.
 
             ### Crates published to crates.io
 
             | Crate | Version | Description |
             |-------|---------|-------------|
-            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + 33 easing variants, `no_std` |
-            | [`animato-color`](https://crates.io/crates/animato-color) | `${{ steps.version.outputs.VERSION }}` | `InLab<C>`, `InOklch<C>`, and `InLinear<C>` perceptual color wrappers |
-            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `Loop`, builder pattern, `no_std`, `KeyframeTrack`, serde |
-            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>`, 5 presets, `no_std` |
-            | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | Bezier curves, CatmullRom splines, motion paths, SVG parser |
-            | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation |
-            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, `Clock` variants |
-            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, `stagger`, time scale, callbacks, async wait |
-            | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | `RafDriver`, `ScrollSmoother`, and optional DOM helpers |
-            | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | `AnimatoPlugin`, Bevy tween/spring components, completion messages |
-            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports all of the above |
+            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + **38** easing variants (5 new advanced) |
+            | [`animato-color`](https://crates.io/crates/animato-color) | `${{ steps.version.outputs.VERSION }}` | Perceptual color wrappers |
+            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `KeyframeTrack<T>` |
+            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>` |
+            | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | **`MorphPath`**, **`DrawSvg`**, Bezier, SVG parser |
+            | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | Inertia, drag, gestures |
+            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, clocks, **`ScrollDriver`**, **`ScrollClock`** |
+            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, stagger |
+            | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | `RafDriver`, **`LayoutAnimator`**, **`SharedElementTransition`** |
+            | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | `AnimatoPlugin` |
+            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports everything |
 
             ### Quick Start
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["bevy", "wasm"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["path"] }
             ```
 
             ```rust
-            use animato::{Easing, RafDriver, Tween, Update};
+            use animato::{DrawSvg, LineSegment, MorphPath, RoughEase, Tween, Update};
 
-            let mut tween = Tween::new(0.0_f32, 500.0)
-                .duration(1.5)
-                .easing(Easing::EaseOutBounce)
-                .build();
-            let mut driver = RafDriver::new();
+            // Shape morphing
+            let morph = MorphPath::new(square_pts, circle_pts);
+            let shape = morph.evaluate(0.5);
 
-            let dt = driver.tick(1016.0);
-            tween.update(dt);
+            // SVG draw animation
+            let path = LineSegment::new([0.0, 0.0], [200.0, 0.0]);
+            let draw = path.draw_on(0.5); // stroke-dashoffset halfway
+
+            // Advanced easing
+            let e = Easing::RoughEase { strength: 0.5, points: 8 };
             ```
 
-            ### What's New in v0.7.0
-            - ✅ New `animato-bevy` crate for Bevy 0.18.1
-            - ✅ New `animato-wasm` crate with `RafDriver`
-            - ✅ Optional `wasm-dom` helpers for FLIP, SplitText, Draggable, and Observer
-            - ✅ TUI examples using ratatui
-            - ✅ `bevy`, `wasm`, and `wasm-dom` facade features
+            ### What's New in v0.8.0 — Advanced
+            - ✅ `MorphPath` — shape morphing with arc-length resampling
+            - ✅ `resample()` — uniform polyline resampling free function
+            - ✅ `DrawSvg` trait — blanket impl on all `PathEvaluate` types
+            - ✅ `ScrollDriver` and `ScrollClock` — scroll-linked animation
+            - ✅ `RoughEase`, `SlowMo`, `Wiggle`, `CustomBounce`, `ExpoScale` easings
+            - ✅ `LayoutAnimator` and `SharedElementTransition` (wasm-dom)
+            - ✅ 3 new integration test suites; 2 new examples
 
-            ### What's Included
-            - ✅ `no_std` support for `animato-core`, `animato-tween`, `animato-spring`, fixed path curves in `animato-path`, 1D inertia/gestures in `animato-physics`, and `animato-color`
-            - ✅ Criterion benchmarks for easing, tween, spring, timeline, paths, and physics
-            - ✅ CI: stable + beta + nightly toolchains plus WASM integration check
-
-            See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for details.
+            See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for full details.
           draft: false
           prerelease: false
