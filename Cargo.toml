@@ -1,5 +1,6 @@
 [workspace]
 resolver = "2"
+exclude = ["examples/wasm_counter"]
 members = [
     "crates/animato-core",
     "crates/animato-tween",
