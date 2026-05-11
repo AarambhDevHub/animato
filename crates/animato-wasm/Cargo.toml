@@ -1,6 +1,6 @@
 [package]
 name        = "animato-wasm"
-description = "WASM, requestAnimationFrame, and DOM integration helpers for Animato."
+description = "WASM, requestAnimationFrame, DOM integration, and layout animation for Animato."
 readme.workspace  = true
 version.workspace     = true
 edition.workspace     = true
@@ -8,7 +8,7 @@ license.workspace     = true
 repository.workspace  = true
 authors.workspace     = true
 rust-version.workspace = true
-keywords    = ["animation", "wasm", "web", "dom", "request-frame"]
+keywords    = ["animation", "wasm", "web", "dom", "layout"]
 categories  = ["wasm", "web-programming", "gui"]
 
 [features]

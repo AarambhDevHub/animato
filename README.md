@@ -32,21 +32,14 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.7.0:**
+**Shipped in v0.8.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
-| [`animato-core`](./crates/animato-core) | Traits (`Interpolate`, `Animatable`, `Update`, `Playable`) + 33 easing variants | yes |
-| [`animato-tween`](./crates/animato-tween) | `Tween<T>`, `KeyframeTrack<T>`, `Loop`, `TweenState`, `TweenBuilder` | alloc |
-| [`animato-timeline`](./crates/animato-timeline) | `Timeline`, `Sequence`, `stagger`, callbacks, time scale, async wait | alloc |
-| [`animato-spring`](./crates/animato-spring) | `Spring`, `SpringN<T>`, `SpringConfig` presets | ✅ |
-| [`animato-path`](./crates/animato-path) | Bezier curves, CatmullRom splines, motion paths, SVG path parsing | core no_std |
-| [`animato-physics`](./crates/animato-physics) | `Inertia`, `DragState`, `GestureRecognizer`, pinch, rotation | core no_std |
-| [`animato-color`](./crates/animato-color) | Perceptual color interpolation in Lab, Oklch, and linear-light sRGB | yes |
-| [`animato-driver`](./crates/animato-driver) | `AnimationDriver`, `Clock`, `WallClock`, `MockClock` | — |
-| [`animato-bevy`](./crates/animato-bevy) | `AnimatoPlugin`, Bevy tween/spring components, completion messages | — |
-| [`animato-wasm`](./crates/animato-wasm) | `RafDriver`, FLIP, SplitText, ScrollSmoother, Draggable, Observer | — |
-| [`animato`](./crates/animato) | Facade crate — re-exports all of the above | — |
+| [`animato-core`](./crates/animato-core) | Traits + **38** easing variants (5 advanced in v0.8.0) | ✅ |
+| [`animato-path`](./crates/animato-path) | Bezier, motion paths, **`MorphPath`**, **`DrawSvg`** (v0.8.0) | core |
+| [`animato-driver`](./crates/animato-driver) | AnimationDriver, Clocks, **`ScrollDriver`**, **`ScrollClock`** (v0.8.0) | — |
+| … all others unchanged …| | |
 
 **Planned in future versions (see [ROADMAP.md](./ROADMAP.md)):**
 
@@ -58,7 +51,7 @@ Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.7"
+animato = "0.8"
 ```
 
 ---
@@ -200,7 +193,7 @@ With the `tokio` feature, `timeline.wait().await` resolves when another task or 
 
 ```toml
 [dependencies]
-animato = { version = "0.7", features = ["path"] }
+animato = { version = "0.8", features = ["path"] }
 ```
 
 ```rust
@@ -228,7 +221,7 @@ let rotation = motion.rotation_deg();
 
 ```toml
 [dependencies]
-animato = { version = "0.7", features = ["physics"] }
+animato = { version = "0.8", features = ["physics"] }
 ```
 
 ```rust
@@ -254,7 +247,7 @@ assert!(matches!(gesture, Some(Gesture::Swipe { .. })));
 
 ```toml
 [dependencies]
-animato = { version = "0.7", features = ["color"] }
+animato = { version = "0.8", features = ["color"] }
 ```
 
 ```rust
@@ -272,16 +265,100 @@ let midpoint = tween.value().into_inner();
 assert!(midpoint.red > 0.0 && midpoint.blue > 0.0);
 ```
 
+### Advanced Easing (v0.8.0)
+
+Five new parameterised easing variants are now available:
+
+```rust
+use animato::Easing;
+
+// Organic, rough motion (deterministic)
+let rough = Easing::RoughEase { strength: 0.5, points: 8 };
+
+// Fast at edges, crawls in the middle
+let slow  = Easing::SlowMo { linear_ratio: 0.5, power: 0.7 };
+
+// Oscillating wiggle (fades to zero at endpoints)
+let wig   = Easing::Wiggle { wiggles: 5 };
+
+// Configurable bounce (0.0=linear, 1.0=EaseOutBounce)
+let bounce = Easing::CustomBounce { strength: 0.7 };
+
+// Exponential time warp
+let expo  = Easing::ExpoScale { start: 0.5, end: 2.0 };
+
+// All satisfy: apply(0.0) == 0.0, apply(1.0) == 1.0
+for e in &[rough, slow, wig, bounce, expo] {
+    assert_eq!(e.apply(0.0), 0.0);
+    assert_eq!(e.apply(1.0), 1.0);
+}
+```
+
+### Shape Morphing (v0.8.0)
+
+```toml
+[dependencies]
+animato = { version = "0.8", features = ["path"] }
+```
+
+```rust
+use animato::{MorphPath, Tween, Update};
+
+let square = vec![[0.0, 0.0], [100.0, 0.0], [100.0, 100.0], [0.0, 100.0]];
+let circle: Vec = (0..=16)
+    .map(|i| {
+        let a = i as f32 * std::f32::consts::TAU / 16.0;
+        [50.0 + 50.0 * a.cos(), 50.0 + 50.0 * a.sin()]
+    })
+    .collect();
+
+let morph = MorphPath::with_resolution(square, circle, 32);
+let mut tween = Tween::new(0.0_f32, 1.0).duration(1.0).build();
+
+tween.update(0.5);
+let shape = morph.evaluate(tween.value()); // Vec
+```
+
+### SVG Draw Animation (v0.8.0)
+
+```rust
+use animato::{CubicBezierCurve, DrawSvg, Tween, Update};
+
+let path = CubicBezierCurve::new([0.0,0.0],[50.0,100.0],[150.0,-100.0],[200.0,0.0]);
+let mut tween = Tween::new(0.0_f32, 1.0).duration(2.0).build();
+
+tween.update(1.0); // halfway
+let draw = path.draw_on(tween.value());
+println!("stroke-dasharray: {}; stroke-dashoffset: {}", draw.dash_array, draw.dash_offset);
+// Or: draw.to_css()
+```
+
+### Scroll-Linked Animation (v0.8.0)
+
+```rust
+use animato::{Easing, ScrollDriver, ScrollClock, Clock, Tween};
+
+// ScrollDriver approach
+let mut driver = ScrollDriver::new(0.0, 1000.0);
+driver.add(Tween::new(0.0_f32, 1.0).duration(1.0).easing(Easing::EaseInOutCubic).build());
+driver.set_position(500.0); // 50% scroll → animations ticked by 0.5
+
+// ScrollClock approach — works with AnimationDriver
+let mut clock = ScrollClock::new(0.0, 1000.0);
+clock.set_scroll(250.0);
+let dt = clock.delta(); // 0.25
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.7", features = ["serde"] }
+animato = { version = "0.8", features = ["serde"] }
 ```
 
-**v0.7.0 features:**
+**v0.8.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
@@ -310,12 +387,12 @@ animato = { version = "0.7", features = ["serde"] }
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.7", default-features = false }
-animato-tween  = { version = "0.7", default-features = false }
-animato-spring = { version = "0.7", default-features = false }
-animato-path   = { version = "0.7", default-features = false }
-animato-physics = { version = "0.7", default-features = false }
-animato-color  = { version = "0.7", default-features = false }
+animato-core   = { version = "0.8", default-features = false }
+animato-tween  = { version = "0.8", default-features = false }
+animato-spring = { version = "0.8", default-features = false }
+animato-path   = { version = "0.8", default-features = false }
+animato-physics = { version = "0.8", default-features = false }
+animato-color  = { version = "0.8", default-features = false }
 ```
 
 Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, SVG parsing, `InertiaN<T>`, and `DragState` require allocation.
@@ -324,28 +401,27 @@ Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Ine
 
 ## Easing Functions
 
-33 easing variants are available as `Easing::EaseOutCubic` (enum) or `ease_out_cubic(t)` (free function where applicable):
+**38** easing variants — 31 classic + CSS-compatible + 5 advanced (v0.8.0):
 
 | Group | Variants |
 |-------|----------|
 | Linear | `Linear` |
-| Polynomial | `EaseIn/Out/InOut` × Quad, Cubic, Quart, Quint (12 total) |
+| Polynomial | `EaseIn/Out/InOut` × Quad, Cubic, Quart, Quint (12) |
 | Sinusoidal | `EaseIn/Out/InOutSine` |
 | Exponential | `EaseIn/Out/InOutExpo` |
 | Circular | `EaseIn/Out/InOutCirc` |
-| Back (overshoot) | `EaseIn/Out/InOutBack` |
+| Back | `EaseIn/Out/InOutBack` |
 | Elastic | `EaseIn/Out/InOutElastic` |
 | Bounce | `EaseIn/Out/InOutBounce` |
-| CSS-compatible | `CubicBezier(f32, f32, f32, f32)`, `Steps(u32)` |
-| Escape hatch | `Custom(fn(f32) -> f32)` |
-
-Additional advanced variants (`RoughEase`, `SlowMo`, `Wiggle`, `CustomBounce`, `ExpoScale`) remain planned for v0.8.0.
+| CSS-compatible | `CubicBezier(f32,f32,f32,f32)`, `Steps(u32)` |
+| **Advanced (v0.8.0)** | `RoughEase{…}`, `SlowMo{…}`, `Wiggle{…}`, `CustomBounce{…}`, `ExpoScale{…}` |
+| Escape hatch | `Custom(fn(f32)->f32)` |
 
 ---
 
 ## Bevy Integration
 
-Animato v0.7.0 targets Bevy 0.18.1. The workspace MSRV is Rust 1.89 to match Bevy's published requirement.
+Animato v0.8.0 targets Bevy 0.18.1. The workspace MSRV is Rust 1.89 to match Bevy's published requirement.
 
 ```rust
 use bevy::prelude::*;
@@ -387,7 +463,7 @@ fn on_tween_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato = { version = "0.7", features = ["wasm"] }
+animato = { version = "0.8", features = ["wasm"] }
 ```
 
 ```rust
@@ -470,11 +546,11 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.7.0 — Integrations` shipped**
+**Current status: `v0.8.0 — Advanced` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.8.0` | Advanced — shape morphing, scroll-linked animation, FLIP layout |
+| `v0.9.0` | Performance — GPU batch compute, `animato-gpu`, benchmarks |
 
 ---
 

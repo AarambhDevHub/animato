@@ -342,29 +342,33 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-path`**
-- [ ] `MorphPath` — point-by-point shape morph with auto-resampling
-- [ ] `resample(points: &[[f32; 2]], count: usize) -> Vec<[f32; 2]>` — uniform resampling
-- [ ] `DrawSvg` trait — `draw_on(progress: f32) -> f32` and `draw_on_reverse(progress: f32) -> f32` for `stroke-dashoffset` animation
+- [x] `MorphPath` — point-by-point shape morph with auto-resampling
+- [x] `resample(points: &[[f32; 2]], count: usize) -> Vec<[f32; 2]>` — uniform resampling
+- [x] `DrawSvg` trait — `draw_on(progress: f32) -> f32` and `draw_on_reverse(progress: f32) -> f32` for `stroke-dashoffset` animation
+- [x] `DrawValues` struct with `to_css()` helper
 
 **`animato-driver`**
-- [ ] `ScrollDriver` — drives animations from scroll position instead of time
-- [ ] `ScrollClock` — `Clock` implementation backed by scroll position
+- [x] `ScrollDriver` — drives animations from scroll position instead of time
+- [x] `ScrollClock` — `Clock` implementation backed by scroll position
 
 **`animato-core`**
-- [ ] Advanced easing variants:
-  - [ ] `RoughEase { strength: f32, points: u32 }`
-  - [ ] `SlowMo { linear_ratio: f32, power: f32 }`
-  - [ ] `Wiggle { wiggles: u32 }`
-  - [ ] `CustomBounce { strength: f32 }`
-  - [ ] `ExpoScale { start: f32, end: f32 }`
+- [x] Advanced easing variants:
+  - [x] `RoughEase { strength: f32, points: u32 }`
+  - [x] `SlowMo { linear_ratio: f32, power: f32 }`
+  - [x] `Wiggle { wiggles: u32 }`
+  - [x] `CustomBounce { strength: f32 }`
+  - [x] `ExpoScale { start: f32, end: f32 }`
 
 **`animato-wasm`**
-- [ ] `LayoutAnimator` — FLIP-style layout transitions with `compute_transitions()` and `css_transform()`
-- [ ] `SharedElementTransition` — animate an element between two layout positions
+- [x] `LayoutAnimator` — FLIP-style layout transitions with `compute_transitions()` and `css_transform()`
+- [x] `SharedElementTransition` — animate an element between two layout positions
 
 **`animato` facade**
-- [ ] `examples/scroll_linked.rs` — scroll-driven animation
-- [ ] `examples/morph_path.rs` — shape morphing between two polygons
+- [x] `examples/scroll_linked.rs` — scroll-driven animation
+- [x] `examples/morph_path.rs` — shape morphing between two polygons
+- [x] `tests/advanced_easing.rs`
+- [x] `tests/morph_path_integration.rs`
+- [x] `tests/scroll_driver.rs`
 
 ---
 

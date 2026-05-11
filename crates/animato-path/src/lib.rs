@@ -45,8 +45,11 @@
 extern crate alloc;
 
 pub mod bezier;
+pub mod draw;
 pub(crate) mod math;
 
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub mod morph;
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub mod motion;
 #[cfg(any(feature = "std", feature = "alloc"))]
@@ -55,9 +58,12 @@ pub mod poly;
 pub mod svg;
 
 pub use bezier::{CubicBezierCurve, PathEvaluate, QuadBezier};
+pub use draw::{DrawSvg, DrawValues};
 
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub use bezier::CatmullRomSpline;
+#[cfg(any(feature = "std", feature = "alloc"))]
+pub use morph::{MorphPath, resample};
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub use motion::{MotionPath, MotionPathTween, MotionPathTweenBuilder};
 #[cfg(any(feature = "std", feature = "alloc"))]

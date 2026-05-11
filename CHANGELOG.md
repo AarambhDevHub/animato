@@ -5,6 +5,51 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+**`animato-core` — 5 new advanced easing variants**
+- `Easing::RoughEase { strength, points }` — organic, rough motion using deterministic sine harmonics. Zero at `t=0`, one at `t=1`.
+- `Easing::SlowMo { linear_ratio, power }` — motion that accelerates at the edges and crawls through the middle; CSS-friendly slow-motion feel.
+- `Easing::Wiggle { wiggles }` — sinusoidal oscillation around the linear trend, fading to zero at both endpoints.
+- `Easing::CustomBounce { strength }` — blend between linear (`strength=0`) and `EaseOutBounce` (`strength=1`).
+- `Easing::ExpoScale { start, end }` — exponential time-warping: `f(t) = (k^t − 1) / (k − 1)` where `k = end / start`.
+- Free functions `rough_ease`, `slow_mo`, `wiggle`, `custom_bounce`, `expo_scale` exported from `animato_core::easing`.
+- `math::log` and `math::exp` added to the `no_std`-portable math shim.
+- `Easing::all_named()` now returns **38** variants (was 33).
+
+**`animato-path` — shape morphing and SVG draw animation**
+- `MorphPath` — morphs between two polylines with automatic arc-length resampling. `evaluate(t)` returns the interpolated shape at progress `t`.
+- `resample(points, count)` — uniformly resample any polyline to an exact point count by arc length. Also available as a standalone public free function.
+- `DrawSvg` trait — blanket-implemented for every `PathEvaluate` type. Provides `draw_on(progress) -> DrawValues` and `draw_on_reverse(progress) -> DrawValues` for CSS `stroke-dashoffset` animation.
+- `DrawValues` struct — holds `dash_array`, `dash_offset`, `progress()`, and `to_css()`.
+
+**`animato-driver` — scroll-linked animation**
+- `ScrollDriver` — drives registered animations by a normalised scroll-position delta. Animations receive `|Δpos| / range` as their `dt`.
+- `ScrollClock` — adapts scroll-position changes to the `Clock` trait; accumulates multiple moves before `delta()` is consumed.
+- Both types re-exported from `animato-driver` root and the `animato` facade.
+
+**`animato-wasm` — layout animation helpers (wasm-dom feature)**
+- `LayoutAnimator` — orchestrates FLIP-style layout transitions for multiple named DOM elements. Supports `snapshot`, `compute_transitions`, `update`, `apply`, and `css_transform`.
+- `SharedElementTransition` — single-element FLIP transition (hero animation). `capture`, `update`, `apply_to`, `css_transform`, and `is_complete`.
+
+**Examples**
+- `examples/morph_path.rs` — morphs a square into a circle using `MorphPath` + `Tween`.
+- `examples/scroll_linked.rs` — simulates scroll-driven animation with both `ScrollDriver` and `ScrollClock`.
+
+**Tests**
+- `tests/advanced_easing.rs` — endpoint invariants, monotonicity, tween integration for all five new easing variants.
+- `tests/morph_path_integration.rs` — `resample`, `MorphPath`, and `DrawSvg` integration tests.
+- `tests/scroll_driver.rs` — `ScrollDriver` and `ScrollClock` integration tests.
+
+### Changed
+- Bumped all workspace crates from `0.7.0` → `0.8.0`.
+- `animato-driver/src/lib.rs` now re-exports `ScrollDriver` and `ScrollClock` at the crate root.
+- `animato/src/lib.rs` re-exports all new v0.8.0 symbols under the appropriate feature flags.
+- `animato-path/src/lib.rs` exposes the new `draw` and `morph` modules.
+- `animato-wasm/src/lib.rs` exposes `LayoutAnimator` and `SharedElementTransition` (wasm-dom + wasm32).
+
+### Fixed
+- `easing.rs` unit test `all_named_count` updated from 33 to 38 to reflect the five new variants.
+
 ---
 
 ## [0.7.0] — 2026-05-09 — Integrations

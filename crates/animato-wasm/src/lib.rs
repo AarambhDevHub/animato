@@ -1,9 +1,11 @@
 //! # animato-wasm
 //!
-//! WASM and browser integration helpers for Animato.
+//! WASM and browser integration for Animato.
 //!
-//! [`RafDriver`] is target-independent and easy to test on native targets. DOM
-//! helpers are available behind the `wasm-dom` feature on `wasm32` targets.
+//! - [`RafDriver`] — `requestAnimationFrame` timestamp → `dt` converter.
+//! - [`ScrollSmoother`] — momentum scroll smoothing.
+//! - `LayoutAnimator` — FLIP transitions for multiple elements (`wasm-dom`).
+//! - `SharedElementTransition` — single-element FLIP transition (`wasm-dom`).
 
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
@@ -16,8 +18,12 @@ mod draggable;
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 mod flip;
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
+mod layout_animator;
+#[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 mod observer;
 mod scroll_smoother;
+#[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
+mod shared_element;
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 mod split_text;
 
@@ -26,8 +32,12 @@ pub use draggable::Draggable;
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 pub use flip::{FlipAnimation, FlipState};
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
+pub use layout_animator::LayoutAnimator;
+#[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 pub use observer::{Observer, ObserverEvent};
 pub use scroll_smoother::ScrollSmoother;
+#[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
+pub use shared_element::SharedElementTransition;
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 pub use split_text::{SplitMode, SplitText};
 
@@ -66,7 +76,7 @@ impl RafDriver {
         }
     }
 
-    /// Create a rAF driver from an existing [`AnimationDriver`].
+    /// Create from an existing [`AnimationDriver`].
     pub fn with_driver(driver: AnimationDriver) -> Self {
         Self {
             driver,
@@ -74,35 +84,29 @@ impl RafDriver {
         }
     }
 
-    /// Register an animation with the inner driver.
+    /// Register an animation.
     pub fn add<A: Update + Send + 'static>(&mut self, animation: A) -> AnimationId {
         self.driver.add(animation)
     }
 
-    /// Convert an rAF timestamp in milliseconds to seconds and tick animations.
-    ///
-    /// The first tick returns `0.0` because no previous timestamp exists.
-    /// Invalid or backward timestamps are treated as zero delta.
+    /// Tick from an rAF timestamp in milliseconds.
     pub fn tick(&mut self, timestamp_ms: f64) -> f32 {
         if !timestamp_ms.is_finite() {
             return 0.0;
         }
-
         let raw_dt = match self.last_timestamp_ms.replace(timestamp_ms) {
             Some(last) => ((timestamp_ms - last) / 1000.0).max(0.0) as f32,
             None => 0.0,
         };
-
         if self.paused {
             return 0.0;
         }
-
         let dt = raw_dt.min(self.max_dt) * self.time_scale;
         self.driver.tick(dt);
         dt
     }
 
-    /// Pause ticking while still consuming timestamps to avoid resume jumps.
+    /// Pause ticking (timestamps continue to be consumed to avoid resume spikes).
     pub fn pause(&mut self) {
         self.paused = true;
     }
@@ -112,18 +116,14 @@ impl RafDriver {
         self.paused = false;
     }
 
-    /// Returns `true` when the driver is paused.
+    /// `true` when paused.
     pub fn is_paused(&self) -> bool {
         self.paused
     }
 
-    /// Set the time scale. Non-finite values become `1.0`; negative values clamp to `0.0`.
-    pub fn set_time_scale(&mut self, time_scale: f32) {
-        self.time_scale = if time_scale.is_finite() {
-            time_scale.max(0.0)
-        } else {
-            1.0
-        };
+    /// Set time scale. Non-finite values become `1.0`; negative clamp to `0.0`.
+    pub fn set_time_scale(&mut self, ts: f32) {
+        self.time_scale = if ts.is_finite() { ts.max(0.0) } else { 1.0 };
     }
 
     /// Current time scale.
@@ -131,7 +131,7 @@ impl RafDriver {
         self.time_scale
     }
 
-    /// Set the maximum accepted frame delta in seconds.
+    /// Set the maximum accepted frame delta.
     pub fn set_max_dt(&mut self, max_dt: f32) {
         self.max_dt = if max_dt.is_finite() {
             max_dt.max(0.0)
@@ -140,27 +140,27 @@ impl RafDriver {
         };
     }
 
-    /// Current maximum frame delta in seconds.
+    /// Current max-dt.
     pub fn max_dt(&self) -> f32 {
         self.max_dt
     }
 
-    /// Forget the previous rAF timestamp.
+    /// Forget the previous timestamp (useful after tab visibility changes).
     pub fn reset_timestamp(&mut self) {
         self.last_timestamp_ms = None;
     }
 
-    /// Borrow the inner animation driver.
+    /// Borrow the inner driver.
     pub fn driver(&self) -> &AnimationDriver {
         &self.driver
     }
 
-    /// Mutably borrow the inner animation driver.
+    /// Mutably borrow the inner driver.
     pub fn driver_mut(&mut self) -> &mut AnimationDriver {
         &mut self.driver
     }
 
-    /// Cancel an animation by id.
+    /// Cancel an animation.
     pub fn cancel(&mut self, id: AnimationId) {
         self.driver.cancel(id);
     }
@@ -175,7 +175,7 @@ impl RafDriver {
         self.driver.active_count()
     }
 
-    /// Returns `true` if an animation id is still active.
+    /// `true` if the animation is still active.
     pub fn is_active(&self, id: AnimationId) -> bool {
         self.driver.is_active(id)
     }
@@ -187,51 +187,46 @@ mod tests {
     use animato_tween::Tween;
 
     #[test]
-    fn first_tick_has_zero_delta() {
-        let mut driver = RafDriver::new();
-        assert_eq!(driver.tick(1000.0), 0.0);
+    fn first_tick_is_zero() {
+        let mut d = RafDriver::new();
+        assert_eq!(d.tick(1000.0), 0.0);
     }
-
     #[test]
-    fn converts_milliseconds_to_seconds() {
-        let mut driver = RafDriver::new();
-        driver.tick(1000.0);
-        assert!((driver.tick(1016.0) - 0.016).abs() < 0.0001);
+    fn converts_ms_to_secs() {
+        let mut d = RafDriver::new();
+        d.tick(1000.0);
+        assert!((d.tick(1016.0) - 0.016).abs() < 0.0001);
     }
-
     #[test]
-    fn time_scale_multiplies_delta() {
-        let mut driver = RafDriver::new();
-        driver.set_time_scale(2.0);
-        driver.tick(1000.0);
-        assert!((driver.tick(1016.0) - 0.032).abs() < 0.0001);
+    fn time_scale_doubles_dt() {
+        let mut d = RafDriver::new();
+        d.set_time_scale(2.0);
+        d.tick(1000.0);
+        assert!((d.tick(1016.0) - 0.032).abs() < 0.0001);
     }
-
     #[test]
-    fn max_dt_clamps_large_gaps() {
-        let mut driver = RafDriver::new();
-        driver.set_max_dt(0.1);
-        driver.tick(1000.0);
-        assert!((driver.tick(5000.0) - 0.1).abs() < 0.0001);
+    fn max_dt_clamps() {
+        let mut d = RafDriver::new();
+        d.set_max_dt(0.1);
+        d.tick(1000.0);
+        assert!((d.tick(5000.0) - 0.1).abs() < 0.0001);
     }
-
     #[test]
-    fn pause_consumes_timestamp_without_ticking() {
-        let mut driver = RafDriver::new();
-        let id = driver.add(Tween::new(0.0_f32, 1.0).duration(0.01).build());
-        driver.tick(1000.0);
-        driver.pause();
-        assert_eq!(driver.tick(5000.0), 0.0);
-        assert!(driver.is_active(id));
-        driver.resume();
-        driver.tick(5016.0);
-        assert!(!driver.is_active(id));
+    fn pause_prevents_tick() {
+        let mut d = RafDriver::new();
+        let id = d.add(Tween::new(0.0_f32, 1.0).duration(0.01).build());
+        d.tick(1000.0);
+        d.pause();
+        assert_eq!(d.tick(5000.0), 0.0);
+        assert!(d.is_active(id));
+        d.resume();
+        d.tick(5016.0);
+        assert!(!d.is_active(id));
     }
-
     #[test]
-    fn invalid_timestamp_is_ignored() {
-        let mut driver = RafDriver::new();
-        assert_eq!(driver.tick(f64::NAN), 0.0);
-        assert_eq!(driver.tick(f64::INFINITY), 0.0);
+    fn invalid_timestamp_ignored() {
+        let mut d = RafDriver::new();
+        assert_eq!(d.tick(f64::NAN), 0.0);
+        assert_eq!(d.tick(f64::INFINITY), 0.0);
     }
 }

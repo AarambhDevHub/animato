@@ -126,9 +126,9 @@ pub use animato_spring::SpringN;
 // ── Path ─────────────────────────────────────────────────────────────────────
 #[cfg(feature = "path")]
 pub use animato_path::{
-    CatmullRomSpline, CompoundPath, CubicBezierCurve, EllipticalArc, LineSegment, MotionPath,
-    MotionPathTween, MotionPathTweenBuilder, PathCommand, PathEvaluate, PathSegment, PolyPath,
-    QuadBezier, SvgPathError, SvgPathParser,
+    CatmullRomSpline, CompoundPath, CubicBezierCurve, DrawSvg, DrawValues, EllipticalArc,
+    LineSegment, MorphPath, MotionPath, MotionPathTween, MotionPathTweenBuilder, PathCommand,
+    PathEvaluate, PathSegment, PolyPath, QuadBezier, SvgPathError, SvgPathParser, resample,
 };
 
 // ── Physics ─────────────────────────────────────────────────────────────────
@@ -146,7 +146,10 @@ pub use palette;
 
 // ── Driver ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "driver")]
-pub use animato_driver::{AnimationDriver, AnimationId, Clock, ManualClock, MockClock, WallClock};
+pub use animato_driver::{
+    AnimationDriver, AnimationId, Clock, ManualClock, MockClock, ScrollClock, ScrollDriver,
+    WallClock,
+};
 
 // ── Bevy ─────────────────────────────────────────────────────────────────────
 #[cfg(feature = "bevy")]
@@ -161,5 +164,6 @@ pub use animato_wasm::{RafDriver, ScrollSmoother};
 
 #[cfg(all(feature = "wasm-dom", target_arch = "wasm32"))]
 pub use animato_wasm::{
-    Draggable, FlipAnimation, FlipState, Observer, ObserverEvent, SplitMode, SplitText,
+    Draggable, FlipAnimation, FlipState, LayoutAnimator, Observer, ObserverEvent,
+    SharedElementTransition, SplitMode, SplitText,
 };

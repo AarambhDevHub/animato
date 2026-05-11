@@ -11,10 +11,53 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  # ── Format ─────────────────────────────────────────────────────────────────
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable (with rustfmt)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+  # ── Lint (Clippy) ──────────────────────────────────────────────────────────
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable (with clippy)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-clippy-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-clippy-
+            ${{ runner.os }}-cargo-
+
+      - name: Clippy (all features, deny warnings)
+        run: cargo clippy --workspace --all-features -- -D warnings
+
   # ── Tests ──────────────────────────────────────────────────────────────────
   test:
     name: Test (${{ matrix.rust }})
     runs-on: ubuntu-latest
+    needs: [fmt, clippy]
     strategy:
       fail-fast: false
       matrix:
@@ -46,23 +89,31 @@ jobs:
       - name: Test (all features)
         run: cargo test --workspace --all-features
 
-      # Only test no_std-compatible crates without default features.
-      # animato-driver requires std (WallClock uses std::time::Instant).
+      # Only no_std-compatible crates — animato-driver, animato-bevy,
+      # animato-timeline, and animato-wasm require std or special targets.
       - name: Test no_std crates (no default features)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
+        run: |
+          cargo test \
+            -p animato-core \
+            -p animato-tween \
+            -p animato-spring \
+            -p animato-path \
+            -p animato-physics \
+            -p animato-color \
+            --no-default-features
 
-  # ── Lint ───────────────────────────────────────────────────────────────────
-  lint:
-    name: Lint
+  # ── MSRV ───────────────────────────────────────────────────────────────────
+  msrv:
+    name: MSRV (Rust 1.89)
     runs-on: ubuntu-latest
-
+    needs: [fmt]
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
+      - name: Install Rust 1.89 (MSRV)
+        uses: dtolnay/rust-toolchain@master
         with:
-          components: clippy, rustfmt
+          toolchain: "1.89"
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -71,19 +122,18 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-lint-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-msrv-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-msrv-
 
-      - name: Check formatting
-        run: cargo fmt --check
-
-      - name: Clippy (all features)
-        run: cargo clippy --workspace --all-features -- -D warnings
+      - name: Check workspace compiles on MSRV
+        run: cargo check --workspace --all-features
 
   # ── Docs ───────────────────────────────────────────────────────────────────
   docs:
     name: Docs
     runs-on: ubuntu-latest
-
+    needs: [fmt]
     steps:
       - uses: actions/checkout@v4
 
@@ -98,17 +148,89 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-docs-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-docs-
 
-      - name: Build docs
+      - name: Build docs (deny warnings)
         run: cargo doc --workspace --all-features --no-deps
         env:
           RUSTDOCFLAGS: "-D warnings"
+
+  # ── no_std cross-compile (bare-metal) ─────────────────────────────────────
+  no-std:
+    name: no_std cross-compile (thumbv7m-none-eabi)
+    runs-on: ubuntu-latest
+    needs: [fmt]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable + thumbv7m-none-eabi target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7m-none-eabi
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-nostd-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-nostd-
+
+      # Build all no_std-compatible crates for bare-metal (no std, no alloc).
+      # animato-driver, animato-bevy, animato-timeline, and animato-wasm are
+      # excluded — they require std or a hosted runtime.
+      - name: Build no_std crates for bare-metal
+        run: |
+          cargo build \
+            -p animato-core \
+            -p animato-tween \
+            -p animato-spring \
+            -p animato-path \
+            -p animato-physics \
+            -p animato-color \
+            --target thumbv7m-none-eabi \
+            --no-default-features
+
+  # ── WASM compile ───────────────────────────────────────────────────────────
+  wasm:
+    name: WASM (wasm32-unknown-unknown)
+    runs-on: ubuntu-latest
+    needs: [fmt]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable + wasm32 target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-wasm-
+
+      - name: Check animato-wasm (wasm-dom feature)
+        run: |
+          cargo check \
+            -p animato-wasm \
+            --target wasm32-unknown-unknown \
+            --features wasm-dom
 
   # ── Benchmarks compile ─────────────────────────────────────────────────────
   benches:
     name: Benches compile
     runs-on: ubuntu-latest
-
+    needs: [fmt]
     steps:
       - uses: actions/checkout@v4
 
@@ -123,86 +245,54 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-
 
-      - name: Check benches compile
+      - name: Check benchmarks compile
         run: cargo bench --workspace --no-run
-
-  # ── no_std cross-compile ───────────────────────────────────────────────────
-  no-std:
-    name: no_std cross-compile
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: thumbv7m-none-eabi
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-nostd-${{ hashFiles('**/Cargo.lock') }}
-
-      # Only the crates that are no_std-compatible
-      - name: Build animato-core (no_std)
-        run: cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-tween (no_std)
-        run: cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-spring (no_std)
-        run: cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-path (no_std)
-        run: cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-physics (no_std)
-        run: cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-color (no_std)
-        run: cargo build -p animato-color --target thumbv7m-none-eabi --no-default-features
-
-  # ── WASM compile ───────────────────────────────────────────────────────────
-  wasm:
-    name: WASM integration compile
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-wasm-${{ hashFiles('**/Cargo.lock') }}
-
-      - name: Check animato-wasm with DOM helpers
-        run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
 
   # ── Security audit ─────────────────────────────────────────────────────────
   audit:
     name: Security audit
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Install cargo-audit
-        run: cargo install cargo-audit --locked
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
 
       - name: Audit dependencies
         run: cargo audit
+
+  # ── CI gate ────────────────────────────────────────────────────────────────
+  # Single job that branch protection can require. It succeeds only when all
+  # parallel jobs above succeed, so reviewers get one green tick in the UI.
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    needs:
+      - fmt
+      - clippy
+      - test
+      - msrv
+      - docs
+      - no-std
+      - wasm
+      - benches
+      - audit
+    if: always()
+    steps:
+      - name: Check all jobs passed
+        run: |
+          results='${{ toJSON(needs) }}'
+          echo "$results" | python3 -c "
+          import json, sys
+          needs = json.load(sys.stdin)
+          failed = [k for k, v in needs.items() if v['result'] not in ('success', 'skipped')]
+          if failed:
+              print('Failed jobs:', failed)
+              sys.exit(1)
+          print('All jobs passed.')
+          "

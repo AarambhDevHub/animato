@@ -46,6 +46,16 @@ pub fn round(x: f32) -> f32 {
 pub fn ceil(x: f32) -> f32 {
     x.ceil()
 }
+#[cfg(feature = "std")]
+#[inline]
+pub fn log(x: f32) -> f32 {
+    x.ln()
+}
+#[cfg(feature = "std")]
+#[inline]
+pub fn exp(x: f32) -> f32 {
+    x.exp()
+}
 
 #[cfg(not(feature = "std"))]
 #[inline]
@@ -81,4 +91,14 @@ pub fn round(x: f32) -> f32 {
 #[inline]
 pub fn ceil(x: f32) -> f32 {
     libm::ceilf(x)
+}
+#[cfg(not(feature = "std"))]
+#[inline]
+pub fn log(x: f32) -> f32 {
+    libm::logf(x)
+}
+#[cfg(not(feature = "std"))]
+#[inline]
+pub fn exp(x: f32) -> f32 {
+    libm::expf(x)
 }
