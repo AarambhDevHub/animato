@@ -5,6 +5,32 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] — 2026-05-14 — Performance
+
+### Added
+- `animato-gpu`: new crate with `GpuAnimationBatch`, `GpuBackend`, and `GpuBatchError`.
+- `GpuAnimationBatch::new_cpu()`, `new(device, queue)`, `try_new_auto()`, `new_auto()`, `push()`, `tick()`, `read_back()`, `backend()`, `len()`, and `clear()`.
+- Embedded WGSL shader source for the 31 classic easing variants.
+- `animato` facade: `gpu` feature flag and GPU batch re-exports.
+- `TweenSnapshot` and runtime state getters for batch evaluators.
+- `MorphPath::evaluate_into()` for allocation-free shape evaluation into a reusable buffer.
+- Benchmarks: `timeline_bench.rs` and `gpu_batch_bench.rs`.
+- Example: `examples/gpu_particles.rs`.
+- Benchmark guide: `docs/benchmarks.md`.
+- Integration tests for GPU CPU fallback parity and facade exports.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins from `0.8.0` to `0.9.0`.
+- `animato-spring` and `animato-physics` now compile as `no_std` when `alloc` is enabled without `std`.
+- `MorphPath::bounds_at()` no longer allocates.
+- `ScrollDriver` tests now prove registered animations receive proportional scroll deltas.
+- `publish.yml`, README, roadmap, architecture notes, and examples updated for `v0.9.0 — Performance`.
+
+### Fixed
+- `SharedElementTransition::reset()` now resets the underlying `FlipAnimation` instead of only clearing the completion flag.
+- Facade integration tests now declare the features they actually use, so the broad `cargo test --workspace --no-default-features` release gate can run.
+
+## [0.8.0] — 2026-05-09 — Advanced
 
 **`animato-core` — 5 new advanced easing variants**
 - `Easing::RoughEase { strength, points }` — organic, rough motion using deterministic sine harmonics. Zero at `t=0`, one at `t=1`.
@@ -199,7 +225,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/AarambhDevHub/animato/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/AarambhDevHub/animato/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AarambhDevHub/animato/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/AarambhDevHub/animato/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/AarambhDevHub/animato/compare/v0.4.0...v0.5.0

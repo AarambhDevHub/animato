@@ -11,7 +11,7 @@ use bevy_transform::components::Transform;
 use std::time::Duration;
 
 fn main() {
-    println!("Animato v0.7.0 - bevy_transform example\n");
+    println!("Animato v0.9.0 - bevy_transform example\n");
 
     let mut app = App::new();
     app.insert_resource(bevy_time::Time::<()>::default());

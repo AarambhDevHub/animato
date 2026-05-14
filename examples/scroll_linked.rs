@@ -15,7 +15,7 @@ fn render_bar(value: f32, label: &str) {
 }
 
 fn main() {
-    println!("Animato v0.8.0 - scroll_linked example");
+    println!("Animato v0.9.0 - scroll_linked example");
     println!("  Scroll range 0–1000 px drives three tweens\n");
 
     // ── ScrollDriver approach ─────────────────────────────────────────────────

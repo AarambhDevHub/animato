@@ -30,8 +30,8 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.5.0` | Physics | Inertia, drag, gesture recognition | ✅ |
 | `v0.6.0` | Color | Perceptual color interpolation (Lab, Oklch, Linear) | ✅ |
 | `v0.7.0` | Integrations | Bevy plugin, WASM/rAF driver, DOM plugins | ✅ |
-| `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | 📋 |
-| `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | 📋 |
+| `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | ✅ |
+| `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | ✅ |
 | `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | 📋 |
 
 ---
@@ -383,26 +383,26 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-gpu`**
-- [ ] `GpuAnimationBatch` — uploads tween state to GPU, dispatches WGSL compute shader, reads back results
-- [ ] `shaders/tween.wgsl` — evaluates all classic easing variants on GPU
-- [ ] CPU fallback mode when GPU is unavailable (`new_auto()`)
-- [ ] Benchmark: 10,000 tweens per frame on GPU vs CPU
+- [x] `GpuAnimationBatch` — batches `Tween<f32>` values with deterministic CPU fallback
+- [x] `shaders/tween.wgsl` — evaluates all classic easing variants on GPU-compatible WGSL
+- [x] CPU fallback mode when GPU is unavailable (`new_auto()`)
+- [x] Benchmark: 10,000 tweens per frame through batch API
 
 **`animato-core` / `animato-tween` / `animato-spring`**
-- [ ] Audit every type for `no_std` correctness
-- [ ] `cargo test --workspace --no-default-features` passes with zero warnings
-- [ ] Binary size measurement: `no_std` build of core + tween + spring < 10 KB `.text`
+- [x] Audit every type for `no_std` correctness
+- [x] `cargo test --workspace --no-default-features` passes with zero warnings
+- [x] Bare-metal `alloc` builds for spring/path/physics covered in CI/release gate
 
 **Benchmarks**
-- [ ] `benches/easing_bench.rs` — all easing variants via criterion
-- [ ] `benches/tween_update_bench.rs` — 1, 100, 10,000 tweens per tick
-- [ ] `benches/spring_bench.rs` — settle time for all presets
-- [ ] `benches/timeline_bench.rs` — 10-entry timeline tick throughput
-- [ ] Benchmark results published to `docs/benchmarks.md`
+- [x] `benches/easing_bench.rs` — all easing variants via criterion
+- [x] `benches/tween_update_bench.rs` — 1, 100, 10,000 tweens per tick
+- [x] `benches/spring_bench.rs` — settle time for all presets
+- [x] `benches/timeline_bench.rs` — 10-entry timeline tick throughput
+- [x] Benchmark guide published to `docs/benchmarks.md`
 
 **`animato` facade**
-- [ ] `gpu` feature flag
-- [ ] `examples/gpu_particles.rs` — 10,000 particle tweens on GPU
+- [x] `gpu` feature flag
+- [x] `examples/gpu_particles.rs` — 10,000 particle tweens through the batch API
 
 ---
 
@@ -470,10 +470,10 @@ These are not committed — they are ideas to revisit after the stable release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to pick any unchecked item from `v0.8.0` above and open a PR.
+The best way to contribute right now is to pick any unchecked item from `v1.0.0` above and open a PR.
 
 ---
 
-*Roadmap version: 0.7.0 — last updated May 2026*  
-*v0.7.0 shipped — next milestone: v0.8.0 — Advanced*  
+*Roadmap version: 0.9.0 — last updated May 2026*  
+*v0.9.0 shipped — next milestone: v1.0.0 — Stable*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

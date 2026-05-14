@@ -66,6 +66,11 @@ impl FlipAnimation {
         self.tween.update(dt)
     }
 
+    /// Reset the FLIP animation to its first frame.
+    pub fn reset(&mut self) {
+        self.tween.reset();
+    }
+
     /// Current normalized progress.
     pub fn progress(&self) -> f32 {
         self.tween.value()

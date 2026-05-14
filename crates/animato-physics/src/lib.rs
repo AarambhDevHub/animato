@@ -24,7 +24,7 @@
 //! | `alloc` | Enables [`InertiaN<T>`] and [`DragState`] |
 //! | `serde` | Derives `Serialize`/`Deserialize` on public types |
 
-#![cfg_attr(not(any(feature = "std", feature = "alloc")), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 

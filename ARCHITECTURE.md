@@ -240,13 +240,14 @@ members = [
     "crates/animato-physics",
     "crates/animato-color",
     "crates/animato-driver",
+    "crates/animato-gpu",
     "crates/animato-bevy",
     "crates/animato-wasm",
     "crates/animato",
 ]
 
 [workspace.package]
-version      = "0.7.0"
+version      = "0.9.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -255,16 +256,17 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.7" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.7" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.7" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.7" }
-animato-path     = { path = "crates/animato-path",     version = "0.7" }
-animato-physics  = { path = "crates/animato-physics",  version = "0.7" }
-animato-color    = { path = "crates/animato-color",    version = "0.7" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.7" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "0.7" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "0.7" }
+animato-core     = { path = "crates/animato-core",     version = "0.9" }
+animato-tween    = { path = "crates/animato-tween",    version = "0.9" }
+animato-timeline = { path = "crates/animato-timeline", version = "0.9" }
+animato-spring   = { path = "crates/animato-spring",   version = "0.9" }
+animato-path     = { path = "crates/animato-path",     version = "0.9" }
+animato-physics  = { path = "crates/animato-physics",  version = "0.9" }
+animato-color    = { path = "crates/animato-color",    version = "0.9" }
+animato-driver   = { path = "crates/animato-driver",   version = "0.9" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "0.9" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "0.9" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "0.9" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -272,8 +274,8 @@ palette      = { version = "0.7", default-features = false, features = ["libm"] 
 wasm-bindgen = { version = "0.2" }
 js-sys       = { version = "0.3" }
 web-sys      = { version = "0.3" }
-wgpu         = { version = "24" }
-bytemuck     = { version = "1",    features = ["derive"] }
+wgpu         = { version = "29.0.3" }
+bytemuck     = { version = "1.25", features = ["derive"] }
 pollster     = { version = "0.4" }
 tokio        = { version = "1",    features = ["sync"] }
 bevy_app     = { version = "0.18.1", default-features = false }
@@ -341,7 +343,7 @@ pub trait Playable: Update + core::any::Any {
 
 #### `src/easing.rs`
 
-All 33 shipped easing variants are exposed as:
+All 38 shipped easing variants are exposed as:
 1. `Easing` enum with `.apply(t: f32) -> f32` — storable, passable, optionally serializable
 2. Free `#[inline] pub fn ease_out_cubic(t: f32) -> f32` — zero-overhead direct calls
 
@@ -379,7 +381,7 @@ pub enum Easing {
     CubicBezier(f32, f32, f32, f32),   // (x1, y1, x2, y2)
     Steps(u32),                        // CSS steps()
 
-    // Advanced parameterized (planned for v0.8.0)
+    // Advanced parameterized (v0.8.0)
     RoughEase { strength: f32, points: u32 },
     SlowMo { linear_ratio: f32, power: f32 },
     Wiggle { wiggles: u32 },
@@ -1006,27 +1008,27 @@ impl ScrollDriver {
 
 ```rust
 pub struct GpuAnimationBatch {
-    device:     wgpu::Device,
-    queue:      wgpu::Queue,
-    pipeline:   wgpu::ComputePipeline,
-    input_buf:  wgpu::Buffer,
-    output_buf: wgpu::Buffer,
-    readback:   wgpu::Buffer,
-    count:      usize,
+    tweens:    Vec<Tween<f32>>,
+    values:    Vec<f32>,
+    resources: Option<GpuResources>,
+    force_cpu: bool,
 }
 
 impl GpuAnimationBatch {
-    pub fn new(device: wgpu::Device, queue: wgpu::Queue) -> Self;
+    pub fn new_cpu() -> Self;
+    pub fn new(device: wgpu::Device, queue: wgpu::Queue) -> Result<Self, GpuBatchError>;
+    pub fn try_new_auto() -> Result<Self, GpuBatchError>;
     pub fn new_auto() -> Self;             // tries GPU, falls back to CPU mode
-    pub fn push(&mut self, tween: Tween<f32>);
+    pub fn push(&mut self, tween: Tween<f32>) -> usize;
     pub fn tick(&mut self, dt: f32);
-    pub fn read_back(&self) -> &[f32];     // current values after tick
+    pub fn read_back(&self) -> &[f32];
+    pub fn backend(&self) -> GpuBackend;
 }
 ```
 
 **WGSL shader (`shaders/tween.wgsl`):**
 
-The shader receives a buffer of tween state structs `{start, end, duration, elapsed, easing_id}` and writes the output float value for each. The entire easing function table is implemented in WGSL. One dispatch covers all tweens in a single GPU pass.
+The shader receives a buffer of tween state structs `{start, end, duration, elapsed, easing_id}` and writes the output float value for each. The v0.9.0 shader covers the 31 classic easing variants; unsupported CSS, advanced, or custom easing falls back to exact CPU evaluation.
 
 ---
 
@@ -1389,7 +1391,7 @@ for tween in tweens.iter_mut() {
 
 ### GPU batch for extreme scale
 
-For 10,000+ concurrent tweens, use `animato-gpu`. The WGSL compute shader evaluates all tweens in one GPU dispatch with no CPU-side loops at update time.
+For 10,000+ concurrent `Tween<f32>` values, use `animato-gpu`. The batch API centralizes updates, embeds the WGSL easing shader, and falls back to exact CPU evaluation whenever GPU setup or easing support is unavailable.
 
 ---
 
@@ -1502,12 +1504,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.7", default-features = false }
-animato-tween = { version = "0.7", default-features = false }
-animato-spring = { version = "0.7", default-features = false }
-animato-path = { version = "0.7", default-features = false }
-animato-physics = { version = "0.7", default-features = false }
-animato-color = { version = "0.7", default-features = false }
+animato-core  = { version = "0.9", default-features = false }
+animato-tween = { version = "0.9", default-features = false }
+animato-spring = { version = "0.9", default-features = false }
+animato-path = { version = "0.9", default-features = false }
+animato-physics = { version = "0.9", default-features = false }
+animato-color = { version = "0.9", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -1614,5 +1616,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.7.0 — covers architecture through Animato 1.0.0*  
+*Document version: 0.9.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

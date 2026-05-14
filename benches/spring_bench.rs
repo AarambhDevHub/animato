@@ -7,6 +7,7 @@ use animato_spring::{Spring, SpringConfig};
 use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
 
 const DT: f32 = 1.0 / 60.0;
+type SpringPreset = (&'static str, fn() -> SpringConfig);
 
 fn settle(config: SpringConfig) -> usize {
     let mut s = Spring::new(config);
@@ -21,7 +22,7 @@ fn settle(config: SpringConfig) -> usize {
 fn bench_settle_all_presets(c: &mut Criterion) {
     let mut group = c.benchmark_group("spring/settle");
 
-    let presets: &[(&str, fn() -> SpringConfig)] = &[
+    let presets: &[SpringPreset] = &[
         ("gentle", SpringConfig::gentle),
         ("wobbly", SpringConfig::wobbly),
         ("stiff", SpringConfig::stiff),

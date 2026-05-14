@@ -17,6 +17,25 @@ pub enum TweenState {
     Completed,
 }
 
+/// Immutable runtime state snapshot for [`Tween`].
+///
+/// This is useful for batch evaluators that need to mirror a tween's current
+/// clock state without mutating it.
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct TweenSnapshot {
+    /// Elapsed animation time inside the current pass, excluding delay.
+    pub elapsed: f32,
+    /// Elapsed delay time.
+    pub delay_elapsed: f32,
+    /// Completed loop count.
+    pub loop_count: u32,
+    /// `true` when a ping-pong tween is currently playing backward.
+    pub ping_pong_reverse: bool,
+    /// Current execution state.
+    pub state: TweenState,
+}
+
 /// A single-value animation from `start` to `end` over `duration` seconds.
 ///
 /// Build with [`Tween::new`] and the consuming builder chain:
@@ -144,6 +163,37 @@ impl<T: Animatable> Tween<T> {
     /// Current execution state.
     pub fn state(&self) -> &TweenState {
         &self.state
+    }
+
+    /// Elapsed animation time in the current pass, excluding delay.
+    pub fn elapsed(&self) -> f32 {
+        self.elapsed
+    }
+
+    /// Elapsed delay time.
+    pub fn delay_elapsed(&self) -> f32 {
+        self.delay_elapsed
+    }
+
+    /// Completed loop count.
+    pub fn loop_count(&self) -> u32 {
+        self.loop_count
+    }
+
+    /// `true` when ping-pong playback is currently reversed.
+    pub fn is_ping_pong_reversed(&self) -> bool {
+        self.ping_pong_reverse
+    }
+
+    /// Snapshot the runtime state without cloning start/end values.
+    pub fn snapshot(&self) -> TweenSnapshot {
+        TweenSnapshot {
+            elapsed: self.elapsed,
+            delay_elapsed: self.delay_elapsed,
+            loop_count: self.loop_count,
+            ping_pong_reverse: self.ping_pong_reverse,
+            state: self.state.clone(),
+        }
     }
 
     /// Reset to the very beginning, including delay and loop counter.

@@ -115,12 +115,25 @@ impl MorphPath {
     /// - `t = 0.0` → `from` shape
     /// - `t = 1.0` → `to` shape
     pub fn evaluate(&self, t: f32) -> Vec<[f32; 2]> {
+        let mut output = Vec::with_capacity(self.point_count());
+        self.evaluate_into(t, &mut output);
+        output
+    }
+
+    /// Write the interpolated shape at `t` into an existing buffer.
+    ///
+    /// The output buffer is cleared and reused, avoiding a fresh allocation on
+    /// animation hot paths.
+    pub fn evaluate_into(&self, t: f32, output: &mut Vec<[f32; 2]>) {
         let t = t.clamp(0.0, 1.0);
-        self.from
-            .iter()
-            .zip(self.to.iter())
-            .map(|(a, b)| a.lerp(b, t))
-            .collect()
+        output.clear();
+        output.reserve(self.point_count());
+        output.extend(
+            self.from
+                .iter()
+                .zip(self.to.iter())
+                .map(|(a, b)| a.lerp(b, t)),
+        );
     }
 
     /// The `from` shape after resampling.
@@ -140,15 +153,17 @@ impl MorphPath {
 
     /// Bounding box `[min_x, min_y, max_x, max_y]` of the morphed shape at `t`.
     pub fn bounds_at(&self, t: f32) -> [f32; 4] {
-        let shape = self.evaluate(t);
-        if shape.is_empty() {
+        if self.from.is_empty() {
             return [0.0, 0.0, 0.0, 0.0];
         }
-        let mut min_x = shape[0][0];
-        let mut min_y = shape[0][1];
-        let mut max_x = shape[0][0];
-        let mut max_y = shape[0][1];
-        for p in &shape[1..] {
+        let t = t.clamp(0.0, 1.0);
+        let first = self.from[0].lerp(&self.to[0], t);
+        let mut min_x = first[0];
+        let mut min_y = first[1];
+        let mut max_x = first[0];
+        let mut max_y = first[1];
+        for (from, to) in self.from.iter().zip(self.to.iter()).skip(1) {
+            let p = from.lerp(to, t);
             min_x = min_x.min(p[0]);
             min_y = min_y.min(p[1]);
             max_x = max_x.max(p[0]);

@@ -28,7 +28,7 @@ fn circle_approx(cx: f32, cy: f32, radius: f32, points: usize) -> Vec<[f32; 2]> 
 }
 
 fn main() {
-    println!("Animato v0.8.0 - morph_path example");
+    println!("Animato v0.9.0 - morph_path example");
     println!("  Morphing square → circle over 1.0 s\n");
 
     let from = square(100.0);

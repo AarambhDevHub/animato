@@ -22,6 +22,7 @@ path     = ["dep:animato-path", "animato-path/std"]
 physics  = ["dep:animato-physics", "animato-physics/alloc"]
 color    = ["dep:animato-color", "dep:palette"]
 driver   = ["dep:animato-driver"]
+gpu      = ["dep:animato-gpu", "tween", "std"]
 bevy     = ["dep:animato-bevy", "tween", "spring", "std"]
 wasm     = ["dep:animato-wasm", "driver"]
 wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
@@ -46,6 +47,7 @@ animato-path     = { workspace = true, optional = true }
 animato-physics  = { workspace = true, optional = true }
 animato-color    = { workspace = true, optional = true }
 animato-driver   = { workspace = true, optional = true }
+animato-gpu      = { workspace = true, optional = true }
 animato-bevy     = { workspace = true, optional = true }
 animato-wasm     = { workspace = true, optional = true }
 palette          = { workspace = true, optional = true }
@@ -61,6 +63,7 @@ animato-path   = { workspace = true, features = ["std"] }
 animato-physics = { workspace = true, features = ["alloc"] }
 animato-color  = { workspace = true }
 animato-driver = { workspace = true }
+animato-gpu    = { workspace = true }
 animato-bevy   = { workspace = true }
 animato-wasm   = { workspace = true }
 bevy_app       = { workspace = true }
@@ -137,6 +140,7 @@ required-features = ["wasm", "tween"]
 [[test]]
 name = "advanced_easing"
 path = "../../tests/advanced_easing.rs"
+required-features = ["tween"]
 
 [[test]]
 name = "morph_path_integration"
@@ -146,6 +150,12 @@ required-features = ["path"]
 [[test]]
 name = "scroll_driver"
 path = "../../tests/scroll_driver.rs"
+required-features = ["tween", "driver"]
+
+[[test]]
+name = "gpu_batch"
+path = "../../tests/gpu_batch.rs"
+required-features = ["gpu"]
 
 # ── Benchmarks ────────────────────────────────────────────────────────────────
 [[bench]]
@@ -171,6 +181,16 @@ harness = false
 [[bench]]
 name    = "physics_bench"
 path    = "../../benches/physics_bench.rs"
+harness = false
+
+[[bench]]
+name    = "timeline_bench"
+path    = "../../benches/timeline_bench.rs"
+harness = false
+
+[[bench]]
+name    = "gpu_batch_bench"
+path    = "../../benches/gpu_batch_bench.rs"
 harness = false
 
 # ── Examples ──────────────────────────────────────────────────────────────────
@@ -233,3 +253,8 @@ required-features = ["tween", "driver"]
 name = "tui_spinner"
 path = "../../examples/tui_spinner.rs"
 required-features = ["tween", "driver"]
+
+[[example]]
+name = "gpu_particles"
+path = "../../examples/gpu_particles.rs"
+required-features = ["gpu"]

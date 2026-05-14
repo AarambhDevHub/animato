@@ -93,9 +93,6 @@ impl SharedElementTransition {
     /// Reset to the beginning.
     pub fn reset(&mut self) {
         self.complete = false;
-        // Re-create the animation from the same states at progress 0.
-        // FlipAnimation doesn't expose reset, so we simply mark complete = false
-        // and rely on progress() re-evaluating from t=0 if needed.
-        // A full reset requires rebuilding — expose the raw states.
+        self.animation.reset();
     }
 }
