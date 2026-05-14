@@ -5,6 +5,30 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0] — 2026-05-14 — Stable
+
+### Added
+- Stable v1.0.0 documentation set under `docs/`, including `README.md`, `api-full.md`, feature guides, recipes, testing, release, troubleshooting, and FAQ pages.
+- v1.0.0 release gates for examples, benchmark compilation, coverage, fuzzing, WASM checks, no_std checks, dry-run publishing, and tag validation.
+- `cargo-fuzz` scaffold with a `SvgPathParser` fuzz target.
+- GitHub Pages release job for the WASM counter example artifact.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins from `0.9.0`/`0.9` to `1.0.0`/`1.0`.
+- Stabilized the existing v0.9 public API as the v1.0 API without public renames or removals.
+- Updated README, architecture notes, roadmap, contributor guidance, examples, benchmark docs, and release workflow copy for `v1.0.0 — Stable`.
+- Hardened `publish.yml` so releases validate the tag, run dry-runs before publishing, and tolerate only explicit already-published reruns.
+
+### Verification
+- `cargo fmt --check`
+- `cargo clippy --workspace --all-features -- -D warnings`
+- `cargo test --workspace --all-features`
+- `cargo test --workspace --no-default-features`
+- `cargo test -p animato --all-features --examples`
+- `cargo doc --workspace --all-features --no-deps`
+- `cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom`
+- `cargo bench --workspace --no-run`
+
 ## [0.9.0] — 2026-05-14 — Performance
 
 ### Added
@@ -225,7 +249,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/AarambhDevHub/animato/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/AarambhDevHub/animato/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AarambhDevHub/animato/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/AarambhDevHub/animato/compare/v0.6.0...v0.7.0

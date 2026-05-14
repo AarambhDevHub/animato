@@ -411,4 +411,72 @@ mod tests {
         Playable::seek_to(&mut track, 0.25);
         assert_eq!(track.value(), Some(25.0));
     }
+
+    #[test]
+    fn keyframe_clamps_negative_time_and_default_track_is_empty() {
+        let frame = Keyframe::new(-1.0, 5.0_f32, Easing::EaseInQuad);
+        let track = KeyframeTrack::<f32>::default();
+
+        assert_eq!(frame.time, 0.0);
+        assert_eq!(frame.value, 5.0);
+        assert_eq!(track.duration(), 0.0);
+        assert_eq!(track.progress(), 1.0);
+    }
+
+    #[test]
+    fn accessors_progress_reset_and_times_loop_work() {
+        let mut track = KeyframeTrack::new()
+            .push(0.0, 0.0_f32)
+            .push(1.0, 100.0)
+            .looping(Loop::Times(2));
+
+        assert_eq!(track.duration(), 1.0);
+        assert_eq!(track.elapsed(), 0.0);
+        assert_eq!(Playable::duration(&track), 2.0);
+
+        track.update(1.25);
+        assert_eq!(track.progress(), 0.625);
+        assert_eq!(track.value(), Some(25.0));
+
+        assert!(!track.update(1.0));
+        assert!(track.is_complete());
+        assert_eq!(track.value(), Some(100.0));
+
+        track.reset();
+        assert_eq!(track.elapsed(), 0.0);
+        assert!(!track.is_complete());
+    }
+
+    #[test]
+    fn value_at_clamps_before_first_and_after_last() {
+        let track = KeyframeTrack::new().push(0.5, 10.0_f32).push(1.5, 30.0_f32);
+
+        assert_eq!(track.value_at(-1.0), Some(10.0));
+        assert_eq!(track.value_at(3.0), Some(30.0));
+    }
+
+    #[test]
+    fn playable_seek_handles_empty_and_infinite_tracks() {
+        let mut empty = KeyframeTrack::<f32>::new();
+        Playable::seek_to(&mut empty, 0.5);
+        assert!(empty.is_complete());
+        assert_eq!(empty.elapsed(), 0.0);
+
+        let mut forever = KeyframeTrack::new()
+            .push(0.0, 0.0_f32)
+            .push(1.0, 10.0)
+            .looping(Loop::Forever);
+        Playable::seek_to(&mut forever, 0.5);
+        assert_eq!(forever.value(), Some(5.0));
+        assert!(!Playable::is_complete(&forever));
+
+        let mut ping_pong = KeyframeTrack::new()
+            .push(0.0, 0.0_f32)
+            .push(1.0, 10.0)
+            .looping(Loop::PingPong);
+        Playable::seek_to(&mut ping_pong, 1.0);
+        assert_eq!(ping_pong.value(), Some(10.0));
+        assert!(Playable::as_any(&ping_pong).is::<KeyframeTrack<f32>>());
+        assert!(Playable::as_any_mut(&mut ping_pong).is::<KeyframeTrack<f32>>());
+    }
 }

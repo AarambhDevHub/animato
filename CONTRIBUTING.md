@@ -144,7 +144,10 @@ Do not mix unrelated changes in one PR. A PR that fixes a bug in `Spring` should
 
 ### 4. Keep changes backward compatible
 
-Until `v1.0.0`, the API is not frozen, but unnecessary breakage should still be avoided. If you need to change a public API signature, open an issue first to discuss it.
+Animato is stable starting at `v1.0.0`. Public API changes must be backward
+compatible unless they are part of a planned future major release with migration
+notes. If you need to change a public API signature, open an issue first and
+explain the compatibility impact.
 
 ### 5. Format your code
 
@@ -232,6 +235,9 @@ cargo test --workspace --all-features
 
 # no_std compile check:
 cargo test --workspace --no-default-features
+
+# Compile every registered example:
+cargo test -p animato --all-features --examples
 ```
 
 ### Clippy
@@ -280,6 +286,23 @@ Check that your docs render correctly:
 
 ```sh
 cargo doc --workspace --all-features --open
+```
+
+### Coverage and fuzzing
+
+Stable API work must keep the release gates healthy. Install the optional tools
+when touching parser, path, animation lifecycle, or integration behavior:
+
+```sh
+cargo install cargo-llvm-cov --locked
+cargo install cargo-fuzz --locked
+```
+
+Run the stable gates:
+
+```sh
+cargo llvm-cov --workspace --all-features --fail-under-lines 90
+cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
 ```
 
 ---
@@ -351,9 +374,11 @@ Animato follows [Semantic Versioning](https://semver.org/).
 
 - **Patch** (`0.1.x`) — bug fixes only, no API changes.
 - **Minor** (`0.x.0`) — new features, backward-compatible API additions, new crates.
-- **Major** (`x.0.0`) — breaking API changes. Will not happen before `v1.0.0`.
+- **Major** (`x.0.0`) — breaking API changes with migration notes.
 
-Until `v1.0.0`, minor versions may contain small breaking changes if unavoidable. These will always be documented clearly in `CHANGELOG.md`.
+Starting at `v1.0.0`, minor and patch releases must not break stable public APIs.
+Breaking changes require a future major release and clear documentation in
+`CHANGELOG.md` and `docs/migration.md`.
 
 Each sub-crate (`animato-core`, `animato-tween`, etc.) is versioned independently. The facade crate (`animato`) tracks the highest version among all sub-crates.
 

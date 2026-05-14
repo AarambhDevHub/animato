@@ -1136,4 +1136,68 @@ mod tests {
             assert_eq!(Easing::Linear.apply(t), t);
         }
     }
+
+    #[test]
+    fn parameterized_equality_covers_all_fields() {
+        assert_ne!(
+            Easing::SlowMo {
+                linear_ratio: 0.5,
+                power: 0.7
+            },
+            Easing::SlowMo {
+                linear_ratio: 0.25,
+                power: 0.7
+            }
+        );
+        assert_ne!(Easing::Wiggle { wiggles: 2 }, Easing::Wiggle { wiggles: 3 });
+        assert_ne!(
+            Easing::CustomBounce { strength: 0.5 },
+            Easing::CustomBounce { strength: 0.7 }
+        );
+        assert_ne!(
+            Easing::ExpoScale {
+                start: 0.5,
+                end: 2.0
+            },
+            Easing::ExpoScale {
+                start: 0.25,
+                end: 2.0
+            }
+        );
+    }
+
+    #[test]
+    fn boundary_branches_for_special_easings_are_explicit() {
+        for f in [ease_in_elastic, ease_out_elastic, ease_in_out_elastic] {
+            assert_eq!(f(0.0), 0.0);
+            assert_eq!(f(1.0), 1.0);
+        }
+        assert!(ease_in_out_expo(0.25) < 0.5);
+        assert!(ease_in_out_expo(0.75) > 0.5);
+        assert!(ease_in_out_elastic(0.25).is_finite());
+        assert!(ease_in_out_elastic(0.75).is_finite());
+    }
+
+    #[test]
+    fn cubic_bezier_falls_back_when_derivative_is_flat() {
+        let value = cubic_bezier(0.4, 0.0, 0.0, 0.0, 1.0);
+
+        assert!(value.is_finite());
+        assert!((0.0..=1.0).contains(&value));
+    }
+
+    #[test]
+    fn advanced_easing_edges_cover_clamps() {
+        assert_eq!(rough_ease(-1.0, 2.0, 100), 0.0);
+        assert_eq!(rough_ease(2.0, 2.0, 100), 1.0);
+        assert_eq!(slow_mo(0.5, 1.0, 10.0), 0.5);
+        assert_eq!(slow_mo(0.5, 0.5, -10.0), 0.5);
+        assert_eq!(wiggle(-1.0, 0), 0.0);
+        assert_eq!(wiggle(2.0, 0), 1.0);
+        assert_eq!(custom_bounce(-1.0, 2.0), 0.0);
+        assert_eq!(custom_bounce(2.0, 2.0), 1.0);
+        assert_eq!(expo_scale(-1.0, -1.0, -1.0), 0.0);
+        assert_eq!(expo_scale(2.0, -1.0, -1.0), 1.0);
+        assert_eq!(expo_scale(0.5, -1.0, -1.0), 0.5);
+    }
 }

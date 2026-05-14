@@ -41,3 +41,19 @@ impl Default for CounterApp {
         Self::new()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::CounterApp;
+    use wasm_bindgen_test::wasm_bindgen_test;
+
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
+
+    #[wasm_bindgen_test]
+    fn counter_advances_after_two_frames() {
+        let mut app = CounterApp::new();
+        app.tick(0.0);
+        app.tick(100.0);
+        assert!(app.value() > 0.0);
+    }
+}

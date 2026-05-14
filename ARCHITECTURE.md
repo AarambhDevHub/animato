@@ -247,7 +247,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "0.9.0"
+version      = "1.0.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -256,17 +256,17 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "0.9" }
-animato-tween    = { path = "crates/animato-tween",    version = "0.9" }
-animato-timeline = { path = "crates/animato-timeline", version = "0.9" }
-animato-spring   = { path = "crates/animato-spring",   version = "0.9" }
-animato-path     = { path = "crates/animato-path",     version = "0.9" }
-animato-physics  = { path = "crates/animato-physics",  version = "0.9" }
-animato-color    = { path = "crates/animato-color",    version = "0.9" }
-animato-driver   = { path = "crates/animato-driver",   version = "0.9" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "0.9" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "0.9" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "0.9" }
+animato-core     = { path = "crates/animato-core",     version = "1.0" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.0" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.0" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.0" }
+animato-path     = { path = "crates/animato-path",     version = "1.0" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.0" }
+animato-color    = { path = "crates/animato-color",    version = "1.0" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.0" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.0" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.0" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.0" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -1028,7 +1028,7 @@ impl GpuAnimationBatch {
 
 **WGSL shader (`shaders/tween.wgsl`):**
 
-The shader receives a buffer of tween state structs `{start, end, duration, elapsed, easing_id}` and writes the output float value for each. The v0.9.0 shader covers the 31 classic easing variants; unsupported CSS, advanced, or custom easing falls back to exact CPU evaluation.
+The shader receives a buffer of tween state structs `{start, end, duration, elapsed, easing_id}` and writes the output float value for each. The v1.0.0 shader covers the 31 classic easing variants; unsupported CSS, advanced, or custom easing falls back to exact CPU evaluation.
 
 ---
 
@@ -1504,12 +1504,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "0.9", default-features = false }
-animato-tween = { version = "0.9", default-features = false }
-animato-spring = { version = "0.9", default-features = false }
-animato-path = { version = "0.9", default-features = false }
-animato-physics = { version = "0.9", default-features = false }
-animato-color = { version = "0.9", default-features = false }
+animato-core  = { version = "1.0", default-features = false }
+animato-tween = { version = "1.0", default-features = false }
+animato-spring = { version = "1.0", default-features = false }
+animato-path = { version = "1.0", default-features = false }
+animato-physics = { version = "1.0", default-features = false }
+animato-color = { version = "1.0", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -1534,10 +1534,17 @@ Jobs:
     - cargo doc --workspace --all-features --no-deps
 
   wasm:
-    - wasm-pack test --headless --chrome --features wasm
+    - cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+    - cd examples/wasm_counter && wasm-pack test --headless --chrome
 
   bench:
     - cargo bench --workspace --no-run
+
+  coverage:
+    - cargo llvm-cov --workspace --all-features --fail-under-lines 90
+
+  fuzz:
+    - cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
 ```
 
 ### `publish.yml` — runs on version tags (`v*`)
@@ -1545,10 +1552,13 @@ Jobs:
 ```
 Steps:
   - Verify tag matches version in each Cargo.toml
+  - Run fmt, clippy, tests, docs, examples, WASM, no_std, coverage, fuzz, and bench gates
+  - cargo publish --dry-run immediately before each crate publish
   - cargo publish -p animato-core
   - cargo publish -p animato-tween
   - ... (in dependency order)
   - cargo publish -p animato
+  - Create GitHub Release and deploy the WASM counter example to GitHub Pages
 ```
 
 ---
@@ -1567,8 +1577,11 @@ Before `cargo publish` for any crate:
 - [ ] `cargo clippy --workspace --all-features -- -D warnings` is clean
 - [ ] `cargo doc --workspace --all-features --open` renders correctly
 - [ ] `cargo bench --workspace --no-run` compiles without errors
+- [ ] `cargo llvm-cov --workspace --all-features --fail-under-lines 90` passes
+- [ ] `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60` passes
+- [ ] `cargo test -p animato --all-features --examples` compiles every registered example
 - [ ] Version in `Cargo.toml` matches git tag and `CHANGELOG.md` entry
-- [ ] `cargo publish --dry-run` succeeds for the crate being released
+- [ ] `cargo publish --dry-run` succeeds for each crate immediately before publishing it
 
 ### Publish order (dependency chain)
 
@@ -1616,5 +1629,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 0.9.0 — covers architecture through Animato 1.0.0*  
+*Document version: 1.0.0 — covers architecture through Animato 1.0.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

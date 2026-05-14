@@ -7,9 +7,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
 
 jobs:
-  # ── Pre-publish gate ─────────────────────────────────────────────────────────
   verify:
     name: Pre-publish verification
     runs-on: ubuntu-latest
@@ -20,8 +20,8 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
-          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt, llvm-tools-preview
+          targets: wasm32-unknown-unknown, thumbv7m-none-eabi
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -31,48 +31,73 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-publish-
+            ${{ runner.os }}-cargo-
 
-      - name: Run full test suite
-        run: cargo test --workspace --all-features
-
-      - name: Run no_std check (no_std-compatible crates only)
-        run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
-
-      - name: Run full no-default-features gate
-        run: cargo test --workspace --no-default-features
-
-      - name: Check GPU crate
-        run: cargo check -p animato-gpu
-
-      - name: Check WASM integrations
-        run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
-
-      - name: Build no_std alloc crates for bare metal
+      - name: Install release tools
         run: |
-          rustup target add thumbv7m-none-eabi
-          cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features --features alloc
-          cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features --features alloc
-          cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features --features alloc
+          rustup toolchain install nightly
+          cargo install cargo-llvm-cov --locked
+          cargo install cargo-fuzz --locked
+          cargo install wasm-pack --locked
+
+      - name: Validate tag matches workspace version
+        run: |
+          set -euo pipefail
+          workspace_version="$(sed -n 's/^version[[:space:]]*=[[:space:]]*"\([^"]*\)"/\1/p' Cargo.toml | head -n1)"
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$workspace_version" != "$tag_version" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match workspace version ${workspace_version}" >&2
+            exit 1
+          fi
+
+      - name: Check formatting
+        run: cargo fmt --check
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
 
-      - name: Check formatting
-        run: cargo fmt --check
+      - name: Run full test suite
+        run: cargo test --workspace --all-features
+
+      - name: Run full no-default-features gate
+        run: cargo test --workspace --no-default-features
+
+      - name: Compile registered examples
+        run: cargo test -p animato --all-features --examples
 
       - name: Build docs
         run: cargo doc --workspace --all-features --no-deps
         env:
           RUSTDOCFLAGS: "-D warnings"
 
-  # ── Publish in dependency order ───────────────────────────────────────────────
-  # Each crate must be visible on crates.io before the next can be published.
-  # The 30s sleep gives the registry index time to propagate.
-  #
-  # v0.9.0 scope: animato-core → animato-color → animato-tween → animato-spring
-  #               → animato-path → animato-physics → animato-driver
-  #               → animato-timeline → animato-gpu → animato-wasm
-  #               → animato-bevy → animato
+      - name: Check WASM integrations
+        run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+
+      - name: Run WASM browser tests
+        run: |
+          cd examples/wasm_counter
+          wasm-pack test --headless --chrome
+
+      - name: Build no_std crates for bare metal
+        run: |
+          cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-color --target thumbv7m-none-eabi --no-default-features
+
+      - name: Compile benchmark suite
+        run: cargo bench --workspace --no-run
+
+      - name: Coverage gate
+        run: cargo llvm-cov --workspace --all-features --fail-under-lines 90
+
+      - name: Fuzz SVG path parser
+        run: cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
+
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -92,81 +117,112 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-cargo-publish-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-publish-
+            ${{ runner.os }}-cargo-
 
-      - name: Publish animato-core
-        run: cargo publish -p animato-core --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+      - name: Publish crates in dependency order
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          set -euo pipefail
 
-      - name: Wait for registry index
-        run: sleep 30
+          publish_crate() {
+            crate="$1"
+            log="publish-${crate}.log"
 
-      - name: Publish animato-color
-        run: cargo publish -p animato-color --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+            cargo publish -p "$crate" --dry-run
 
-      - name: Wait for registry index
-        run: sleep 30
+            set +e
+            cargo publish -p "$crate" --token "$CARGO_REGISTRY_TOKEN" 2>&1 | tee "$log"
+            status="${PIPESTATUS[0]}"
+            set -e
 
-      - name: Publish animato-tween
-        run: cargo publish -p animato-tween --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+            if [ "$status" -eq 0 ]; then
+              return 0
+            fi
 
-      - name: Wait for registry index
-        run: sleep 30
+            if grep -Eiq "already uploaded|already exists|crate version .* is already uploaded" "$log"; then
+              echo "$crate is already published for this version; continuing explicit rerun."
+              return 0
+            fi
 
-      - name: Publish animato-spring
-        run: cargo publish -p animato-spring --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+            echo "Publishing $crate failed." >&2
+            exit "$status"
+          }
 
-      - name: Wait for registry index
-        run: sleep 30
+          for crate in \
+            animato-core \
+            animato-color \
+            animato-tween \
+            animato-spring \
+            animato-path \
+            animato-physics \
+            animato-driver \
+            animato-timeline \
+            animato-gpu \
+            animato-wasm \
+            animato-bevy \
+            animato
+          do
+            publish_crate "$crate"
+            if [ "$crate" != "animato" ]; then
+              sleep 30
+            fi
+          done
 
-      - name: Publish animato-path
-        run: cargo publish -p animato-path --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+  pages:
+    name: Deploy WASM example to Pages
+    runs-on: ubuntu-latest
+    needs: verify
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
 
-      - name: Wait for registry index
-        run: sleep 30
+    steps:
+      - uses: actions/checkout@v4
 
-      - name: Publish animato-physics
-        run: cargo publish -p animato-physics --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
 
-      - name: Wait for registry index
-        run: sleep 30
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
 
-      - name: Publish animato-driver
-        run: cargo publish -p animato-driver --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+      - name: Build WASM counter example
+        run: |
+          cd examples/wasm_counter
+          wasm-pack build --target web
 
-      - name: Wait for registry index
-        run: sleep 30
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p site/www site/pkg
+          cp examples/wasm_counter/www/index.html site/www/index.html
+          cp -R examples/wasm_counter/pkg/. site/pkg/
 
-      - name: Publish animato-timeline
-        run: cargo publish -p animato-timeline --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
 
-      - name: Wait for registry index
-        run: sleep 30
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
 
-      - name: Publish animato-gpu
-        run: cargo publish -p animato-gpu --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
 
-      - name: Wait for registry index
-        run: sleep 30
-
-      - name: Publish animato-wasm
-        run: cargo publish -p animato-wasm --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
-
-      - name: Wait for registry index
-        run: sleep 30
-
-      - name: Publish animato-bevy
-        run: cargo publish -p animato-bevy --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
-
-      - name: Wait for registry index
-        run: sleep 30
-
-      - name: Publish animato (facade)
-        run: cargo publish -p animato --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
-
-  # ── GitHub Release ────────────────────────────────────────────────────────────
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: publish
+    needs: [publish, pages]
     permissions:
       contents: write
 
@@ -176,69 +232,80 @@ jobs:
       - name: Extract version from tag
         id: version
         run: |
-          echo "TAG=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
-          echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          echo "TAG=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Performance"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Stable"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Performance
+            ## Animato ${{ steps.version.outputs.TAG }} — Stable
 
-            The ninth release of Animato adds `animato-gpu`, benchmark coverage,
-            stronger no_std/alloc release gates, and targeted v0.8 hardening.
+            Animato v1.0.0 stabilizes the existing v0.9 API without public
+            renames or removals. This release freezes the public API, expands
+            documentation, hardens release verification, and publishes every
+            workspace crate at the same stable version.
+
+            ### Install
+
+            ```toml
+            [dependencies]
+            animato = "${{ steps.version.outputs.VERSION }}"
+            ```
 
             ### Crates published to crates.io
 
             | Crate | Version | Description |
             |-------|---------|-------------|
-            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits + **38** easing variants (5 new advanced) |
+            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits, interpolation, and easing |
             | [`animato-color`](https://crates.io/crates/animato-color) | `${{ steps.version.outputs.VERSION }}` | Perceptual color wrappers |
-            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>`, `KeyframeTrack<T>` |
-            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | `Spring`, `SpringN<T>` |
-            | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | **`MorphPath`**, **`DrawSvg`**, Bezier, SVG parser |
-            | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | Inertia, drag, gestures |
-            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, clocks, **`ScrollDriver`**, **`ScrollClock`** |
-            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, stagger |
-            | [`animato-gpu`](https://crates.io/crates/animato-gpu) | `${{ steps.version.outputs.VERSION }}` | `GpuAnimationBatch` with CPU fallback |
-            | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | `RafDriver`, **`LayoutAnimator`**, **`SharedElementTransition`** |
-            | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | `AnimatoPlugin` |
-            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports everything |
+            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>` and keyframe tracks |
+            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | Scalar and component springs |
+            | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | Bezier, SVG paths, motion paths, morphing |
+            | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | Inertia, drag, and gesture recognition |
+            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | Drivers, clocks, and scroll drivers |
+            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | Timeline, sequence, and stagger composition |
+            | [`animato-gpu`](https://crates.io/crates/animato-gpu) | `${{ steps.version.outputs.VERSION }}` | GPU/CPU fallback batch tween evaluation |
+            | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | rAF and DOM helpers |
+            | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | Bevy integration plugin |
+            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Stable facade crate |
 
-            ### Quick Start
+            ### Verification
 
-            ```toml
-            [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["gpu"] }
-            ```
+            - `cargo fmt --check`
+            - `cargo clippy --workspace --all-features -- -D warnings`
+            - `cargo test --workspace --all-features`
+            - `cargo test --workspace --no-default-features`
+            - `cargo test -p animato --all-features --examples`
+            - `cargo doc --workspace --all-features --no-deps`
+            - `cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom`
+            - `wasm-pack test --headless --chrome`
+            - `cargo bench --workspace --no-run`
+            - `cargo llvm-cov --workspace --all-features --fail-under-lines 90`
+            - `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60`
+            - `cargo publish --dry-run` for every crate immediately before publish
 
-            ```rust
-            use animato::{Easing, GpuAnimationBatch, Tween};
+            ### Documentation
 
-            let mut batch = GpuAnimationBatch::new_auto();
-            batch.push(
-                Tween::new(0.0_f32, 100.0)
-                    .duration(1.0)
-                    .easing(Easing::EaseOutCubic)
-                    .build(),
-            );
+            - [README](./README.md)
+            - [Full API map](./docs/api-full.md)
+            - [Getting started](./docs/getting-started.md)
+            - [Feature flags](./docs/feature-flags.md)
+            - [Testing](./docs/testing.md)
+            - [Release process](./docs/release.md)
+            - [Changelog](./CHANGELOG.md)
 
-            batch.tick(1.0 / 60.0);
-            let values = batch.read_back();
-            ```
+            ### WASM Example
 
-            ### What's New in v0.9.0 — Performance
-            - ✅ `animato-gpu` with `GpuAnimationBatch`
-            - ✅ `gpu` facade feature
-            - ✅ CPU fallback for unavailable GPU or unsupported easing
-            - ✅ `TweenSnapshot` and batch-friendly tween state accessors
-            - ✅ Allocation-free `MorphPath::evaluate_into()` and `bounds_at()`
-            - ✅ `SharedElementTransition::reset()` fixed
-            - ✅ Timeline and GPU batch benchmarks plus `docs/benchmarks.md`
-            - ✅ Stronger no_std/alloc and no-default-features release gates
+            The prebuilt WASM counter example is deployed through GitHub Pages:
+            ${{ needs.pages.outputs.page_url }}
 
-            See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for full details.
+            ### Notes
+
+            Capture benchmark timing on release hardware before public
+            announcement and include it in follow-up release commentary when
+            publishing to community channels.
           draft: false
           prerelease: false

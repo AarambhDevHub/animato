@@ -108,4 +108,22 @@ mod tests {
         assert_eq!(timeline.get::<Tween<f32>>("first").unwrap().value(), 10.0);
         assert_eq!(timeline.get::<Tween<f32>>("second").unwrap().value(), 0.0);
     }
+
+    #[test]
+    fn cursor_default_then_for_and_negative_gap_are_stable() {
+        let sequence = Sequence::default()
+            .gap(-1.0)
+            .then_for(
+                "first",
+                Tween::new(0.0_f32, 10.0).duration(10.0).build(),
+                0.25,
+            )
+            .then("second", Tween::new(0.0_f32, 20.0).duration(0.75).build());
+
+        assert_eq!(sequence.cursor(), 1.0);
+
+        let timeline = sequence.build();
+        assert_eq!(timeline.entry_count(), 2);
+        assert_eq!(timeline.duration(), 1.0);
+    }
 }

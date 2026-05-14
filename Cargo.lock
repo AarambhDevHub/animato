@@ -34,7 +34,7 @@ checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
 name = "animato"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-bevy",
  "animato-color",
@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "animato-bevy"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "animato-spring",
@@ -74,7 +74,7 @@ dependencies = [
 
 [[package]]
 name = "animato-color"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "palette",
@@ -83,7 +83,7 @@ dependencies = [
 
 [[package]]
 name = "animato-core"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "libm",
  "serde",
@@ -91,7 +91,7 @@ dependencies = [
 
 [[package]]
 name = "animato-driver"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -99,7 +99,7 @@ dependencies = [
 
 [[package]]
 name = "animato-gpu"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -110,7 +110,7 @@ dependencies = [
 
 [[package]]
 name = "animato-path"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -120,7 +120,7 @@ dependencies = [
 
 [[package]]
 name = "animato-physics"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "libm",
@@ -129,7 +129,7 @@ dependencies = [
 
 [[package]]
 name = "animato-spring"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -137,7 +137,7 @@ dependencies = [
 
 [[package]]
 name = "animato-timeline"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -147,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "animato-tween"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -155,7 +155,7 @@ dependencies = [
 
 [[package]]
 name = "animato-wasm"
-version = "0.9.0"
+version = "1.0.0"
 dependencies = [
  "animato-core",
  "animato-driver",
@@ -1206,9 +1206,9 @@ dependencies = [
 
 [[package]]
 name = "hashbrown"
-version = "0.17.0"
+version = "0.17.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f467dd6dccf739c208452f8014c75c18bb8301b050ad1cfb27153803edb0f51"
+checksum = "ed5909b6e89a2db4456e54cd5f673791d7eca6732202bbf2a9cc504fe2f9b84a"
 
 [[package]]
 name = "heapless"
@@ -1264,7 +1264,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d466e9454f08e4a911e14806c24e16fba1b4c121d1ea474396f396069cf949d9"
 dependencies = [
  "equivalent",
- "hashbrown 0.17.0",
+ "hashbrown 0.17.1",
  "serde",
  "serde_core",
 ]
@@ -1712,6 +1712,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ordered-float"
+version = "5.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7d950ca161dc355eaf28f82b11345ed76c6e1f6eb1f4f4479e0323b9e2fbd0e"
+dependencies = [
+ "num-traits",
+]
+
+[[package]]
 name = "palette"
 version = "0.7.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1856,18 +1865,18 @@ dependencies = [
 
 [[package]]
 name = "pin-project"
-version = "1.1.12"
+version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cbf0d9e68100b3a7989b4901972f265cd542e560a3a8a724e1e20322f4d06ce9"
+checksum = "2466b2336ed02bcdca6b294417127b90ec92038d1d5c4fbeac971a922e0e0924"
 dependencies = [
  "pin-project-internal",
 ]
 
 [[package]]
 name = "pin-project-internal"
-version = "1.1.12"
+version = "1.1.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a990e22f43e84855daf260dded30524ef4a9021cc7541c26540500a50b624389"
+checksum = "c96395f0a926bc13b1c17622aaddda1ecb55d49c8f1bf9777e4d877800a43f8b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2484,7 +2493,7 @@ dependencies = [
  "nix",
  "num-derive",
  "num-traits",
- "ordered-float",
+ "ordered-float 4.6.0",
  "pest",
  "pest_derive",
  "phf",
@@ -2578,9 +2587,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.52.2"
+version = "1.52.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "110a78583f19d5cdb2c5ccf321d1290344e71313c6c37d43520d386027d18386"
+checksum = "8fc7f01b389ac15039e4dc9531aa973a135d7a4135281b12d7c1bc79fd57fffe"
 dependencies = [
  "pin-project-lite",
 ]
@@ -2893,7 +2902,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5f2ab60e120fd6eaa68d9567f3226e876684639d22a4219b313ff69ec0ccd5ac"
 dependencies = [
  "log",
- "ordered-float",
+ "ordered-float 4.6.0",
  "strsim",
  "thiserror 1.0.69",
  "wezterm-dynamic-derive",
@@ -3046,7 +3055,7 @@ dependencies = [
  "objc2-metal",
  "objc2-quartz-core",
  "once_cell",
- "ordered-float",
+ "ordered-float 5.3.0",
  "parking_lot",
  "portable-atomic",
  "portable-atomic-util",

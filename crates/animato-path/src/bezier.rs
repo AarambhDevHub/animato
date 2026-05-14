@@ -446,4 +446,44 @@ mod tests {
         assert_eq!(spline.position(1.0), [100.0, 0.0]);
         assert!(spline.arc_length() > 100.0);
     }
+
+    #[test]
+    fn quad_accessors_and_degenerate_tangent_are_safe() {
+        let curve = QuadBezier::new([1.0, 2.0], [1.0, 2.0], [1.0, 2.0]);
+
+        assert_eq!(curve.start(), [1.0, 2.0]);
+        assert_eq!(curve.control(), [1.0, 2.0]);
+        assert_eq!(curve.end(), [1.0, 2.0]);
+        assert_eq!(curve.position(0.5), [1.0, 2.0]);
+        assert_eq!(curve.tangent(0.5), [0.0, 0.0]);
+    }
+
+    #[test]
+    fn cubic_accessors_and_degenerate_tangent_are_safe() {
+        let curve = CubicBezierCurve::new([2.0, 3.0], [2.0, 3.0], [2.0, 3.0], [2.0, 3.0]);
+
+        assert_eq!(curve.start(), [2.0, 3.0]);
+        assert_eq!(curve.control1(), [2.0, 3.0]);
+        assert_eq!(curve.control2(), [2.0, 3.0]);
+        assert_eq!(curve.end(), [2.0, 3.0]);
+        assert_eq!(curve.position(0.5), [2.0, 3.0]);
+        assert_eq!(curve.tangent(0.5), [0.0, 0.0]);
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    #[test]
+    fn catmull_rom_handles_empty_single_and_two_point_inputs() {
+        let empty = CatmullRomSpline::new(alloc::vec![]);
+        assert!(empty.points().is_empty());
+        assert_eq!(empty.position(0.5), [0.0, 0.0]);
+        assert_eq!(empty.tangent(0.5), [0.0, 0.0]);
+
+        let single = CatmullRomSpline::new(alloc::vec![[4.0, 5.0]]);
+        assert_eq!(single.position(0.5), [4.0, 5.0]);
+        assert_eq!(single.tangent(0.5), [0.0, 0.0]);
+
+        let line = CatmullRomSpline::new(alloc::vec![[0.0, 0.0], [10.0, 0.0]]);
+        assert_eq!(line.position(0.5), [5.0, 0.0]);
+        assert_eq!(line.tangent(0.5), [1.0, 0.0]);
+    }
 }

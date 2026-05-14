@@ -444,4 +444,109 @@ mod tests {
         assert!(GpuAnimationBatch::shader_source().contains("@compute"));
         assert!(GpuAnimationBatch::shader_source().contains("ease_out_bounce"));
     }
+
+    #[test]
+    fn default_len_clear_and_empty_tick_are_cpu_safe() {
+        let mut batch = GpuAnimationBatch::default();
+
+        assert_eq!(batch.backend(), GpuBackend::Cpu);
+        assert!(batch.is_empty());
+        assert_eq!(batch.len(), 0);
+        batch.tick(0.25);
+        assert!(batch.read_back().is_empty());
+
+        let index = batch.push(Tween::new(1.0_f32, 3.0).duration(1.0).build());
+        assert_eq!(index, 0);
+        assert_eq!(batch.len(), 1);
+        assert_eq!(batch.read_back(), &[1.0]);
+
+        batch.clear();
+        assert!(batch.is_empty());
+        assert!(batch.read_back().is_empty());
+        assert_eq!(batch.backend(), GpuBackend::Cpu);
+    }
+
+    #[test]
+    fn supported_easing_ids_cover_all_shader_variants() {
+        let supported = [
+            Easing::Linear,
+            Easing::EaseInQuad,
+            Easing::EaseOutQuad,
+            Easing::EaseInOutQuad,
+            Easing::EaseInCubic,
+            Easing::EaseOutCubic,
+            Easing::EaseInOutCubic,
+            Easing::EaseInQuart,
+            Easing::EaseOutQuart,
+            Easing::EaseInOutQuart,
+            Easing::EaseInQuint,
+            Easing::EaseOutQuint,
+            Easing::EaseInOutQuint,
+            Easing::EaseInSine,
+            Easing::EaseOutSine,
+            Easing::EaseInOutSine,
+            Easing::EaseInExpo,
+            Easing::EaseOutExpo,
+            Easing::EaseInOutExpo,
+            Easing::EaseInCirc,
+            Easing::EaseOutCirc,
+            Easing::EaseInOutCirc,
+            Easing::EaseInBack,
+            Easing::EaseOutBack,
+            Easing::EaseInOutBack,
+            Easing::EaseInElastic,
+            Easing::EaseOutElastic,
+            Easing::EaseInOutElastic,
+            Easing::EaseInBounce,
+            Easing::EaseOutBounce,
+            Easing::EaseInOutBounce,
+        ];
+
+        for (index, easing) in supported.iter().enumerate() {
+            assert_eq!(classic_easing_id(easing), Some(index as u32));
+        }
+        assert_eq!(classic_easing_id(&Easing::Steps(4)), None);
+    }
+
+    #[test]
+    fn cpu_fallback_handles_multiple_tweens_and_loops() {
+        let mut batch = GpuAnimationBatch::new_cpu();
+        batch.push(
+            Tween::new(0.0_f32, 10.0)
+                .duration(1.0)
+                .looping(animato_tween::Loop::Forever)
+                .build(),
+        );
+        batch.push(
+            Tween::new(10.0_f32, 0.0)
+                .duration(2.0)
+                .easing(Easing::EaseInOutQuad)
+                .build(),
+        );
+
+        batch.tick(1.25);
+
+        assert!((batch.read_back()[0] - 2.5).abs() < 0.001);
+        assert!(batch.read_back()[1] < 5.0);
+    }
+
+    #[test]
+    fn auto_constructor_falls_back_or_reports_gpu_without_panicking() {
+        let mut batch = GpuAnimationBatch::new_auto();
+
+        assert!(matches!(batch.backend(), GpuBackend::Cpu | GpuBackend::Gpu));
+        batch.push(Tween::new(0.0_f32, 1.0).duration(0.1).build());
+        batch.tick(0.1);
+        assert_eq!(batch.read_back().len(), 1);
+    }
+
+    #[test]
+    fn gpu_error_debug_and_equality_are_stable() {
+        let adapter = GpuBatchError::AdapterUnavailable;
+        let device = GpuBatchError::RequestDevice("lost".to_owned());
+
+        assert_eq!(adapter, GpuBatchError::AdapterUnavailable);
+        assert_ne!(adapter, device);
+        assert!(format!("{device:?}").contains("lost"));
+    }
 }
