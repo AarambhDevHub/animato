@@ -52,8 +52,8 @@ mod tests {
 
     #[test]
     fn round_to_decimals() {
-        assert_eq!(round_to(3.14159, 2), 3.14);
-        assert_eq!(round_to(3.14159, 0), 3.0);
-        assert_eq!(round_to(3.145, 2), 3.15);
+        assert_eq!(round_to(12.345, 2), 12.35);
+        assert_eq!(round_to(12.345, 0), 12.0);
+        assert_eq!(round_to(98.765, 2), 98.77);
     }
 }

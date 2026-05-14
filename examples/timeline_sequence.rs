@@ -15,7 +15,7 @@ fn tween(end: f32, duration: f32, easing: Easing) -> Tween<f32> {
 }
 
 fn main() {
-    println!("Animato v0.7.0 - timeline_sequence example\n");
+    println!("Animato v0.9.0 - timeline_sequence example\n");
 
     let fade = tween(1.0, 0.8, Easing::EaseOutCubic);
     let slide = tween(120.0, 1.0, Easing::EaseInOutSine);

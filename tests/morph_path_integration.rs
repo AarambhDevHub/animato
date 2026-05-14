@@ -108,6 +108,21 @@ fn morph_driven_by_tween() {
     assert!((shape[1][1] - 50.0).abs() < 0.01);
 }
 
+#[test]
+fn morph_evaluate_into_reuses_output_buffer() {
+    let from = vec![[0.0_f32, 0.0], [100.0, 0.0]];
+    let to = vec![[0.0_f32, 100.0], [100.0, 100.0]];
+    let morph = MorphPath::with_resolution(from, to, 2);
+    let mut output = Vec::with_capacity(8);
+    let initial_capacity = output.capacity();
+
+    morph.evaluate_into(0.5, &mut output);
+
+    assert_eq!(output.len(), 2);
+    assert_eq!(output.capacity(), initial_capacity);
+    assert!((output[0][1] - 50.0).abs() < 0.01);
+}
+
 // ── DrawSvg ──────────────────────────────────────────────────────────────────
 
 #[test]

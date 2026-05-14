@@ -38,8 +38,21 @@ jobs:
       - name: Run no_std check (no_std-compatible crates only)
         run: cargo test -p animato-core -p animato-tween -p animato-spring -p animato-path -p animato-physics -p animato-color --no-default-features
 
+      - name: Run full no-default-features gate
+        run: cargo test --workspace --no-default-features
+
+      - name: Check GPU crate
+        run: cargo check -p animato-gpu
+
       - name: Check WASM integrations
         run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+
+      - name: Build no_std alloc crates for bare metal
+        run: |
+          rustup target add thumbv7m-none-eabi
+          cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features --features alloc
+          cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features --features alloc
+          cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features --features alloc
 
       - name: Clippy
         run: cargo clippy --workspace --all-features -- -D warnings
@@ -56,9 +69,10 @@ jobs:
   # Each crate must be visible on crates.io before the next can be published.
   # The 30s sleep gives the registry index time to propagate.
   #
-  # v0.8.0 scope: animato-core → animato-color → animato-tween → animato-spring
+  # v0.9.0 scope: animato-core → animato-color → animato-tween → animato-spring
   #               → animato-path → animato-physics → animato-driver
-  #               → animato-timeline → animato-wasm → animato-bevy → animato
+  #               → animato-timeline → animato-gpu → animato-wasm
+  #               → animato-bevy → animato
   publish:
     name: Publish to crates.io
     runs-on: ubuntu-latest
@@ -127,6 +141,12 @@ jobs:
       - name: Wait for registry index
         run: sleep 30
 
+      - name: Publish animato-gpu
+        run: cargo publish -p animato-gpu --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
+
+      - name: Wait for registry index
+        run: sleep 30
+
       - name: Publish animato-wasm
         run: cargo publish -p animato-wasm --token ${{ secrets.CARGO_REGISTRY_TOKEN }} || true
 
@@ -163,13 +183,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Advanced"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Performance"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Advanced
+            ## Animato ${{ steps.version.outputs.TAG }} — Performance
 
-            The eighth release of Animato, adding shape morphing, SVG draw animation,
-            scroll-linked animation, five new advanced easing variants, and FLIP layout
-            orchestration helpers.
+            The ninth release of Animato adds `animato-gpu`, benchmark coverage,
+            stronger no_std/alloc release gates, and targeted v0.8 hardening.
 
             ### Crates published to crates.io
 
@@ -183,6 +202,7 @@ jobs:
             | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | Inertia, drag, gestures |
             | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | `AnimationDriver`, clocks, **`ScrollDriver`**, **`ScrollClock`** |
             | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | `Timeline`, `Sequence`, stagger |
+            | [`animato-gpu`](https://crates.io/crates/animato-gpu) | `${{ steps.version.outputs.VERSION }}` | `GpuAnimationBatch` with CPU fallback |
             | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | `RafDriver`, **`LayoutAnimator`**, **`SharedElementTransition`** |
             | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | `AnimatoPlugin` |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Facade — re-exports everything |
@@ -191,32 +211,33 @@ jobs:
 
             ```toml
             [dependencies]
-            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["path"] }
+            animato = { version = "${{ steps.version.outputs.VERSION }}", features = ["gpu"] }
             ```
 
             ```rust
-            use animato::{DrawSvg, LineSegment, MorphPath, RoughEase, Tween, Update};
+            use animato::{Easing, GpuAnimationBatch, Tween};
 
-            // Shape morphing
-            let morph = MorphPath::new(square_pts, circle_pts);
-            let shape = morph.evaluate(0.5);
+            let mut batch = GpuAnimationBatch::new_auto();
+            batch.push(
+                Tween::new(0.0_f32, 100.0)
+                    .duration(1.0)
+                    .easing(Easing::EaseOutCubic)
+                    .build(),
+            );
 
-            // SVG draw animation
-            let path = LineSegment::new([0.0, 0.0], [200.0, 0.0]);
-            let draw = path.draw_on(0.5); // stroke-dashoffset halfway
-
-            // Advanced easing
-            let e = Easing::RoughEase { strength: 0.5, points: 8 };
+            batch.tick(1.0 / 60.0);
+            let values = batch.read_back();
             ```
 
-            ### What's New in v0.8.0 — Advanced
-            - ✅ `MorphPath` — shape morphing with arc-length resampling
-            - ✅ `resample()` — uniform polyline resampling free function
-            - ✅ `DrawSvg` trait — blanket impl on all `PathEvaluate` types
-            - ✅ `ScrollDriver` and `ScrollClock` — scroll-linked animation
-            - ✅ `RoughEase`, `SlowMo`, `Wiggle`, `CustomBounce`, `ExpoScale` easings
-            - ✅ `LayoutAnimator` and `SharedElementTransition` (wasm-dom)
-            - ✅ 3 new integration test suites; 2 new examples
+            ### What's New in v0.9.0 — Performance
+            - ✅ `animato-gpu` with `GpuAnimationBatch`
+            - ✅ `gpu` facade feature
+            - ✅ CPU fallback for unavailable GPU or unsupported easing
+            - ✅ `TweenSnapshot` and batch-friendly tween state accessors
+            - ✅ Allocation-free `MorphPath::evaluate_into()` and `bounds_at()`
+            - ✅ `SharedElementTransition::reset()` fixed
+            - ✅ Timeline and GPU batch benchmarks plus `docs/benchmarks.md`
+            - ✅ Stronger no_std/alloc and no-default-features release gates
 
             See [CHANGELOG.md](./CHANGELOG.md) and [ROADMAP.md](./ROADMAP.md) for full details.
           draft: false

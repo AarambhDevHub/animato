@@ -1,4 +1,4 @@
-//! Benchmark: all 33 named/representative easing variants via Criterion.
+//! Benchmark: all 38 named/representative easing variants via Criterion.
 //!
 //! Run with: `cargo bench --bench easing_bench`
 

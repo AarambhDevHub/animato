@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.7", default-features = false }
-//! animato-tween  = { version = "0.7", default-features = false }
-//! animato-spring = { version = "0.7", default-features = false }
-//! animato-physics = { version = "0.7", default-features = false }
-//! animato-color = { version = "0.7", default-features = false }
+//! animato-core   = { version = "0.9", default-features = false }
+//! animato-tween  = { version = "0.9", default-features = false }
+//! animato-spring = { version = "0.9", default-features = false }
+//! animato-physics = { version = "0.9", default-features = false }
+//! animato-color = { version = "0.9", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -86,6 +86,7 @@
 //! | `physics` | [`Inertia`], [`DragState`], [`GestureRecognizer`] |
 //! | `color` | [`InLab<T>`], [`InOklch<T>`], [`InLinear<T>`] |
 //! | `driver` | [`AnimationDriver`], all [`Clock`] variants |
+//! | `gpu` | [`GpuAnimationBatch`] for high-volume `Tween<f32>` batches |
 //! | `bevy` | [`AnimatoPlugin`], Bevy tween/spring wrapper components |
 //! | `wasm` | [`RafDriver`] for `requestAnimationFrame` loops |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
@@ -109,7 +110,8 @@ pub mod easing {
 // ── Tween ────────────────────────────────────────────────────────────────────
 #[cfg(feature = "tween")]
 pub use animato_tween::{
-    Keyframe, KeyframeTrack, Loop, Tween, TweenBuilder, TweenState, round_to, snap_to,
+    Keyframe, KeyframeTrack, Loop, Tween, TweenBuilder, TweenSnapshot, TweenState, round_to,
+    snap_to,
 };
 
 // ── Timeline ────────────────────────────────────────────────────────────────
@@ -150,6 +152,10 @@ pub use animato_driver::{
     AnimationDriver, AnimationId, Clock, ManualClock, MockClock, ScrollClock, ScrollDriver,
     WallClock,
 };
+
+// ── GPU ──────────────────────────────────────────────────────────────────────
+#[cfg(feature = "gpu")]
+pub use animato_gpu::{GpuAnimationBatch, GpuBackend, GpuBatchError};
 
 // ── Bevy ─────────────────────────────────────────────────────────────────────
 #[cfg(feature = "bevy")]

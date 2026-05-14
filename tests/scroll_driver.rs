@@ -1,6 +1,8 @@
 //! Integration tests for v0.8.0 ScrollDriver and ScrollClock.
 
 use animato::{AnimationDriver, Clock, Easing, ScrollClock, ScrollDriver, Tween, Update};
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 // ── ScrollDriver ──────────────────────────────────────────────────────────────
 
@@ -44,16 +46,31 @@ fn scroll_driver_zero_delta_does_not_call_update() {
 
 #[test]
 fn scroll_driver_ticks_proportional_delta() {
-    // A tween with duration=1 driven by scroll should advance by the
-    // normalised scroll fraction.
-    let mut value_tween = Tween::new(0.0_f32, 100.0)
-        .duration(1.0)
-        .easing(Easing::Linear)
-        .build();
+    struct Probe {
+        calls: Arc<AtomicUsize>,
+        last_dt: Arc<Mutex<f32>>,
+    }
 
-    // Scroll 50% of range → tween should advance ~50%.
-    value_tween.update(0.5); // manually drive by same fraction
-    assert!((value_tween.value() - 50.0).abs() < 0.01);
+    impl Update for Probe {
+        fn update(&mut self, dt: f32) -> bool {
+            self.calls.fetch_add(1, Ordering::SeqCst);
+            *self.last_dt.lock().unwrap() = dt;
+            true
+        }
+    }
+
+    let calls = Arc::new(AtomicUsize::new(0));
+    let last_dt = Arc::new(Mutex::new(0.0));
+    let mut driver = ScrollDriver::new(0.0, 1000.0);
+    driver.add(Probe {
+        calls: Arc::clone(&calls),
+        last_dt: Arc::clone(&last_dt),
+    });
+
+    driver.set_position(500.0);
+
+    assert_eq!(calls.load(Ordering::SeqCst), 1);
+    assert!((*last_dt.lock().unwrap() - 0.5).abs() < 0.001);
 }
 
 #[test]

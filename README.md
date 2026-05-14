@@ -32,26 +32,21 @@ Most Rust animation crates are either too minimal (just easing functions) or too
 
 ## Crates
 
-**Shipped in v0.8.0:**
+**Shipped in v0.9.0:**
 
 | Crate | Description | `no_std` |
 |-------|-------------|----------|
 | [`animato-core`](./crates/animato-core) | Traits + **38** easing variants (5 advanced in v0.8.0) | ✅ |
 | [`animato-path`](./crates/animato-path) | Bezier, motion paths, **`MorphPath`**, **`DrawSvg`** (v0.8.0) | core |
 | [`animato-driver`](./crates/animato-driver) | AnimationDriver, Clocks, **`ScrollDriver`**, **`ScrollClock`** (v0.8.0) | — |
+| [`animato-gpu`](./crates/animato-gpu) | **`GpuAnimationBatch`** for 10K+ `Tween<f32>` values with CPU fallback (v0.9.0) | — |
 | … all others unchanged …| | |
-
-**Planned in future versions (see [ROADMAP.md](./ROADMAP.md)):**
-
-| Crate | Version | Description |
-|-------|---------|-------------|
-| `animato-gpu` | v0.9.0 | `GpuAnimationBatch` — 10K+ tweens per frame on GPU |
 
 Most users only need the facade:
 
 ```toml
 [dependencies]
-animato = "0.8"
+animato = "0.9"
 ```
 
 ---
@@ -193,7 +188,7 @@ With the `tokio` feature, `timeline.wait().await` resolves when another task or 
 
 ```toml
 [dependencies]
-animato = { version = "0.8", features = ["path"] }
+animato = { version = "0.9", features = ["path"] }
 ```
 
 ```rust
@@ -221,7 +216,7 @@ let rotation = motion.rotation_deg();
 
 ```toml
 [dependencies]
-animato = { version = "0.8", features = ["physics"] }
+animato = { version = "0.9", features = ["physics"] }
 ```
 
 ```rust
@@ -247,7 +242,7 @@ assert!(matches!(gesture, Some(Gesture::Swipe { .. })));
 
 ```toml
 [dependencies]
-animato = { version = "0.8", features = ["color"] }
+animato = { version = "0.9", features = ["color"] }
 ```
 
 ```rust
@@ -298,7 +293,7 @@ for e in &[rough, slow, wig, bounce, expo] {
 
 ```toml
 [dependencies]
-animato = { version = "0.8", features = ["path"] }
+animato = { version = "0.9", features = ["path"] }
 ```
 
 ```rust
@@ -349,16 +344,35 @@ clock.set_scroll(250.0);
 let dt = clock.delta(); // 0.25
 ```
 
+### GPU Batch (v0.9.0)
+
+```rust
+use animato::{Easing, GpuAnimationBatch, Tween};
+
+let mut batch = GpuAnimationBatch::new_auto();
+for i in 0..10_000 {
+    batch.push(
+        Tween::new(0.0_f32, i as f32)
+            .duration(2.0)
+            .easing(Easing::EaseOutCubic)
+            .build(),
+    );
+}
+
+batch.tick(1.0 / 60.0);
+let values = batch.read_back();
+```
+
 ---
 
 ## Feature Flags
 
 ```toml
 [dependencies]
-animato = { version = "0.8", features = ["serde"] }
+animato = { version = "0.9", features = ["serde"] }
 ```
 
-**v0.8.0 features:**
+**v0.9.0 features:**
 
 | Feature | What it adds |
 |---------|--------------|
@@ -371,28 +385,23 @@ animato = { version = "0.8", features = ["serde"] }
 | `physics` | `Inertia`, `InertiaN<T>`, `DragState`, `GestureRecognizer` |
 | `color` | `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and the `palette` re-export |
 | `driver` | `AnimationDriver`, `Clock` variants |
+| `gpu` | `GpuAnimationBatch` via `wgpu` with deterministic CPU fallback |
 | `bevy` | `AnimatoPlugin`, `AnimatoTween<T>`, `AnimatoSpring<T>`, transform helpers, completion messages |
 | `wasm` | `RafDriver` + `ScrollSmoother` |
 | `wasm-dom` | DOM helpers: `FlipAnimation`, `SplitText`, `Draggable`, `Observer` |
 | `serde` | `Serialize`/`Deserialize` on supported concrete public types |
 | `tokio` | `.wait().await` on `Timeline` completion |
 
-**Features planned for future versions:**
-
-| Feature | Version | What it adds |
-|---------|---------|--------------|
-| `gpu` | v0.9.0 | `GpuAnimationBatch` via `wgpu` |
-
 ### `no_std` usage
 
 ```toml
 [dependencies]
-animato-core   = { version = "0.8", default-features = false }
-animato-tween  = { version = "0.8", default-features = false }
-animato-spring = { version = "0.8", default-features = false }
-animato-path   = { version = "0.8", default-features = false }
-animato-physics = { version = "0.8", default-features = false }
-animato-color  = { version = "0.8", default-features = false }
+animato-core   = { version = "0.9", default-features = false }
+animato-tween  = { version = "0.9", default-features = false }
+animato-spring = { version = "0.9", default-features = false }
+animato-path   = { version = "0.9", default-features = false }
+animato-physics = { version = "0.9", default-features = false }
+animato-color  = { version = "0.9", default-features = false }
 ```
 
 Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls. `KeyframeTrack<T>`, `Timeline`, `SpringN<T>`, `MotionPath`, SVG parsing, `InertiaN<T>`, and `DragState` require allocation.
@@ -421,7 +430,7 @@ Available in `no_std`: `Easing`, `Tween<T>`, `Spring`, fixed Bezier curves, `Ine
 
 ## Bevy Integration
 
-Animato v0.8.0 targets Bevy 0.18.1. The workspace MSRV is Rust 1.89 to match Bevy's published requirement.
+Animato v0.9.0 targets Bevy 0.18.1. The workspace MSRV is Rust 1.89 to match Bevy's published requirement.
 
 ```rust
 use bevy::prelude::*;
@@ -463,7 +472,7 @@ fn on_tween_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato = { version = "0.8", features = ["wasm"] }
+animato = { version = "0.9", features = ["wasm"] }
 ```
 
 ```rust
@@ -546,11 +555,11 @@ cargo doc --workspace --all-features --open
 
 See [ROADMAP.md](./ROADMAP.md) for the full versioned plan from `v0.1.0` to `v1.0.0`.
 
-**Current status: `v0.8.0 — Advanced` shipped**
+**Current status: `v0.9.0 — Performance` shipped**
 
 | Next | Milestone |
 |------|-----------|
-| `v0.9.0` | Performance — GPU batch compute, `animato-gpu`, benchmarks |
+| `v1.0.0` | Stable — API freeze, docs, examples, CI hardening |
 
 ---
 

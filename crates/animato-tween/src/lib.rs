@@ -51,4 +51,4 @@ pub use builder::TweenBuilder;
 pub use keyframe::{Keyframe, KeyframeTrack};
 pub use loop_mode::Loop;
 pub use modifiers::{round_to, snap_to};
-pub use tween::{Tween, TweenState};
+pub use tween::{Tween, TweenSnapshot, TweenState};

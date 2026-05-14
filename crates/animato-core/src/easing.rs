@@ -1087,7 +1087,9 @@ mod tests {
 
     #[test]
     fn free_functions_match_enum() {
-        let cases: &[(Easing, fn(f32) -> f32)] = &[
+        type EasingCase = (Easing, fn(f32) -> f32);
+
+        let cases: &[EasingCase] = &[
             (Easing::EaseInQuad, ease_in_quad),
             (Easing::EaseOutCubic, ease_out_cubic),
             (Easing::EaseOutBounce, ease_out_bounce),
