@@ -1,0 +1,52 @@
+name: Deploy Pages
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  pages:
+    name: Deploy WASM example to Pages
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
+
+      - name: Build WASM counter example
+        run: |
+          cd examples/wasm_counter
+          wasm-pack build --target web --out-dir pkg
+
+      - name: Prepare Pages artifact
+        run: |
+          mkdir -p site/pkg
+          cp examples/wasm_counter/www/index.html site/index.html
+          cp -R examples/wasm_counter/pkg/. site/pkg/
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
+      - name: Deploy Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
