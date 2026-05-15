@@ -283,7 +283,9 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Install cargo-fuzz
-        run: cargo install cargo-fuzz --locked
+        run: |
+          cargo install cargo-binstall --locked
+          cargo binstall cargo-fuzz --locked --no-confirm
 
       - name: Run SVG parser fuzz smoke test
         run: cargo fuzz run svg_path_parser -- -max_total_time=60
