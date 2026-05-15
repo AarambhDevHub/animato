@@ -381,4 +381,106 @@ mod tests {
         let tween = MotionPathTween::new(line).auto_rotate(true).build();
         assert!((tween.rotation_deg() - 90.0).abs() < 0.001);
     }
+
+    #[test]
+    fn motion_path_constructors_and_accessors_work() {
+        let mut path = MotionPath::new();
+        assert!(path.is_empty());
+        assert_eq!(path.len(), 0);
+        assert_eq!(path.position(0.5), [0.0, 0.0]);
+
+        path = path.push_segment(PathSegment::Line(LineSegment::new([0.0, 0.0], [10.0, 0.0])));
+        assert_eq!(path.len(), 1);
+        assert_eq!(path.segments().len(), 1);
+        assert_eq!(path.position(0.5), [5.0, 0.0]);
+
+        let from_commands = MotionPath::from_commands(&[
+            PathCommand::MoveTo([0.0, 0.0]),
+            PathCommand::LineTo([10.0, 0.0]),
+        ]);
+        assert_eq!(from_commands.len(), 1);
+
+        let from_svg = MotionPath::from_svg("M0 0 L10 0");
+        assert_eq!(from_svg.len(), 1);
+        assert!(MotionPath::try_from_svg("M0 0 L10 0").is_ok());
+        assert!(MotionPath::try_from_svg("M0 0 C").is_err());
+    }
+
+    #[test]
+    fn motion_path_from_each_segment_type() {
+        let paths = [
+            MotionPath::from(LineSegment::new([0.0, 0.0], [10.0, 0.0])),
+            MotionPath::from(QuadBezier::new([0.0, 0.0], [5.0, 5.0], [10.0, 0.0])),
+            MotionPath::from(CubicBezierCurve::new(
+                [0.0, 0.0],
+                [3.0, 5.0],
+                [7.0, -5.0],
+                [10.0, 0.0],
+            )),
+            MotionPath::from(EllipticalArc::from_svg(
+                [0.0, 0.0],
+                [10.0, 10.0],
+                0.0,
+                false,
+                true,
+                [10.0, 0.0],
+            )),
+            MotionPath::from(PathSegment::Line(LineSegment::new([0.0, 0.0], [10.0, 0.0]))),
+        ];
+
+        for path in paths {
+            assert_eq!(path.len(), 1);
+            assert!(path.position(0.5)[0].is_finite());
+            assert!(path.tangent(0.5)[0].is_finite());
+            assert!(path.arc_length() >= 0.0);
+        }
+    }
+
+    #[test]
+    fn builder_clamps_values_and_exposes_state() {
+        let line = LineSegment::new([0.0, 0.0], [100.0, 0.0]);
+        let mut tween = MotionPathTween::new(line)
+            .duration(-1.0)
+            .delay(-1.0)
+            .time_scale(-1.0)
+            .looping(Loop::Forever)
+            .easing(Easing::EaseInQuad)
+            .start_offset(-1.0)
+            .end_offset(2.0)
+            .build();
+
+        assert!(!tween.is_auto_rotate());
+        assert_eq!(tween.rotation_deg(), 0.0);
+        assert_eq!(tween.path_progress(), 1.0);
+        assert_eq!(tween.value(), [100.0, 0.0]);
+        assert_eq!(Playable::duration(&tween), f32::INFINITY);
+        assert_eq!(tween.path().len(), 1);
+        assert!(!tween.tween().is_complete());
+        assert!(!tween.update(0.0));
+        assert!(tween.is_complete());
+
+        tween.tween_mut().reset();
+        tween.seek(0.25);
+        assert_eq!(tween.path_progress(), 1.0);
+        tween.reset();
+        assert!(!tween.is_complete());
+        assert!(!tween.update(0.0));
+        assert!(tween.is_complete());
+    }
+
+    #[test]
+    fn from_tween_and_playable_methods_work() {
+        let line = LineSegment::new([0.0, 0.0], [100.0, 0.0]);
+        let base = Tween::new(0.0_f32, 1.0).duration(1.0).build();
+        let mut tween = MotionPathTween::from_tween(line, base);
+
+        assert_eq!(Playable::duration(&tween), 1.0);
+        Playable::seek_to(&mut tween, 0.5);
+        assert_eq!(tween.value(), [50.0, 0.0]);
+        assert!(!Playable::is_complete(&tween));
+        assert!(Playable::as_any(&tween).is::<MotionPathTween>());
+        assert!(Playable::as_any_mut(&mut tween).is::<MotionPathTween>());
+        Playable::reset(&mut tween);
+        assert_eq!(tween.value(), [0.0, 0.0]);
+    }
 }

@@ -8,7 +8,7 @@
 use animato::{DragConstraints, DragState, PointerData, Update};
 
 fn main() {
-    println!("Animato v0.9.0 - physics_drag example");
+    println!("Animato v1.0.0 - physics_drag example");
 
     let mut drag = DragState::new([0.0, 0.0])
         .constraints(DragConstraints::bounded(0.0, 200.0, 0.0, 120.0))

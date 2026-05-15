@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "0.9", default-features = false }
-//! animato-tween  = { version = "0.9", default-features = false }
-//! animato-spring = { version = "0.9", default-features = false }
-//! animato-physics = { version = "0.9", default-features = false }
-//! animato-color = { version = "0.9", default-features = false }
+//! animato-core   = { version = "1.0", default-features = false }
+//! animato-tween  = { version = "1.0", default-features = false }
+//! animato-spring = { version = "1.0", default-features = false }
+//! animato-physics = { version = "1.0", default-features = false }
+//! animato-color = { version = "1.0", default-features = false }
 //! ```
 //!
 //! ## Feature Flags

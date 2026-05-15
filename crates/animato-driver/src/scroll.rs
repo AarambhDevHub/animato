@@ -40,6 +40,16 @@ pub struct ScrollDriver {
     animations: std::vec::Vec<Box<dyn Update + Send>>,
 }
 
+fn normalized_max(min: f32, max: f32) -> f32 {
+    if max > min {
+        max
+    } else {
+        let increment = f32::EPSILON * min.abs().max(1.0);
+        let adjusted = min + increment;
+        if adjusted > min { adjusted } else { min + 1.0 }
+    }
+}
+
 impl Debug for ScrollDriver {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ScrollDriver")
@@ -59,7 +69,7 @@ impl ScrollDriver {
     pub fn new(min: f32, max: f32) -> Self {
         Self {
             min,
-            max: max.max(min + f32::EPSILON),
+            max: normalized_max(min, max),
             position: min,
             animations: std::vec::Vec::new(),
         }
@@ -173,7 +183,7 @@ impl ScrollClock {
             last: min,
             pending: 0.0,
             min,
-            max: max.max(min + f32::EPSILON),
+            max: normalized_max(min, max),
         }
     }
 
@@ -302,5 +312,51 @@ mod tests {
         clock.set_scroll(100.0);
         let _ = clock.delta();
         assert!((clock.progress() - 0.5).abs() < 0.001);
+    }
+
+    #[test]
+    fn scroll_driver_debug_default_and_degenerate_range() {
+        let mut driver = ScrollDriver::new(10.0, 5.0);
+
+        assert_eq!(driver.min(), 10.0);
+        assert!(driver.max() > driver.min());
+        assert_eq!(driver.position(), 10.0);
+        assert_eq!(driver.progress(), 0.0);
+        assert!(format!("{driver:?}").contains("ScrollDriver"));
+
+        driver.set_position(20.0);
+        assert_eq!(driver.position(), driver.max());
+        assert_eq!(driver.progress(), 1.0);
+
+        let default_driver = ScrollDriver::default();
+        assert_eq!(default_driver.animation_count(), 0);
+    }
+
+    #[test]
+    fn clear_completed_removes_finished_animations() {
+        struct Done;
+        impl Update for Done {
+            fn update(&mut self, _dt: f32) -> bool {
+                false
+            }
+        }
+
+        let mut driver = ScrollDriver::new(0.0, 100.0);
+        driver.add(Done);
+
+        assert_eq!(driver.animation_count(), 1);
+        driver.clear_completed();
+        assert_eq!(driver.animation_count(), 0);
+    }
+
+    #[test]
+    fn scroll_clock_default_clamps_and_reports_position() {
+        let mut clock = ScrollClock::default();
+
+        clock.set_scroll(2000.0);
+
+        assert_eq!(clock.scroll_position(), 1000.0);
+        assert_eq!(clock.progress(), 1.0);
+        assert_eq!(clock.delta(), 1.0);
     }
 }

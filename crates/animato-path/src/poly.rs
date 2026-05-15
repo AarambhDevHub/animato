@@ -694,4 +694,124 @@ mod tests {
         assert_eq!(path.position(0.0), [0.0, 0.0]);
         assert_eq!(path.position(1.0), [100.0, 0.0]);
     }
+
+    #[test]
+    fn line_accessors_and_clamping_work() {
+        let line = LineSegment::new([5.0, 5.0], [15.0, 5.0]);
+
+        assert_eq!(line.start(), [5.0, 5.0]);
+        assert_eq!(line.end(), [15.0, 5.0]);
+        assert_eq!(line.position(-1.0), [5.0, 5.0]);
+        assert_eq!(line.position(2.0), [15.0, 5.0]);
+    }
+
+    #[test]
+    fn arc_accessors_line_fallback_and_rotation_work() {
+        let fallback =
+            EllipticalArc::from_svg([0.0, 0.0], [0.0, 10.0], 45.0, false, true, [10.0, 0.0]);
+
+        assert_eq!(fallback.start(), [0.0, 0.0]);
+        assert_eq!(fallback.end(), [10.0, 0.0]);
+        assert_eq!(fallback.center(), [0.0, 0.0]);
+        assert_eq!(fallback.radii(), [0.0, 0.0]);
+        assert_eq!(fallback.position(0.5), [5.0, 0.0]);
+        assert_eq!(fallback.tangent(0.5), [1.0, 0.0]);
+
+        let rotated =
+            EllipticalArc::from_svg([0.0, 0.0], [20.0, 10.0], 30.0, true, false, [30.0, 10.0]);
+        assert_eq!(rotated.start(), [0.0, 0.0]);
+        assert_eq!(rotated.end(), [30.0, 10.0]);
+        assert!(rotated.center()[0].is_finite());
+        assert!(rotated.radii()[0] >= 20.0);
+        assert!(rotated.tangent(0.5)[0].is_finite());
+    }
+
+    #[test]
+    fn path_segment_delegates_all_variants() {
+        let segments = [
+            PathSegment::Line(LineSegment::new([0.0, 0.0], [10.0, 0.0])),
+            PathSegment::Quad(QuadBezier::new([0.0, 0.0], [5.0, 5.0], [10.0, 0.0])),
+            PathSegment::Cubic(CubicBezierCurve::new(
+                [0.0, 0.0],
+                [3.0, 5.0],
+                [7.0, -5.0],
+                [10.0, 0.0],
+            )),
+            PathSegment::Arc(EllipticalArc::from_svg(
+                [0.0, 0.0],
+                [10.0, 10.0],
+                0.0,
+                false,
+                true,
+                [10.0, 0.0],
+            )),
+        ];
+
+        for segment in segments {
+            assert!(segment.position(0.5)[0].is_finite());
+            assert!(segment.tangent(0.5)[0].is_finite());
+            assert!(segment.arc_length() >= 0.0);
+        }
+    }
+
+    #[test]
+    fn command_builders_cover_all_segment_types_and_empty_paths() {
+        let empty = CompoundPath::new();
+        assert!(empty.is_empty());
+        assert_eq!(empty.position(0.5), [0.0, 0.0]);
+        assert_eq!(empty.tangent(0.5), [0.0, 0.0]);
+
+        let commands = [
+            PathCommand::LineTo([10.0, 0.0]),
+            PathCommand::MoveTo([0.0, 0.0]),
+            PathCommand::QuadTo {
+                control: [5.0, 5.0],
+                end: [10.0, 0.0],
+            },
+            PathCommand::CubicTo {
+                control1: [12.0, 5.0],
+                control2: [18.0, 5.0],
+                end: [20.0, 0.0],
+            },
+            PathCommand::ArcTo {
+                radii: [10.0, 10.0],
+                x_axis_rotation: 0.0,
+                large_arc: false,
+                sweep: true,
+                end: [30.0, 0.0],
+            },
+            PathCommand::ClosePath,
+        ];
+        let path = CompoundPath::from_commands(&commands);
+
+        assert_eq!(path.len(), 4);
+        assert!(!path.is_empty());
+        assert!(path.segments().len() == 4);
+        assert!(path.position(0.2)[0].is_finite());
+        assert!(path.tangent(0.8)[0].is_finite());
+    }
+
+    #[test]
+    fn builder_methods_and_svg_errors_work() {
+        let path = CompoundPath::new()
+            .quad_to([0.0, 0.0], [5.0, 10.0], [10.0, 0.0])
+            .cubic_to([10.0, 0.0], [15.0, 10.0], [20.0, -10.0], [25.0, 0.0])
+            .arc_to([25.0, 0.0], [10.0, 10.0], 0.0, false, true, [35.0, 0.0]);
+
+        assert_eq!(path.len(), 3);
+        assert!(path.arc_length() > 0.0);
+        assert!(CompoundPath::try_from_svg("M0 0 L10 0").is_ok());
+        assert!(CompoundPath::try_from_svg("M0 0 Q").is_err());
+    }
+
+    #[test]
+    fn poly_path_exposes_points() {
+        let path = PolyPath::new(alloc::vec![[1.0, 2.0], [3.0, 4.0]]);
+
+        assert_eq!(path.points(), &[[1.0, 2.0], [3.0, 4.0]]);
+        assert_eq!(path.position(0.5), [2.0, 3.0]);
+        let tangent = path.tangent(0.5);
+        assert!((tangent[0] - core::f32::consts::FRAC_1_SQRT_2).abs() < 0.001);
+        assert!((tangent[1] - core::f32::consts::FRAC_1_SQRT_2).abs() < 0.001);
+    }
 }

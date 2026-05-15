@@ -625,4 +625,93 @@ mod tests {
         t.update(-5.0);
         assert_eq!(t.value(), 0.0);
     }
+
+    #[test]
+    fn accessors_snapshot_and_eased_progress_are_current() {
+        let mut t = Tween::new(0.0_f32, 100.0)
+            .duration(2.0)
+            .delay(0.5)
+            .easing(Easing::EaseInQuad)
+            .build();
+
+        t.update(0.25);
+        assert_eq!(t.progress(), 0.0);
+        assert_eq!(t.eased_progress(), 0.0);
+        assert_eq!(t.elapsed(), 0.0);
+        assert_eq!(t.delay_elapsed(), 0.25);
+        assert_eq!(t.loop_count(), 0);
+        assert!(!t.is_ping_pong_reversed());
+
+        let snapshot = t.snapshot();
+        assert_eq!(snapshot.delay_elapsed, 0.25);
+        assert_eq!(snapshot.state, TweenState::Idle);
+    }
+
+    #[test]
+    fn seek_and_reverse_restart_completed_tween() {
+        let mut t = make(0.0, 100.0, 1.0);
+
+        t.update(1.0);
+        assert!(t.is_complete());
+        t.seek(0.25);
+        assert_eq!(t.state(), &TweenState::Running);
+        assert_eq!(t.value(), 25.0);
+
+        t.update(1.0);
+        t.reverse();
+        assert_eq!(t.state(), &TweenState::Running);
+        assert_eq!(t.value(), 100.0);
+    }
+
+    #[test]
+    fn playables_seek_cover_delay_looping_and_downcast() {
+        let mut delayed = Tween::new(0.0_f32, 100.0).duration(1.0).delay(1.0).build();
+        Playable::seek_to(&mut delayed, 0.25);
+        assert_eq!(delayed.state(), &TweenState::Idle);
+        assert_eq!(delayed.delay_elapsed(), 0.5);
+
+        let mut times = Tween::new(0.0_f32, 10.0)
+            .duration(1.0)
+            .looping(Loop::Times(3))
+            .build();
+        Playable::seek_to(&mut times, 0.5);
+        assert_eq!(times.loop_count(), 1);
+        assert_eq!(times.state(), &TweenState::Running);
+        Playable::seek_to(&mut times, 1.0);
+        assert!(Playable::is_complete(&times));
+
+        let mut forever = Tween::new(0.0_f32, 10.0)
+            .duration(1.0)
+            .looping(Loop::Forever)
+            .build();
+        Playable::seek_to(&mut forever, 0.75);
+        assert_eq!(forever.value(), 7.5);
+
+        let mut ping_pong = Tween::new(0.0_f32, 10.0)
+            .duration(1.0)
+            .looping(Loop::PingPong)
+            .build();
+        Playable::seek_to(&mut ping_pong, 1.0);
+        assert!(ping_pong.is_ping_pong_reversed());
+        assert_eq!(ping_pong.value(), 10.0);
+
+        assert_eq!(Playable::duration(&times), 3.0);
+        assert!(Playable::as_any(&times).is::<Tween<f32>>());
+        assert!(Playable::as_any_mut(&mut times).is::<Tween<f32>>());
+        Playable::reset(&mut times);
+        assert_eq!(times.state(), &TweenState::Running);
+    }
+
+    #[test]
+    fn playable_seek_handles_zero_duration_and_delay_boundary() {
+        let mut zero = make(0.0, 1.0, 0.0);
+        Playable::seek_to(&mut zero, 0.5);
+        assert_eq!(zero.state(), &TweenState::Completed);
+        assert_eq!(zero.value(), 1.0);
+
+        let mut delayed = Tween::new(0.0_f32, 1.0).duration(1.0).delay(1.0).build();
+        Playable::seek_to(&mut delayed, 0.5);
+        assert_eq!(delayed.state(), &TweenState::Running);
+        assert_eq!(delayed.value(), 0.0);
+    }
 }

@@ -430,4 +430,65 @@ mod tests {
         assert!(position[0] > 0.0);
         assert!(position[1] < 0.0);
     }
+
+    #[test]
+    fn presets_and_bounds_are_constructible() {
+        let bounds = InertiaBounds::new(-10.0, 10.0);
+        let config = InertiaConfig::snappy().with_bounds(bounds.clone());
+
+        assert_eq!(bounds.min, -10.0);
+        assert_eq!(bounds.max, 10.0);
+        assert_eq!(config.bounds, Some(bounds));
+        assert!(InertiaConfig::heavy().friction < InertiaConfig::snappy().friction);
+        assert_eq!(InertiaConfig::<f32>::default(), InertiaConfig::smooth());
+    }
+
+    #[test]
+    fn invalid_config_values_settle_immediately() {
+        let mut inertia = Inertia::with_position(InertiaConfig::new(f32::NAN, f32::NAN), f32::NAN);
+
+        inertia.kick(f32::INFINITY);
+
+        assert_eq!(inertia.position(), 0.0);
+        assert_eq!(inertia.velocity(), 0.0);
+        assert!(!inertia.update(DT));
+    }
+
+    #[test]
+    fn zero_friction_stops_on_first_update() {
+        let mut inertia = Inertia::new(InertiaConfig::new(0.0, 0.0));
+
+        inertia.kick(100.0);
+
+        assert!(!inertia.update(DT));
+        assert_eq!(inertia.velocity(), 0.0);
+    }
+
+    #[test]
+    fn reversed_bounds_are_normalized_when_applied() {
+        let config = InertiaConfig::new(1000.0, 1.0).with_bounds(InertiaBounds::new(10.0, -10.0));
+        let mut inertia = Inertia::with_position(config, 100.0);
+
+        assert_eq!(inertia.position(), 10.0);
+        inertia.snap_to(-100.0);
+        assert_eq!(inertia.position(), -10.0);
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    #[test]
+    fn inertia_n_vec4_bounds_velocity_and_snap() {
+        let config = InertiaConfig::new(1000.0, 0.5).with_bounds(InertiaBounds::new(
+            [-10.0, -10.0, -10.0, -10.0],
+            [10.0, 10.0, 10.0, 10.0],
+        ));
+        let mut inertia: InertiaN<[f32; 4]> = InertiaN::new(config, [0.0, 0.0, 0.0, 0.0]);
+
+        inertia.kick([100.0, -50.0, 25.0, -10.0]);
+        assert_eq!(inertia.velocity(), [100.0, -50.0, 25.0, -10.0]);
+        assert!(inertia.update(DT));
+        inertia.snap_to([20.0, -20.0, 5.0, -5.0]);
+
+        assert_eq!(inertia.position(), [10.0, -10.0, 5.0, -5.0]);
+        assert_eq!(inertia.velocity(), [0.0, 0.0, 0.0, 0.0]);
+    }
 }

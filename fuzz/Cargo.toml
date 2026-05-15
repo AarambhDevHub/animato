@@ -1,0 +1,19 @@
+[package]
+name = "animato-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+animato-path = { path = "../crates/animato-path", features = ["std"] }
+libfuzzer-sys = "0.4"
+
+[[bin]]
+name = "svg_path_parser"
+path = "fuzz_targets/svg_path_parser.rs"
+test = false
+doc = false
+bench = false

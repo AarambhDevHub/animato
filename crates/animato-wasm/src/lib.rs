@@ -229,4 +229,62 @@ mod tests {
         assert_eq!(d.tick(f64::NAN), 0.0);
         assert_eq!(d.tick(f64::INFINITY), 0.0);
     }
+
+    #[test]
+    fn with_driver_preserves_existing_driver() {
+        let mut base = animato_driver::AnimationDriver::new();
+        let id = base.add(Tween::new(0.0_f32, 1.0).duration(1.0).build());
+
+        let d = RafDriver::with_driver(base);
+
+        assert_eq!(d.active_count(), 1);
+        assert!(d.is_active(id));
+    }
+
+    #[test]
+    fn reset_timestamp_discards_resume_spike() {
+        let mut d = RafDriver::new();
+
+        d.tick(1000.0);
+        d.reset_timestamp();
+
+        assert_eq!(d.tick(5000.0), 0.0);
+    }
+
+    #[test]
+    fn non_finite_time_scale_and_max_dt_fall_back_to_defaults() {
+        let mut d = RafDriver::new();
+
+        d.set_time_scale(f32::NAN);
+        d.set_max_dt(f32::INFINITY);
+
+        assert_eq!(d.time_scale(), 1.0);
+        assert_eq!(d.max_dt(), RafDriver::DEFAULT_MAX_DT);
+    }
+
+    #[test]
+    fn negative_time_scale_and_max_dt_clamp_to_zero() {
+        let mut d = RafDriver::new();
+
+        d.set_time_scale(-1.0);
+        d.set_max_dt(-1.0);
+
+        assert_eq!(d.time_scale(), 0.0);
+        assert_eq!(d.max_dt(), 0.0);
+    }
+
+    #[test]
+    fn driver_accessors_and_cancel_helpers_work() {
+        let mut d = RafDriver::new();
+        let id = d.add(Tween::new(0.0_f32, 1.0).duration(1.0).build());
+
+        assert_eq!(d.driver().active_count(), 1);
+        assert_eq!(d.driver_mut().active_count(), 1);
+        d.cancel(id);
+        assert_eq!(d.active_count(), 0);
+
+        d.add(Tween::new(0.0_f32, 1.0).duration(1.0).build());
+        d.cancel_all();
+        assert_eq!(d.active_count(), 0);
+    }
 }

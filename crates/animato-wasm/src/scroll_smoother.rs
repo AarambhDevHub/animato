@@ -79,3 +79,68 @@ impl ScrollSmoother {
         (self.target - self.current).abs() <= self.epsilon && self.velocity.abs() <= self.epsilon
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn default_starts_settled_at_zero() {
+        let smoother = ScrollSmoother::default();
+
+        assert_eq!(smoother.current(), 0.0);
+        assert_eq!(smoother.target(), 0.0);
+        assert!(smoother.is_settled());
+    }
+
+    #[test]
+    fn snap_to_sets_current_target_and_stops_motion() {
+        let mut smoother = ScrollSmoother::new();
+
+        smoother.scroll_to(100.0);
+        smoother.update(1.0 / 60.0);
+        smoother.snap_to(42.0);
+
+        assert_eq!(smoother.current(), 42.0);
+        assert_eq!(smoother.target(), 42.0);
+        assert!(!smoother.update(0.0));
+        assert!(smoother.is_settled());
+    }
+
+    #[test]
+    fn scroll_to_clamps_negative_targets() {
+        let mut smoother = ScrollSmoother::new();
+
+        smoother.scroll_to(-20.0);
+
+        assert_eq!(smoother.target(), 0.0);
+    }
+
+    #[test]
+    fn wheel_delta_accumulates_into_target() {
+        let mut smoother = ScrollSmoother::new();
+
+        smoother.on_wheel(25.0);
+        smoother.on_wheel(15.0);
+
+        assert_eq!(smoother.target(), 40.0);
+    }
+
+    #[test]
+    fn update_moves_toward_target_and_settles() {
+        let mut smoother = ScrollSmoother::new();
+
+        smoother.scroll_to(120.0);
+        assert!(smoother.update(1.0 / 60.0));
+        assert!(smoother.current() > 0.0);
+
+        for _ in 0..600 {
+            if !smoother.update(1.0 / 60.0) {
+                break;
+            }
+        }
+
+        assert!((smoother.current() - 120.0).abs() <= 0.01);
+        assert!(smoother.is_settled());
+    }
+}

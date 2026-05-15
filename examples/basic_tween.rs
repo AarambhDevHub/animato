@@ -18,7 +18,7 @@ fn render_bar(value: f32, width: usize) {
 }
 
 fn main() {
-    println!("Animato v0.9.0 - basic_tween example");
+    println!("Animato v1.0.0 - basic_tween example");
     println!("  Animating 0 → 100 over 2.0s with EaseOutCubic\n");
 
     // ── Build a tween ────────────────────────────────────────────────────────

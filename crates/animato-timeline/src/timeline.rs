@@ -918,4 +918,127 @@ mod tests {
 
         assert!(matches!(wait.as_mut().poll(&mut cx), Poll::Ready(())));
     }
+
+    #[test]
+    fn empty_timeline_completes_on_play_and_reports_progress() {
+        let mut timeline = Timeline::default();
+
+        assert_eq!(timeline.state(), TimelineState::Idle);
+        assert_eq!(timeline.progress(), 1.0);
+        timeline.play();
+
+        assert_eq!(timeline.state(), TimelineState::Completed);
+        assert!(timeline.is_complete());
+        assert!(!timeline.update(1.0));
+    }
+
+    #[test]
+    fn completed_timeline_restarts_when_played_again() {
+        let mut timeline = Timeline::new().add("a", tween(1.0, 1.0), At::Start);
+
+        timeline.play();
+        assert!(!timeline.update(1.0));
+        timeline.play();
+
+        assert_eq!(timeline.state(), TimelineState::Playing);
+        assert_eq!(timeline.elapsed(), 0.0);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 0.0);
+    }
+
+    #[test]
+    fn absolute_and_missing_label_positions_are_resolved() {
+        let timeline = Timeline::new()
+            .add("first", tween(1.0, 0.5), At::Absolute(-1.0))
+            .add("second", tween(1.0, 0.5), At::Label("missing"));
+
+        assert_eq!(timeline.entry_count(), 2);
+        assert_eq!(timeline.duration(), 1.0);
+    }
+
+    #[test]
+    fn get_mut_can_edit_child_animation() {
+        let mut timeline = Timeline::new().add("a", tween(100.0, 1.0), At::Start);
+
+        timeline.get_mut::<Tween<f32>>("a").unwrap().seek(0.75);
+
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 75.0);
+        assert!(timeline.get::<Tween<f32>>("missing").is_none());
+    }
+
+    #[test]
+    fn seek_clamps_and_uncompletes_when_returning_from_end() {
+        let mut timeline = Timeline::new().add("a", tween(100.0, 1.0), At::Start);
+
+        timeline.seek(2.0);
+        assert!(timeline.is_complete());
+        timeline.seek_abs(0.25);
+
+        assert_eq!(timeline.state(), TimelineState::Playing);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 25.0);
+        timeline.seek_abs(-5.0);
+        assert_eq!(timeline.elapsed(), 0.0);
+    }
+
+    #[test]
+    fn forever_loop_progress_uses_local_time() {
+        let mut timeline = Timeline::new()
+            .add("a", tween(100.0, 1.0), At::Start)
+            .looping(Loop::Forever);
+
+        timeline.play();
+        timeline.update(2.25);
+
+        assert!((timeline.progress() - 0.25).abs() < 0.001);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 25.0);
+        assert!(!timeline.is_complete());
+    }
+
+    #[test]
+    fn zero_duration_entry_completes_and_fires_once() {
+        let mut timeline = Timeline::new().add("instant", tween(1.0, 0.0), At::Start);
+
+        timeline.play();
+
+        assert!(!timeline.update(0.0));
+        assert_eq!(timeline.get::<Tween<f32>>("instant").unwrap().value(), 1.0);
+    }
+
+    #[test]
+    fn negative_update_delta_does_not_advance() {
+        let mut timeline = Timeline::new().add("a", tween(100.0, 1.0), At::Start);
+
+        timeline.play();
+        assert!(timeline.update(-1.0));
+
+        assert_eq!(timeline.elapsed(), 0.0);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 0.0);
+    }
+
+    #[test]
+    fn playable_trait_for_timeline_exposes_downcast_hooks() {
+        let mut timeline = Timeline::new().add("a", tween(100.0, 1.0), At::Start);
+
+        assert_eq!(Playable::duration(&timeline), 1.0);
+        Playable::seek_to(&mut timeline, 0.5);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 50.0);
+        assert!(Playable::as_any(&timeline).is::<Timeline>());
+        assert!(Playable::as_any_mut(&mut timeline).is::<Timeline>());
+        Playable::reset(&mut timeline);
+        assert_eq!(timeline.state(), TimelineState::Idle);
+    }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn debug_formats_entries_and_callbacks() {
+        let timeline = Timeline::new()
+            .add("a", tween(1.0, 1.0), At::Start)
+            .on_entry_complete("a", || {})
+            .on_complete(|| {});
+
+        let debug = format!("{timeline:?}");
+
+        assert!(debug.contains("Timeline"));
+        assert!(debug.contains("entry_complete"));
+        assert!(debug.contains("has_complete"));
+    }
 }

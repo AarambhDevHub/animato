@@ -8,7 +8,7 @@
 use animato::{Easing, GpuAnimationBatch, Tween};
 
 fn main() {
-    println!("Animato v0.9.0 - gpu_particles example");
+    println!("Animato v1.0.0 - gpu_particles example");
     println!("  Evaluating 10,000 particle tween values\n");
 
     let mut batch = GpuAnimationBatch::new_auto();
