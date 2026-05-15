@@ -200,8 +200,8 @@ jobs:
 
       - name: Prepare Pages artifact
         run: |
-          mkdir -p site/www site/pkg
-          cp examples/wasm_counter/www/index.html site/www/index.html
+          mkdir -p site/pkg
+          cp examples/wasm_counter/www/index.html site/index.html
           cp -R examples/wasm_counter/pkg/. site/pkg/
 
       - name: Configure Pages
