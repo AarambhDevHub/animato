@@ -28,7 +28,9 @@
    - 4.12 [animato-leptos](#412-animato-leptos)
    - 4.13 [animato-dioxus](#413-animato-dioxus)
    - 4.14 [animato-yew](#414-animato-yew)
-   - 4.15 [animato (facade)](#415-animato-facade)
+   - 4.15 [animato-js](#415-animato-js)
+   - 4.16 [animato-devtools](#416-animato-devtools)
+   - 4.17 [animato (facade)](#417-animato-facade)
 5. [Data Flow & Runtime Loop](#5-data-flow--runtime-loop)
 6. [Type System Design](#6-type-system-design)
 7. [Feature Flag Strategy](#7-feature-flag-strategy)
@@ -235,6 +237,31 @@ animato/
 │   │       ├── agent.rs               ← AnimationAgent for message-based coordination
 │   │       └── css.rs                 ← AnimatedStyle, CSS property helpers
 │   │
+│   ├── animato-js/                       ← WASM-to-NPM bindings for JS frameworks (v1.4.0)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── tween.rs               ← JsTween — wasm_bindgen wrapper
+│   │       ├── spring.rs              ← JsSpring — wasm_bindgen wrapper
+│   │       ├── timeline.rs            ← JsTimeline — wasm_bindgen wrapper
+│   │       ├── keyframe.rs            ← JsKeyframeTrack — wasm_bindgen wrapper
+│   │       ├── driver.rs              ← JsRafDriver — rAF-based animation loop
+│   │       ├── easing.rs              ← easing name parser (string → Easing enum)
+│   │       └── path.rs                ← JsMotionPath — wasm_bindgen wrapper
+│   │
+│   ├── animato-devtools/                     ← animation inspector & DevTools (v1.6.0)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── inspector.rs             ← TimelineInspector — live animation timeline view
+│   │       ├── easing_editor.rs         ← EasingCurveEditor — interactive curve preview/tuning
+│   │       ├── spring_viz.rs            ← SpringVisualizer — position/velocity graph with sliders
+│   │       ├── recorder.rs             ← AnimationRecorder — capture/replay/export to JSON
+│   │       ├── perf_monitor.rs          ← PerformanceMonitor — FPS, animation count, frame budget
+│   │       ├── web_panel.rs             ← Web overlay panel (WASM) for Leptos/Dioxus/Yew/JS
+│   │       ├── egui_panel.rs            ← egui panel for Bevy/desktop apps
+│   │       └── tui_panel.rs             ← TUI panel via ratatui for terminal apps
+│   │
 │   └── animato/                          ← facade crate — the one users add to Cargo.toml
 │       ├── Cargo.toml
 │       └── src/
@@ -289,6 +316,8 @@ members = [
     "crates/animato-leptos",
     "crates/animato-dioxus",
     "crates/animato-yew",
+    "crates/animato-js",
+    "crates/animato-devtools",
     "crates/animato",
 ]
 
@@ -316,6 +345,8 @@ animato-wasm     = { path = "crates/animato-wasm",     version = "1.0" }
 animato-leptos   = { path = "crates/animato-leptos",   version = "1.1" }
 animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.2" }
 animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
+animato-js       = { path = "crates/animato-js",       version = "1.4" }
+animato-devtools = { path = "crates/animato-devtools", version = "1.6" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -1750,7 +1781,375 @@ gloo             = { version = "0.11" }
 
 ---
 
-### 4.15 `animato` (facade)
+### 4.15 `animato-js`
+
+**Responsibility:** WASM-compiled NPM package exposing Animato's animation engine to JavaScript frameworks (React, Svelte, Vue, Angular, vanilla JS). Provides `#[wasm_bindgen]` wrappers around core types, a string-based easing parser for JS ergonomics, and a ready-to-use rAF driver. Published to NPM as `@animato/core` via `wasm-pack`.
+
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-wasm`, `wasm-bindgen`, `js-sys`, `web-sys`
+
+**Version:** Starts at `1.4.0`.
+
+**Build command:** `wasm-pack build crates/animato-js --target web --scope animato`
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `tween.rs` | `JsTween` — `#[wasm_bindgen]` wrapper around `Tween<f32>` and `Tween<[f32; N]>` |
+| `spring.rs` | `JsSpring` — wrapper around `Spring` and `SpringN<T>` |
+| `timeline.rs` | `JsTimeline` — wrapper around `Timeline` with string-label API |
+| `keyframe.rs` | `JsKeyframeTrack` — wrapper around `KeyframeTrack<f32>` |
+| `driver.rs` | `JsRafDriver` — wrapper around `RafDriver` for JS rAF callbacks |
+| `easing.rs` | `parse_easing(name: &str) -> Easing` — string-to-enum parser for JS ergonomics |
+| `path.rs` | `JsMotionPath` — wrapper around `MotionPathTween` |
+
+#### `src/tween.rs`
+
+```rust
+#[wasm_bindgen]
+pub struct JsTween {
+    inner: Tween<f32>,
+}
+
+#[wasm_bindgen]
+impl JsTween {
+    #[wasm_bindgen(constructor)]
+    pub fn new(from: f32, to: f32, duration: f32) -> Self;
+
+    /// Set easing by name: "linear", "easeOutCubic", "easeInOutBack", etc.
+    pub fn set_easing(&mut self, name: &str);
+
+    /// Set easing by CSS cubic-bezier control points.
+    pub fn set_cubic_bezier(&mut self, x1: f32, y1: f32, x2: f32, y2: f32);
+
+    pub fn update(&mut self, dt: f32) -> bool;
+    pub fn value(&self) -> f32;
+    pub fn progress(&self) -> f32;
+    pub fn eased_progress(&self) -> f32;
+    pub fn is_complete(&self) -> bool;
+    pub fn pause(&mut self);
+    pub fn resume(&mut self);
+    pub fn reset(&mut self);
+    pub fn reverse(&mut self);
+    pub fn seek(&mut self, t: f32);
+    pub fn set_time_scale(&mut self, ts: f32);
+    pub fn set_delay(&mut self, delay: f32);
+    pub fn set_loop_count(&mut self, count: u32);
+    pub fn set_ping_pong(&mut self);
+}
+
+/// Multi-dimensional tween for [x, y] animations.
+#[wasm_bindgen]
+pub struct JsTween2D {
+    inner: Tween<[f32; 2]>,
+}
+
+#[wasm_bindgen]
+impl JsTween2D {
+    #[wasm_bindgen(constructor)]
+    pub fn new(from_x: f32, from_y: f32, to_x: f32, to_y: f32, duration: f32) -> Self;
+    pub fn update(&mut self, dt: f32) -> bool;
+    pub fn x(&self) -> f32;
+    pub fn y(&self) -> f32;
+}
+```
+
+#### `src/spring.rs`
+
+```rust
+#[wasm_bindgen]
+pub struct JsSpring {
+    inner: Spring,
+}
+
+#[wasm_bindgen]
+impl JsSpring {
+    #[wasm_bindgen(constructor)]
+    pub fn new(initial: f32, target: f32) -> Self;
+
+    /// Use a named preset: "gentle", "wobbly", "stiff", "slow", "snappy".
+    pub fn set_preset(&mut self, name: &str);
+
+    pub fn set_config(&mut self, stiffness: f32, damping: f32, mass: f32);
+    pub fn set_target(&mut self, target: f32);
+    pub fn update(&mut self, dt: f32) -> bool;
+    pub fn position(&self) -> f32;
+    pub fn velocity(&self) -> f32;
+    pub fn is_settled(&self) -> bool;
+    pub fn snap_to(&mut self, pos: f32);
+}
+```
+
+#### `src/easing.rs`
+
+```rust
+/// Parses a JavaScript-friendly easing name into the Animato Easing enum.
+/// Supports: "linear", "easeInQuad", "easeOutCubic", "easeInOutBack",
+/// "easeOutBounce", "easeInElastic", "steps(5)",
+/// "cubicBezier(0.4, 0, 0.2, 1)", and all 38 named variants.
+pub fn parse_easing(name: &str) -> Easing;
+
+/// Returns all available easing names as a JS array.
+#[wasm_bindgen]
+pub fn available_easings() -> Vec<JsValue>;
+```
+
+#### JavaScript usage (after `wasm-pack build`):
+
+```js
+// Install: npm install @animato/core
+import init, { JsTween, JsSpring, available_easings } from '@animato/core';
+
+await init(); // initialize WASM module
+
+// Tween
+const tween = new JsTween(0, 300, 1.0);
+tween.set_easing('easeOutCubic');
+
+let last = performance.now();
+function tick(now) {
+  if (tween.update((now - last) / 1000)) {
+    last = now;
+    element.style.transform = `translateX(${tween.value()}px)`;
+    requestAnimationFrame(tick);
+  }
+}
+requestAnimationFrame(tick);
+
+// Spring
+const spring = new JsSpring(0, 100);
+spring.set_preset('wobbly');
+```
+
+#### `Cargo.toml`
+
+```toml
+[package]
+name        = "animato-js"
+version     = "1.4.0"
+description = "WASM bindings for the Animato animation library — use Animato in React, Svelte, Vue, and any JavaScript framework."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default    = ["tween", "spring", "timeline", "driver"]
+tween      = []
+spring     = []
+timeline   = []
+driver     = []
+path       = ["dep:animato-path"]
+color      = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true }
+animato-spring   = { workspace = true }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true }
+animato-path     = { workspace = true, optional = true }
+animato-color    = { workspace = true, optional = true }
+wasm-bindgen     = { workspace = true }
+js-sys           = { workspace = true }
+web-sys          = { workspace = true, features = ["Window", "Performance"] }
+```
+
+---
+
+### 4.16 `animato-devtools`
+
+**Responsibility:** Animation inspector and developer tools for debugging, tuning, and recording animations at runtime. Provides a live timeline inspector, interactive easing curve editor, spring parameter visualizer, performance monitor, and animation recorder/exporter. Ships with three rendering backends: web overlay (WASM), egui panel (desktop/Bevy), and TUI panel (terminal/ratatui).
+
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`
+
+**Version:** Starts at `1.6.0`.
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `inspector.rs` | `TimelineInspector` — live view of all running animations with progress bars, labels, timing |
+| `easing_editor.rs` | `EasingCurveEditor` — interactive easing curve preview, cubic-bezier control point dragging, side-by-side comparison |
+| `spring_viz.rs` | `SpringVisualizer` — real-time position/velocity graph, tunable stiffness/damping/mass sliders, preset switcher |
+| `recorder.rs` | `AnimationRecorder` — capture running animation values per frame, replay, export to JSON/binary |
+| `perf_monitor.rs` | `PerformanceMonitor` — FPS counter, active animation count, frame budget usage, per-animation update cost |
+| `web_panel.rs` | `DevToolsWebPanel` — floating WASM overlay panel injected into any web app |
+| `egui_panel.rs` | `DevToolsEguiPanel` — egui window for Bevy/desktop apps |
+| `tui_panel.rs` | `DevToolsTuiPanel` — ratatui-based panel for terminal apps |
+
+#### `src/inspector.rs`
+
+```rust
+/// Live animation timeline inspector.
+/// Hooks into an AnimationDriver to display all running animations.
+pub struct TimelineInspector {
+    snapshots: Vec<AnimationSnapshot>,
+}
+
+pub struct AnimationSnapshot {
+    pub id: AnimationId,
+    pub label: Option<String>,
+    pub kind: AnimationKind,       // Tween, Spring, Keyframe, Timeline
+    pub progress: f32,
+    pub elapsed: f32,
+    pub duration: Option<f32>,     // None for springs
+    pub state: PlaybackState,      // Playing, Paused, Complete
+    pub easing: Option<Easing>,
+}
+
+impl TimelineInspector {
+    pub fn new() -> Self;
+    pub fn capture(&mut self, driver: &AnimationDriver);
+    pub fn snapshots(&self) -> &[AnimationSnapshot];
+    pub fn active_count(&self) -> usize;
+    pub fn completed_count(&self) -> usize;
+}
+```
+
+#### `src/easing_editor.rs`
+
+```rust
+/// Interactive easing curve editor.
+/// Renders the easing curve, allows control-point dragging for
+/// cubic-bezier, and provides side-by-side comparison of two easings.
+pub struct EasingCurveEditor {
+    pub current: Easing,
+    pub compare: Option<Easing>,
+    pub sample_count: usize,       // curve resolution (default 100)
+}
+
+impl EasingCurveEditor {
+    pub fn new(easing: Easing) -> Self;
+    pub fn set_easing(&mut self, easing: Easing);
+    pub fn set_compare(&mut self, easing: Option<Easing>);
+    pub fn samples(&self) -> Vec<[f32; 2]>;    // (t, value) points for rendering
+    pub fn compare_samples(&self) -> Option<Vec<[f32; 2]>>;
+    /// For cubic-bezier: update control points interactively.
+    pub fn set_control_points(&mut self, x1: f32, y1: f32, x2: f32, y2: f32);
+}
+```
+
+#### `src/spring_viz.rs`
+
+```rust
+/// Real-time spring parameter visualizer.
+/// Simulates a spring with given config and records position/velocity
+/// over time for graph rendering.
+pub struct SpringVisualizer {
+    pub config: SpringConfig,
+    pub history: Vec<SpringFrame>,
+    pub max_frames: usize,
+}
+
+pub struct SpringFrame {
+    pub time: f32,
+    pub position: f32,
+    pub velocity: f32,
+}
+
+impl SpringVisualizer {
+    pub fn new(config: SpringConfig) -> Self;
+    pub fn simulate(&mut self, target: f32, dt: f32, steps: usize);
+    pub fn set_stiffness(&mut self, s: f32);
+    pub fn set_damping(&mut self, d: f32);
+    pub fn set_mass(&mut self, m: f32);
+    pub fn set_preset(&mut self, name: &str);  // "gentle", "wobbly", etc.
+    pub fn settle_time(&self) -> f32;
+    pub fn overshoot_pct(&self) -> f32;
+}
+```
+
+#### `src/recorder.rs`
+
+```rust
+/// Captures animation values per frame for replay and export.
+pub struct AnimationRecorder {
+    tracks: HashMap<String, RecordedTrack>,
+    recording: bool,
+}
+
+pub struct RecordedTrack {
+    pub label: String,
+    pub frames: Vec<RecordedFrame>,
+}
+
+pub struct RecordedFrame {
+    pub time: f32,
+    pub value: f64,          // f64 for precision in export
+    pub progress: f32,
+}
+
+impl AnimationRecorder {
+    pub fn new() -> Self;
+    pub fn start(&mut self);
+    pub fn stop(&mut self);
+    pub fn record(&mut self, label: &str, time: f32, value: f64, progress: f32);
+    pub fn export_json(&self) -> String;
+    pub fn export_binary(&self) -> Vec<u8>;
+    pub fn import_json(json: &str) -> Result<Self, serde_json::Error>;
+    pub fn replay(&self, label: &str, time: f32) -> Option<f64>;
+    pub fn clear(&mut self);
+}
+```
+
+#### `src/perf_monitor.rs`
+
+```rust
+/// Frame-level performance monitor for animation workloads.
+pub struct PerformanceMonitor {
+    frame_times: VecDeque<f32>,
+    window_size: usize,
+}
+
+impl PerformanceMonitor {
+    pub fn new(window_size: usize) -> Self;
+    pub fn record_frame(&mut self, dt: f32);
+    pub fn fps(&self) -> f32;
+    pub fn avg_frame_time_ms(&self) -> f32;
+    pub fn max_frame_time_ms(&self) -> f32;
+    pub fn frame_budget_usage(&self, target_fps: f32) -> f32;  // 0.0..1.0+
+}
+```
+
+#### `Cargo.toml`
+
+```toml
+[package]
+name        = "animato-devtools"
+version     = "1.6.0"
+description = "Animation DevTools for Animato — timeline inspector, easing editor, spring visualizer, recorder, and performance monitor."
+
+[features]
+default    = ["inspector", "easing-editor", "spring-viz", "recorder", "perf-monitor"]
+inspector     = []
+easing-editor = []
+spring-viz    = []
+recorder      = ["dep:serde", "dep:serde_json"]
+perf-monitor  = []
+web-panel     = ["dep:animato-wasm", "dep:wasm-bindgen", "dep:web-sys"]
+egui-panel    = ["dep:egui"]
+tui-panel     = ["dep:ratatui", "dep:crossterm"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true }
+animato-spring   = { workspace = true }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true, optional = true }
+serde            = { workspace = true, optional = true }
+serde_json       = { version = "1", optional = true }
+wasm-bindgen     = { workspace = true, optional = true }
+web-sys          = { workspace = true, optional = true }
+egui             = { version = "0.31", optional = true }
+ratatui          = { version = "0.29", optional = true }
+crossterm        = { version = "0.28", optional = true }
+```
+
+---
+
+### 4.17 `animato` (facade)
 
 **Responsibility:** The one crate users put in their `Cargo.toml`. Feature flags on this crate activate the matching sub-crates and re-export their public APIs.
 
@@ -1772,6 +2171,8 @@ wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
 leptos   = ["dep:animato-leptos"]
 dioxus   = ["dep:animato-dioxus"]
 yew      = ["dep:animato-yew"]
+js       = ["dep:animato-js"]
+devtools = ["dep:animato-devtools"]
 serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde", "animato-color?/serde"]
 tokio    = ["animato-timeline/tokio"]
 no_std   = []
@@ -1983,6 +2384,8 @@ NOT available in no_std (require allocation):
 | `leptos` | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | `animato-leptos`, `leptos` |
 | `dioxus` | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | `animato-dioxus`, `dioxus` |
 | `yew` | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | `animato-yew`, `yew` |
+| `js` | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | `animato-js`, `wasm-bindgen` |
+| `devtools` | Animation inspector, easing editor, spring visualizer, recorder, perf monitor | `animato-devtools` |
 | `serde` | `Serialize`/`Deserialize` on all public types | `serde` |
 | `tokio` | `.wait().await` on timelines | `tokio` |
 
@@ -1996,9 +2399,11 @@ NOT available in no_std (require allocation):
 | Leptos web app | `leptos` |
 | Dioxus cross-platform app | `dioxus` |
 | Yew web app | `yew` |
+| React / Svelte / Vue (via WASM) | `js` (build with `wasm-pack`) |
 | GPU particle system | `gpu` |
+| Debugging animations | `devtools` |
 | Embedded / no_std | `default-features = false` |
-| Everything | `default,path,physics,color,gpu,leptos,dioxus,yew,serde,tokio` |
+| Everything | `default,path,physics,color,gpu,leptos,dioxus,yew,devtools,serde,tokio` |
 
 ---
 
@@ -2311,7 +2716,8 @@ Before `cargo publish` for any crate:
 animato-core → animato-tween → animato-spring → animato-path → animato-physics
           → animato-color → animato-driver → animato-timeline
           → animato-gpu → animato-bevy → animato-wasm
-          → animato-leptos → animato-dioxus → animato-yew → animato
+          → animato-leptos → animato-dioxus → animato-yew → animato-js
+          → animato-devtools → animato
 ```
 
 ---
@@ -2352,5 +2758,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.3.0 — covers architecture through Animato 1.0.0 core + Leptos 1.1.0 + Dioxus 1.2.0 + Yew 1.3.0*  
+*Document version: 1.6.0 — covers architecture through Animato 1.0.0 core + Leptos 1.1.0 + Dioxus 1.2.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.3.0`.  
+This roadmap tracks every planned release from `v0.1.0` through `v1.6.0`.  
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -36,6 +36,9 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | 📋 |
 | `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | 📋 |
 | `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | 📋 |
+| `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | 📋 |
+| `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | 📋 |
+| `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | 📋 |
 
 ---
 
@@ -653,20 +656,231 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 ---
 
-## Post-1.3 Ideas (Future / `v1.x+`)
+## v1.4.0 — JavaScript
 
-These are not committed — they are ideas to revisit after the framework integrations ship.
+**Goal:** Expose Animato’s animation engine to the JavaScript ecosystem via WASM. A JS developer can `npm install @animato/core`, import tween/spring/timeline classes, and use them in React, Svelte, Vue, Angular, or vanilla JS — powered by Animato’s optimized Rust math under the hood.
+
+### Crates shipped
+
+- `animato-js` `v1.4.0` (new)
+
+### NPM packages published
+
+- `@animato/core` — WASM module built via `wasm-pack`
+
+### Deliverables
+
+**`animato-js` — tween bindings**
+- [ ] `JsTween` — `#[wasm_bindgen]` wrapper around `Tween<f32>` with constructor, `update(dt)`, `value()`, `progress()`, `pause()`, `resume()`, `reset()`, `reverse()`, `seek(t)`, `set_time_scale(ts)`, `set_delay(delay)`, `set_loop_count(n)`, `set_ping_pong()`
+- [ ] `JsTween.set_easing(name)` — accepts string names like `"easeOutCubic"`, `"easeInOutBack"`, `"steps(5)"`, `"cubicBezier(0.4, 0, 0.2, 1)"`
+- [ ] `JsTween2D` — wrapper around `Tween<[f32; 2]>` with `x()` and `y()` accessors
+- [ ] `JsTween3D` — wrapper around `Tween<[f32; 3]>` with `x()`, `y()`, `z()` accessors
+
+**`animato-js` — spring bindings**
+- [ ] `JsSpring` — wrapper around `Spring` with `set_target()`, `position()`, `velocity()`, `is_settled()`, `snap_to()`
+- [ ] `JsSpring.set_preset(name)` — accepts `"gentle"`, `"wobbly"`, `"stiff"`, `"slow"`, `"snappy"`
+- [ ] `JsSpring.set_config(stiffness, damping, mass)` — custom spring parameters
+
+**`animato-js` — timeline bindings**
+- [ ] `JsTimeline` — wrapper around `Timeline` with `add(label, tween, at)`, `play()`, `pause()`, `seek(t)`, `reset()`, `duration()`, `progress()`
+- [ ] String-based `At` positioning: `"start"`, `"end"`, `"label:fade"`, `"+0.2"` (offset)
+
+**`animato-js` — keyframe bindings**
+- [ ] `JsKeyframeTrack` — wrapper around `KeyframeTrack<f32>` with `push(time, value)`, `push_eased(time, value, easing)`, `value()`, `is_complete()`
+
+**`animato-js` — driver bindings**
+- [ ] `JsRafDriver` — wrapper around `RafDriver` for managing multiple animations from one rAF loop
+- [ ] `JsRafDriver.add(tween)` / `JsRafDriver.add_spring(spring)` — register animations
+- [ ] `JsRafDriver.tick(timestamp_ms)` — drive from `requestAnimationFrame`
+
+**`animato-js` — easing**
+- [ ] `parse_easing(name: &str) -> Easing` — string-to-enum parser supporting all 38 named variants + CSS cubic-bezier + steps
+- [ ] `available_easings()` — returns all easing names as a JS array for picker UIs
+
+**`animato-js` — path bindings (optional)**
+- [ ] `JsMotionPath` — wrapper around `MotionPathTween` with `x()`, `y()`, `rotation_deg()`
+
+**`animato` facade**
+- [ ] `js` feature flag
+
+**Build & Publish**
+- [ ] `wasm-pack build crates/animato-js --target web --scope animato` produces `@animato/core`
+- [ ] NPM publish workflow in `.github/workflows/publish-npm.yml`
+- [ ] `package.json` with correct entry points, TypeScript `.d.ts` type definitions
+- [ ] WASM module size target: < 100 KB gzipped
+
+**Documentation & Examples**
+- [ ] `docs/javascript.md` — JavaScript integration guide
+- [ ] `examples/js_react_tween/` — React app using `@animato/core` hooks
+- [ ] `examples/js_svelte_spring/` — Svelte app with spring-animated elements
+- [ ] `examples/js_vanilla_timeline/` — vanilla JS timeline animation
+- [ ] README in `crates/animato-js/` with NPM install + usage instructions
+
+**Testing**
+- [ ] Rust unit tests for all `#[wasm_bindgen]` wrappers
+- [ ] `wasm-pack test --headless --chrome` for WASM integration tests
+- [ ] Easing parser tests: all 38 names, CSS cubic-bezier, steps, invalid input handling
+- [ ] WASM compile check: `cargo check -p animato-js --target wasm32-unknown-unknown`
+---
+
+## v1.5.0 — Advanced Engine
+
+**Goal:** Level up the core animation engine with advanced features that benefit ALL integration crates. Spring from velocity for fling-to-snap gestures, waveform generators for procedural effects, quaternion slerp for 3D rotation, animation groups for complex orchestration, and advanced stagger patterns beyond linear delay.
+
+### Crates enhanced (no new crate)
+
+All enhancements go into existing crates as backward-compatible additions.
+
+### Deliverables
+
+**`animato-spring` — velocity & damping modes**
+- [ ] `Spring::from_velocity(initial, velocity, target, config)` — start a spring with initial velocity (fling-to-snap)
+- [ ] `SpringConfig::critically_damped(stiffness)` — auto-calculate damping for zero overshoot
+- [ ] `SpringConfig::overdamped(stiffness, ratio)` — overdamped preset with configurable ratio
+- [ ] `SpringConfig::underdamped(stiffness, ratio)` — underdamped preset with configurable bounce
+- [ ] `Spring::energy(&self) -> f32` — current kinetic + potential energy for settle detection
+- [ ] `Spring::overshoot_count(&self) -> u32` — number of times the spring crossed the target
+
+**`animato-tween` — waveform generators**
+- [ ] `Waveform::Sine { frequency, amplitude, phase }` — continuous sine wave as KeyframeTrack
+- [ ] `Waveform::Sawtooth { frequency, amplitude }` — sawtooth wave
+- [ ] `Waveform::Square { frequency, amplitude, duty_cycle }` — square wave with duty cycle
+- [ ] `Waveform::Triangle { frequency, amplitude }` — triangle wave
+- [ ] `Waveform::Noise { seed, smoothness }` — smoothed random noise for organic motion
+- [ ] `waveform.sample(time) -> f32` — evaluate waveform at any time
+- [ ] `waveform.to_keyframe_track(duration, sample_rate) -> KeyframeTrack<f32>` — convert to keyframes
+
+**`animato-tween` — advanced stagger patterns**
+- [ ] `StaggerPattern::Grid { cols, rows, origin }` — 2D grid stagger from center/corner/edge
+- [ ] `StaggerPattern::Random { seed, min_delay, max_delay }` — randomized stagger with bounds
+- [ ] `StaggerPattern::CenterOut { count }` — stagger from center element outward
+- [ ] `StaggerPattern::EdgesIn { count }` — stagger from edges toward center
+- [ ] `StaggerPattern::Custom(Box<dyn Fn(usize, usize) -> f32>)` — user-defined delay function
+
+**`animato-core` — interpolation extensions**
+- [ ] `Quaternion` newtype with `Interpolate` impl using slerp (spherical linear interpolation)
+- [ ] `Mat4` newtype with `Interpolate` impl using decompose-lerp-recompose
+- [ ] `Angle` newtype with shortest-path interpolation (handles 359° → 1° correctly)
+- [ ] `Color` newtype aliases for common color representations with perceptual interpolation
+
+**`animato-timeline` — animation groups**
+- [ ] `AnimationGroup::parallel(animations)` — all animations play simultaneously, group completes when all finish
+- [ ] `AnimationGroup::sequence(animations)` — animations play one after another
+- [ ] `AnimationGroup::stagger(animations, pattern)` — staggered start using StaggerPattern
+- [ ] Nested timelines: `Timeline::add_timeline(label, sub_timeline, at)` — timeline inside a timeline
+- [ ] `AnimationGroup::on_complete(callback)` — fires when all group members finish
+- [ ] Group-level `pause()`, `resume()`, `seek()`, `reverse()`, `set_time_scale()`
+
+**`animato-driver` — animation recording**
+- [ ] `AnimationRecorder` — hooks into `AnimationDriver` to capture values per frame
+- [ ] `recorder.start()` / `recorder.stop()` / `recorder.record(label, time, value)`
+- [ ] `recorder.export_json()` → `String` — JSON export for DevTools consumption
+- [ ] `recorder.export_binary()` → `Vec<u8>` — compact binary format
+- [ ] `recorder.import_json(json)` — load recorded sequence
+- [ ] `recorder.replay(label, time)` → `Option<f64>` — replay a recorded value at any time
+
+**Documentation & Examples**
+- [ ] `docs/advanced-engine.md` — advanced engine features guide
+- [ ] `examples/spring_fling.rs` — fling-to-snap with initial velocity
+- [ ] `examples/waveform_demo.rs` — procedural sine/sawtooth/square wave animations
+- [ ] `examples/quaternion_rotation.rs` — smooth 3D rotation interpolation
+- [ ] `examples/stagger_grid.rs` — 2D grid stagger pattern demo
+- [ ] `examples/animation_groups.rs` — parallel + sequence + nested timeline
+
+**Testing**
+- [ ] Spring from velocity: reaches target, energy dissipates, overshoot count correct
+- [ ] Waveform generators: frequency/amplitude accuracy, phase offset, sample consistency
+- [ ] Quaternion slerp: endpoint identity, shortest path, midpoint accuracy
+- [ ] Animation groups: parallel completes when last finishes, sequence ordering, nested seek
+- [ ] Stagger patterns: grid delay calculation, random bounds, center-out symmetry
+- [ ] Recorder: round-trip JSON export/import, replay accuracy
+
+---
+
+## v1.6.0 — DevTools
+
+**Goal:** Ship `animato-devtools` — a runtime animation inspector that works across all platforms. Developers can visualize running animations, tune easing curves and spring parameters interactively, record/replay animation sequences, and monitor performance. Three rendering backends: web overlay, egui panel, and TUI panel.
+
+### Crates shipped
+
+- `animato-devtools` `v1.6.0` (new)
+
+### Deliverables
+
+**`animato-devtools` — timeline inspector**
+- [ ] `TimelineInspector` — hooks into `AnimationDriver` to capture all running animation state
+- [ ] `AnimationSnapshot` struct: id, label, kind (Tween/Spring/Keyframe/Timeline), progress, elapsed, duration, state, easing
+- [ ] `capture(driver)` — snapshot all running animations in one call
+- [ ] `active_count()` / `completed_count()` — quick status queries
+- [ ] Visual progress bars with color-coded animation types
+
+**`animato-devtools` — easing curve editor**
+- [ ] `EasingCurveEditor` — renders easing curve as (t, value) sample points
+- [ ] All 38 named easings selectable from a dropdown
+- [ ] Custom cubic-bezier control point dragging with live preview
+- [ ] Side-by-side comparison of two easings
+- [ ] Copy-to-clipboard of easing code: `Easing::CubicBezier(x1, y1, x2, y2)`
+
+**`animato-devtools` — spring visualizer**
+- [ ] `SpringVisualizer` — simulates a spring and records position/velocity history
+- [ ] Real-time graph rendering (position over time, velocity over time)
+- [ ] Interactive sliders for stiffness, damping, mass
+- [ ] Preset switcher: gentle, wobbly, stiff, slow, snappy
+- [ ] Displays: settle time, overshoot percentage, oscillation count
+
+**`animato-devtools` — animation recorder**
+- [ ] Integrates with `AnimationRecorder` from v1.5.0 `animato-driver`
+- [ ] UI controls: start/stop recording, clear, export JSON, export binary
+- [ ] Visual playback scrubber for recorded sequences
+- [ ] Frame-by-frame stepping for debugging timing issues
+
+**`animato-devtools` — performance monitor**
+- [ ] `PerformanceMonitor` — rolling window FPS, avg/max frame time, budget usage
+- [ ] Per-animation update cost breakdown
+- [ ] Alert when frame budget exceeds 100% (dropped frames)
+- [ ] History graph of FPS over time
+
+**`animato-devtools` — rendering backends**
+- [ ] `DevToolsWebPanel` — floating overlay panel for web apps (WASM), toggle with keyboard shortcut
+- [ ] `DevToolsEguiPanel` — egui window that integrates into Bevy/desktop apps
+- [ ] `DevToolsTuiPanel` — ratatui-based panel for terminal apps with sparkline graphs
+- [ ] All three backends share the same `DevToolsState` data model
+
+**`animato` facade**
+- [ ] `devtools` feature flag
+- [ ] Re-exports all `animato-devtools` public APIs
+
+**Documentation & Examples**
+- [ ] `docs/devtools.md` — DevTools integration guide (web + desktop + TUI)
+- [ ] `examples/devtools_web_overlay/` — Leptos app with DevTools panel open
+- [ ] `examples/devtools_bevy_egui/` — Bevy app with egui DevTools panel
+- [ ] `examples/devtools_tui/` — terminal app with ratatui DevTools panel
+
+**Testing**
+- [ ] TimelineInspector: captures correct snapshot count, progress values, state transitions
+- [ ] EasingCurveEditor: sample endpoints (0,0) and (1,1), cubic-bezier control point updates
+- [ ] SpringVisualizer: simulate produces correct frame count, settle time calculation
+- [ ] AnimationRecorder integration: record → export → import → replay round-trip
+- [ ] PerformanceMonitor: FPS calculation accuracy, budget usage bounds
+- [ ] WASM compile check: `cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel`
+
+---
+
+## Post-1.6 Ideas (Future / `v2.x+`)
+
+These are not committed — they are ideas to revisit after DevTools ships.
 
 | Idea | Notes |
 |------|-------|
-| `animato-egui` | `EguiAnimatoPlugin` for egui animation helpers |
-| `animato-tauri` | Tauri IPC bridge for driving Animato from the JS frontend |
-| Declarative animation DSL | A `animato!{ }` proc macro for GSAP-style chaining |
-| Spring from velocity | Start a spring with an initial velocity, not just a target |
-| Animation recording | Record and replay animation sequences as data |
+| `animato-egui` | Full egui animation integration (beyond DevTools panel) |
+| `animato-iced` | Iced Elm-architecture animation with `Message::AnimationTick` |
+| `animato-slint` | Slint property binding animations for embedded/automotive |
+| `animato-tauri` | Tauri IPC bridge for driving Animato from the Rust backend |
+| `animato-macro` | `animato!{ }` proc macro for declarative GSAP-style chaining |
+| `@animato/react` | Dedicated React hooks NPM package wrapping `@animato/core` |
+| `@animato/svelte` | Dedicated Svelte stores/actions NPM package wrapping `@animato/core` |
+| `@animato/vue` | Dedicated Vue composables NPM package wrapping `@animato/core` |
 | `f64` time precision | Optional `dt: f64` for high-precision simulation targets |
-| Waveform generators | Sine, sawtooth, square wave as `KeyframeTrack` presets |
-| Interpolation extensions | Quaternion slerp, matrix lerp for 3D work |
 
 ---
 
@@ -678,6 +892,6 @@ The best way to contribute right now is to use the v1.0 stable API and open focu
 
 ---
 
-*Roadmap version: 1.3.0 — last updated May 2026*  
-*v1.0.0 core shipped — framework integrations in progress*  
+*Roadmap version: 1.6.0 — last updated May 2026*  
+*v1.0.0 core shipped — framework integrations and engine expansion in progress*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
