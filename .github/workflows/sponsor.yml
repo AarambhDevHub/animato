@@ -1,0 +1,104 @@
+name: Sponsor
+
+on:
+  # Thank sponsors when they start sponsoring via GitHub Sponsors
+  sponsorship:
+    types: [created]
+
+  # Weekly reminder every Monday at 9:00 AM IST (3:30 AM UTC)
+  schedule:
+    - cron: "30 3 * * 1"
+
+  # Allow manual trigger from Actions tab
+  workflow_dispatch:
+
+jobs:
+  # ── Thank a new GitHub Sponsor ────────────────────────────────────────────
+  thank-sponsor:
+    name: Thank new sponsor
+    runs-on: ubuntu-latest
+    if: github.event_name == 'sponsorship'
+    permissions:
+      issues: write
+
+    steps:
+      - name: Post thank-you issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const sponsor = context.payload.sponsorship.sponsor.login;
+            const amount  = context.payload.sponsorship.tier.monthly_price_in_dollars;
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: `💖 Thank you, @${sponsor}!`,
+              body: [
+                `## Thank you for sponsoring Animato! 🎉`,
+                ``,
+                `@${sponsor} just became a sponsor at **$${amount}/month**.`,
+                ``,
+                `Your support directly funds continued development of Animato —`,
+                `new features, bug fixes, documentation, and examples.`,
+                ``,
+                `Every contribution, big or small, keeps this project alive and growing.`,
+                ``,
+                `Thank you from the bottom of my heart. 🦀`,
+                ``,
+                `— Aarambh Dev Hub`,
+              ].join('\n'),
+              labels: ['sponsor 💖'],
+            });
+
+  # ── Weekly funding reminder in GitHub Discussions ─────────────────────────
+  funding-reminder:
+    name: Weekly funding reminder
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update SPONSORS.md
+        run: |
+          cat > SPONSORS.md << 'EOF'
+          # Supporting Animato
+
+          Animato is free and open source, maintained in spare time alongside a full
+          development schedule. If this library saves you time or powers something
+          you ship, consider supporting its development.
+
+          ## Ways to Support
+
+          | Platform | Link |
+          |----------|------|
+          | 💖 GitHub Sponsors | [github.com/sponsors/aarambh-darshan](https://github.com/sponsors/aarambh-darshan) |
+          | ☕ Buy Me a Coffee | [buymeacoffee.com/aarambhdevhub](https://buymeacoffee.com/aarambhdevhub) |
+          | 💳 Razorpay (UPI / Card) | [razorpay.me/@aarambhdevhub](https://razorpay.me/@aarambhdevhub) |
+
+          ## What Your Support Funds
+
+          - Active development of Animato through v1.x patch releases
+          - New examples and documentation
+          - Faster responses to issues and pull requests
+          - Future projects in the Aarambh Dev Hub ecosystem
+
+          ## Current Supporters
+
+          Thank you to everyone who has starred the repo, shared the project,
+          left feedback, and contributed code. You keep this going.
+
+          ---
+
+          *SPONSORS.md is updated automatically every week.*
+          EOF
+
+      - name: Commit updated SPONSORS.md
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add SPONSORS.md
+          git diff --staged --quiet || git commit -m "chore: update SPONSORS.md [skip ci]"
+          git push

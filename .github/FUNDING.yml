@@ -1,0 +1,10 @@
+# Animato — Funding options
+# This file adds the "Sponsor" button to the GitHub repository.
+# Docs: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+github:
+  - aarambh-darshan
+
+custom:
+  - "https://buymeacoffee.com/aarambhdevhub"
+  - "https://razorpay.me/@aarambhdevhub"
