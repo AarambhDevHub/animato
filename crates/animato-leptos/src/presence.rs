@@ -154,8 +154,14 @@ pub fn AnimatePresence(
 ) -> impl IntoView {
     let enter = enter.unwrap_or_else(PresenceAnimation::fade);
     let exit = exit.unwrap_or_else(|| enter.reversed());
-    let enter_style = enter.to.to_css();
-    let exit_style = exit.to.to_css();
+    let transition = format!(
+        "transition:opacity {:.3}s ease, transform {:.3}s ease, filter {:.3}s ease; will-change:opacity,transform,filter;",
+        enter.duration.max(exit.duration).max(0.0),
+        enter.duration.max(exit.duration).max(0.0),
+        enter.duration.max(exit.duration).max(0.0)
+    );
+    let enter_style = format!("{}{}", enter.to.to_css(), transition);
+    let exit_style = format!("{}{}", exit.to.to_css(), transition);
     let exit_display = if wait_exit { "" } else { "display:none;" };
     let child = children();
 

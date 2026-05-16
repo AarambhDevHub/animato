@@ -1,10 +1,7 @@
 //! Pointer, drag, pinch, and swipe helpers.
 
 use animato_core::Update;
-use animato_physics::{
-    DragAxis, DragConstraints, DragState, Gesture, GestureConfig, InertiaConfig, InertiaN,
-    PointerData, SwipeDirection,
-};
+use animato_physics::{DragAxis, DragConstraints, DragState, InertiaConfig, InertiaN, PointerData};
 use leptos::html;
 use leptos::prelude::*;
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
@@ -15,6 +12,8 @@ use std::rc::Rc;
 use std::sync::{Arc, Mutex};
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
 use wasm_bindgen::JsCast;
+
+pub use animato_physics::{Gesture, GestureConfig, SwipeDirection};
 
 /// Draggable element configuration.
 #[derive(Clone, Debug, PartialEq)]
