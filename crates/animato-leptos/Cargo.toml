@@ -1,0 +1,59 @@
+[package]
+name        = "animato-leptos"
+description = "Leptos integration for the Animato animation library: signal-backed hooks, scroll, presence, FLIP lists, gestures, CSS, and SSR guards."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "leptos", "signals", "wasm", "web"]
+categories  = ["wasm", "web-programming", "gui"]
+
+[features]
+default    = ["scroll", "presence", "transition", "list", "gesture", "css"]
+csr        = ["leptos/csr"]
+hydrate    = ["leptos/hydrate"]
+ssr        = ["leptos/ssr", "leptos_router?/ssr"]
+scroll     = []
+presence   = ["css"]
+transition = ["presence", "dep:leptos_router"]
+list       = ["presence"]
+gesture    = ["dep:animato-physics"]
+css        = []
+path       = ["dep:animato-path"]
+color      = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true, features = ["std"] }
+animato-spring   = { workspace = true, features = ["std"] }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true }
+animato-path     = { workspace = true, features = ["std"], optional = true }
+animato-physics  = { workspace = true, features = ["std"], optional = true }
+animato-color    = { workspace = true, optional = true }
+leptos           = { workspace = true }
+leptos_router    = { workspace = true, optional = true }
+wasm-bindgen     = { workspace = true }
+web-sys          = { workspace = true, features = [
+    "Document",
+    "DomRect",
+    "Element",
+    "Event",
+    "EventTarget",
+    "HtmlElement",
+    "MouseEvent",
+    "Node",
+    "Performance",
+    "PointerEvent",
+    "Touch",
+    "TouchEvent",
+    "TouchList",
+    "Window",
+] }
+
+[dev-dependencies]
+approx = { workspace = true }

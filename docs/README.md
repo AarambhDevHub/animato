@@ -1,6 +1,6 @@
 # Animato Documentation
 
-This directory contains the stable v1.0.0 documentation for Animato. Use it with
+This directory contains the stable v1.1.0 documentation for Animato. Use it with
 the generated API docs on [docs.rs](https://docs.rs/animato).
 
 ## Start Here
@@ -27,6 +27,7 @@ the generated API docs on [docs.rs](https://docs.rs/animato).
 | GPU batching | [gpu.md](./gpu.md) |
 | Bevy | [bevy.md](./bevy.md) |
 | WASM and DOM | [wasm.md](./wasm.md) |
+| Leptos | [leptos.md](./leptos.md) |
 
 ## Operations
 
@@ -46,7 +47,7 @@ the generated API docs on [docs.rs](https://docs.rs/animato).
 
 ```toml
 [dependencies]
-animato = "1.0"
+animato = "1.1"
 ```
 
 ## First Animation
@@ -66,5 +67,5 @@ assert!(opacity > 0.0 && opacity < 1.0);
 
 ## Stable Contract
 
-Animato v1.0.0 freezes the current public API. Public items are documented and
+Animato v1.1.0 keeps the v1 public API stable. Public items are documented and
 covered by tests, and breaking changes require a future major release.

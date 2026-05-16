@@ -5,7 +5,7 @@
 Enable the matching feature:
 
 ```toml
-animato = { version = "1.0", features = ["path"] }
+animato = { version = "1.1", features = ["path"] }
 ```
 
 Examples:
@@ -21,7 +21,7 @@ Examples:
 Use focused crates and disable default features:
 
 ```toml
-animato-tween = { version = "1.0", default-features = false }
+animato-tween = { version = "1.1", default-features = false }
 ```
 
 Do not use `AnimationDriver`, `Timeline`, Bevy, WASM DOM helpers, or wall-clock

@@ -7,12 +7,12 @@ embedded and constrained targets.
 
 ```toml
 [dependencies]
-animato-core = { version = "1.0", default-features = false }
-animato-tween = { version = "1.0", default-features = false }
-animato-spring = { version = "1.0", default-features = false }
-animato-path = { version = "1.0", default-features = false }
-animato-physics = { version = "1.0", default-features = false }
-animato-color = { version = "1.0", default-features = false }
+animato-core = { version = "1.1", default-features = false }
+animato-tween = { version = "1.1", default-features = false }
+animato-spring = { version = "1.1", default-features = false }
+animato-path = { version = "1.1", default-features = false }
+animato-physics = { version = "1.1", default-features = false }
+animato-color = { version = "1.1", default-features = false }
 ```
 
 ## Available Without Allocation
@@ -36,8 +36,8 @@ animato-color = { version = "1.0", default-features = false }
 Enable crate-specific `alloc` features where needed:
 
 ```toml
-animato-spring = { version = "1.0", default-features = false, features = ["alloc"] }
-animato-path = { version = "1.0", default-features = false, features = ["alloc"] }
+animato-spring = { version = "1.1", default-features = false, features = ["alloc"] }
+animato-path = { version = "1.1", default-features = false, features = ["alloc"] }
 ```
 
 ## Bare-Metal Check

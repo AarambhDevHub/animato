@@ -7,7 +7,7 @@ required for the upgrade.
 
 ```toml
 [dependencies]
-animato = "1.0"
+animato = "1.1"
 ```
 
 Focused crates:

@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.0.0 API surface by crate. For signatures,
+This file lists the stable v1.1.0 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.0"
+animato = "1.1"
 ```
 
 ## animato-core
@@ -287,6 +287,21 @@ Stable public items include `RafDriver`, `ScrollSmoother`, and with `wasm-dom`:
 `SplitText`, `SplitMode`, `Draggable`, `Observer`, and `ObserverEvent`.
 
 Use [wasm.md](./wasm.md) for browser setup.
+
+## animato-leptos
+
+Features: `leptos`, plus one app mode feature such as `leptos-csr`,
+`leptos-hydrate`, or `leptos-ssr`.
+
+Stable public items include `use_tween`, `use_spring`, `use_timeline`,
+`use_keyframes`, `TweenHandle`, `SpringHandle`, `TimelineHandle`,
+`KeyframeHandle`, `use_scroll_progress`, `use_scroll_trigger`,
+`use_scroll_velocity`, `SmoothScroll`, `AnimatePresence`, `PresenceAnimation`,
+`PageTransition`, `TransitionMode`, `AnimatedFor`, `use_drag`, `use_gesture`,
+`use_pinch`, `use_swipe`, `AnimatedStyle`, `css_tween`, `css_spring`,
+`is_hydrating`, `use_client_only`, and `SsrFallback`.
+
+Use [leptos.md](./leptos.md) for app setup and examples.
 
 ## Related Docs
 

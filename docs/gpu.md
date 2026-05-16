@@ -4,7 +4,7 @@ Feature: `gpu`.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["gpu"] }
+animato = { version = "1.1", features = ["gpu"] }
 ```
 
 `GpuAnimationBatch` batches many `Tween<f32>` values. It uses GPU resources when

@@ -6,7 +6,7 @@ Animato is published as focused crates plus the `animato` facade.
 
 ```toml
 [dependencies]
-animato = "1.0"
+animato = "1.1"
 ```
 
 Default features include `std`, `tween`, `timeline`, `spring`, and `driver`.
@@ -15,20 +15,21 @@ Default features include `std`, `tween`, `timeline`, `spring`, and `driver`.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["path", "physics", "color", "serde"] }
+animato = { version = "1.1", features = ["path", "physics", "color", "serde"] }
 ```
 
 Common combinations:
 
 | Use case | Dependency |
 |----------|------------|
-| TUI or CLI app | `animato = "1.0"` |
-| Bevy game | `animato = { version = "1.0", features = ["bevy"] }` |
-| Browser rAF loop | `animato = { version = "1.0", features = ["wasm"] }` |
-| Browser DOM helpers | `animato = { version = "1.0", features = ["wasm-dom"] }` |
-| SVG paths and morphing | `animato = { version = "1.0", features = ["path"] }` |
-| Drag and gestures | `animato = { version = "1.0", features = ["physics"] }` |
-| GPU batches | `animato = { version = "1.0", features = ["gpu"] }` |
+| TUI or CLI app | `animato = "1.1"` |
+| Bevy game | `animato = { version = "1.1", features = ["bevy"] }` |
+| Browser rAF loop | `animato = { version = "1.1", features = ["wasm"] }` |
+| Browser DOM helpers | `animato = { version = "1.1", features = ["wasm-dom"] }` |
+| Leptos CSR app | `animato = { version = "1.1", features = ["leptos-csr"] }` |
+| SVG paths and morphing | `animato = { version = "1.1", features = ["path"] }` |
+| Drag and gestures | `animato = { version = "1.1", features = ["physics"] }` |
+| GPU batches | `animato = { version = "1.1", features = ["gpu"] }` |
 
 ## Focused Crates
 
@@ -36,17 +37,17 @@ Use focused crates when dependency size matters:
 
 ```toml
 [dependencies]
-animato-core = "1.0"
-animato-tween = "1.0"
+animato-core = "1.1"
+animato-tween = "1.1"
 ```
 
 ## no_std
 
 ```toml
 [dependencies]
-animato-core = { version = "1.0", default-features = false }
-animato-tween = { version = "1.0", default-features = false }
-animato-spring = { version = "1.0", default-features = false }
+animato-core = { version = "1.1", default-features = false }
+animato-tween = { version = "1.1", default-features = false }
+animato-spring = { version = "1.1", default-features = false }
 ```
 
 See [no-std.md](./no-std.md) for details.

@@ -26,18 +26,19 @@ animato-timeline
 animato-gpu
 animato-wasm
 animato-bevy
+animato-leptos
 animato
 ```
 
 ## Tag
 
 ```sh
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
-The publish workflow validates that `v1.0.0` matches the workspace package
-version `1.0.0`.
+The publish workflow validates that `v1.1.0` matches the workspace package
+version `1.1.0`.
 
 ## GitHub Release
 

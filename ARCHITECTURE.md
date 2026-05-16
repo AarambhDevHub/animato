@@ -322,7 +322,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "1.0.0"
+version      = "1.1.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -331,17 +331,17 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.0" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.0" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.0" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.0" }
-animato-path     = { path = "crates/animato-path",     version = "1.0" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.0" }
-animato-color    = { path = "crates/animato-color",    version = "1.0" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.0" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.0" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.0" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.0" }
+animato-core     = { path = "crates/animato-core",     version = "1.1" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.1" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.1" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.1" }
+animato-path     = { path = "crates/animato-path",     version = "1.1" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.1" }
+animato-color    = { path = "crates/animato-color",    version = "1.1" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.1" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.1" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.1" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.1" }
 animato-leptos   = { path = "crates/animato-leptos",   version = "1.1" }
 animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.2" }
 animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
@@ -365,8 +365,8 @@ bevy_time    = { version = "0.18.1", default-features = false }
 bevy_transform = { version = "0.18.1", default-features = false, features = ["bevy-support", "libm"] }
 approx       = { version = "0.5" }
 criterion    = { version = "0.5",  features = ["html_reports"] }
-leptos       = { version = "0.7" }
-leptos_router = { version = "0.7" }
+leptos       = { version = "0.8.19" }
+leptos_router = { version = "0.8.13" }
 dioxus       = { version = "0.7" }
 dioxus-router = { version = "0.7" }
 yew          = { version = "0.21" }
@@ -2169,6 +2169,9 @@ bevy     = ["dep:animato-bevy"]
 wasm     = ["dep:animato-wasm"]
 wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
 leptos   = ["dep:animato-leptos"]
+leptos-csr = ["leptos", "animato-leptos/csr"]
+leptos-hydrate = ["leptos", "animato-leptos/hydrate"]
+leptos-ssr = ["leptos", "animato-leptos/ssr"]
 dioxus   = ["dep:animato-dioxus"]
 yew      = ["dep:animato-yew"]
 js       = ["dep:animato-js"]
@@ -2631,12 +2634,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "1.0", default-features = false }
-animato-tween = { version = "1.0", default-features = false }
-animato-spring = { version = "1.0", default-features = false }
-animato-path = { version = "1.0", default-features = false }
-animato-physics = { version = "1.0", default-features = false }
-animato-color = { version = "1.0", default-features = false }
+animato-core  = { version = "1.1", default-features = false }
+animato-tween = { version = "1.1", default-features = false }
+animato-spring = { version = "1.1", default-features = false }
+animato-path = { version = "1.1", default-features = false }
+animato-physics = { version = "1.1", default-features = false }
+animato-color = { version = "1.1", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -2758,5 +2761,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.6.0 — covers architecture through Animato 1.0.0 core + Leptos 1.1.0 + Dioxus 1.2.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
+*Document version: 1.6.0 — covers architecture through Animato 1.1.0 core + Leptos 1.1.0 + Dioxus 1.2.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

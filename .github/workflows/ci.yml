@@ -220,6 +220,17 @@ jobs:
       - name: Check animato-wasm with DOM helpers
         run: cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
 
+      - name: Check animato-leptos CSR
+        run: cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
+
+      - name: Check Leptos examples
+        run: |
+          cargo check --manifest-path examples/leptos_basic_tween/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/leptos_scroll_trigger/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/leptos_page_transition/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+
       - name: Install wasm-pack
         run: cargo install wasm-pack --locked
 
