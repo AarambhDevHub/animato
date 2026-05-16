@@ -25,7 +25,10 @@
    - 4.9 [animato-gpu](#49-animato-gpu)
    - 4.10 [animato-bevy](#410-animato-bevy)
    - 4.11 [animato-wasm](#411-animato-wasm)
-   - 4.12 [animato (facade)](#412-animato-facade)
+   - 4.12 [animato-leptos](#412-animato-leptos)
+   - 4.13 [animato-dioxus](#413-animato-dioxus)
+   - 4.14 [animato-yew](#414-animato-yew)
+   - 4.15 [animato (facade)](#415-animato-facade)
 5. [Data Flow & Runtime Loop](#5-data-flow--runtime-loop)
 6. [Type System Design](#6-type-system-design)
 7. [Feature Flag Strategy](#7-feature-flag-strategy)
@@ -192,6 +195,46 @@ animato/
 │   │       ├── draggable.rs
 │   │       └── observer.rs
 │   │
+│   ├── animato-leptos/                   ← Leptos signal-based animation hooks (v1.1.0)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── hooks.rs               ← use_tween, use_spring, use_timeline, use_keyframes
+│   │       ├── scroll.rs              ← use_scroll_progress, use_scroll_trigger, SmoothScroll
+│   │       ├── presence.rs            ← AnimatePresence mount/unmount transitions
+│   │       ├── transition.rs          ← PageTransition route-change wrapper
+│   │       ├── list.rs                ← AnimatedFor FLIP list reordering
+│   │       ├── gesture.rs             ← use_drag, use_gesture, use_pinch
+│   │       ├── css.rs                 ← AnimatedStyle, CSS property helpers
+│   │       └── ssr.rs                 ← SSR-aware guards, hydration helpers
+│   │
+│   ├── animato-dioxus/                   ← Dioxus cross-platform animation hooks (v1.2.0)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── hooks.rs               ← use_tween, use_spring, use_timeline, use_keyframes
+│   │       ├── motion.rs              ← use_motion all-in-one hook
+│   │       ├── scroll.rs              ← use_scroll_progress, use_scroll_trigger
+│   │       ├── presence.rs            ← AnimatePresence mount/unmount transitions
+│   │       ├── transition.rs          ← PageTransition route-change wrapper
+│   │       ├── list.rs                ← AnimatedFor FLIP list reordering
+│   │       ├── gesture.rs             ← use_drag, use_gesture, use_pinch
+│   │       ├── platform.rs            ← platform-adaptive animation (web/desktop/mobile/TUI)
+│   │       └── native.rs              ← native window animation helpers (desktop/mobile)
+│   │
+│   ├── animato-yew/                      ← Yew component-based animation hooks (v1.3.0)
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs
+│   │       ├── hooks.rs               ← use_tween, use_spring, use_timeline, use_keyframes
+│   │       ├── scroll.rs              ← use_scroll_progress, use_scroll_trigger
+│   │       ├── presence.rs            ← AnimatePresence mount/unmount transitions
+│   │       ├── transition.rs          ← PageTransition route-change wrapper
+│   │       ├── list.rs                ← AnimatedFor FLIP list reordering
+│   │       ├── gesture.rs             ← use_drag, use_gesture, use_pinch
+│   │       ├── agent.rs               ← AnimationAgent for message-based coordination
+│   │       └── css.rs                 ← AnimatedStyle, CSS property helpers
+│   │
 │   └── animato/                          ← facade crate — the one users add to Cargo.toml
 │       ├── Cargo.toml
 │       └── src/
@@ -243,6 +286,9 @@ members = [
     "crates/animato-gpu",
     "crates/animato-bevy",
     "crates/animato-wasm",
+    "crates/animato-leptos",
+    "crates/animato-dioxus",
+    "crates/animato-yew",
     "crates/animato",
 ]
 
@@ -267,6 +313,9 @@ animato-driver   = { path = "crates/animato-driver",   version = "1.0" }
 animato-gpu      = { path = "crates/animato-gpu",      version = "1.0" }
 animato-bevy     = { path = "crates/animato-bevy",     version = "1.0" }
 animato-wasm     = { path = "crates/animato-wasm",     version = "1.0" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.1" }
+animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.2" }
+animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -285,6 +334,12 @@ bevy_time    = { version = "0.18.1", default-features = false }
 bevy_transform = { version = "0.18.1", default-features = false, features = ["bevy-support", "libm"] }
 approx       = { version = "0.5" }
 criterion    = { version = "0.5",  features = ["html_reports"] }
+leptos       = { version = "0.7" }
+leptos_router = { version = "0.7" }
+dioxus       = { version = "0.7" }
+dioxus-router = { version = "0.7" }
+yew          = { version = "0.21" }
+yew-router   = { version = "0.18" }
 ```
 
 ---
@@ -1095,7 +1150,607 @@ impl RafDriver {
 
 ---
 
-### 4.12 `animato` (facade)
+### 4.12 `animato-leptos`
+
+**Responsibility:** First-class Leptos integration. Signal-backed animation hooks, scroll-driven animations, mount/unmount presence transitions, FLIP list reordering, page transitions, gesture bindings, CSS helpers, and SSR-aware hydration guards.
+
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `leptos`, `leptos_router`
+
+**Version:** Starts at `1.1.0` — published independently from the core `1.0` crates.
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `hooks.rs` | `use_tween`, `use_spring`, `use_timeline`, `use_keyframes` — signal-backed animation hooks |
+| `scroll.rs` | `use_scroll_progress`, `use_scroll_trigger`, `use_scroll_velocity`, `SmoothScroll` component |
+| `presence.rs` | `AnimatePresence` — mount/unmount transitions with configurable enter/exit animations |
+| `transition.rs` | `PageTransition` — route-change wrapper with fade, slide, zoom, morph presets |
+| `list.rs` | `AnimatedFor` — FLIP-powered list reordering, insert, and remove animations |
+| `gesture.rs` | `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — pointer event → animation bindings |
+| `css.rs` | `AnimatedStyle`, `css_transform()`, `css_spring()` — CSS property animation helpers |
+| `ssr.rs` | `is_hydrating()`, `use_client_only()`, `SsrFallback` — SSR-aware animation guards |
+
+#### `src/hooks.rs`
+
+```rust
+/// Signal-backed tween. Returns a reactive ReadSignal<T> that updates every frame
+/// and a TweenHandle for playback control.
+pub fn use_tween<T: Animatable + Send + Sync + 'static>(
+    from: T,
+    to: T,
+    config: impl FnOnce(TweenBuilder<T>) -> TweenBuilder<T>,
+) -> (ReadSignal<T>, TweenHandle)
+
+/// Signal-backed spring. The returned signal updates every frame until settled.
+pub fn use_spring<T: Animatable + Send + Sync + 'static>(
+    initial: T,
+    config: SpringConfig,
+) -> (ReadSignal<T>, SpringHandle)
+
+/// Compose multiple animations with timeline scheduling.
+pub fn use_timeline(
+    builder: impl FnOnce(&mut Timeline),
+) -> TimelineHandle
+
+/// Multi-stop keyframe animation driven by a signal.
+pub fn use_keyframes<T: Animatable + Send + Sync + 'static>(
+    builder: impl FnOnce(KeyframeTrack<T>) -> KeyframeTrack<T>,
+) -> (ReadSignal<T>, KeyframeHandle)
+```
+
+**Handle types:**
+
+```rust
+pub struct TweenHandle {
+    pub fn play(&self);
+    pub fn pause(&self);
+    pub fn resume(&self);
+    pub fn reset(&self);
+    pub fn reverse(&self);
+    pub fn seek(&self, t: f32);
+    pub fn set_time_scale(&self, ts: f32);
+    pub fn is_complete(&self) -> ReadSignal<bool>;
+    pub fn progress(&self) -> ReadSignal<f32>;
+}
+
+pub struct SpringHandle {
+    pub fn set_target(&self, target: T);
+    pub fn snap_to(&self, value: T);
+    pub fn is_settled(&self) -> ReadSignal<bool>;
+}
+```
+
+#### `src/scroll.rs`
+
+```rust
+/// Returns a signal in [0.0, 1.0] tracking scroll progress of a target element.
+pub fn use_scroll_progress(
+    target: NodeRef<html::Div>,
+    config: ScrollConfig,
+) -> ReadSignal<f32>
+
+/// Fires a callback when an element enters/exits the viewport.
+pub fn use_scroll_trigger(
+    target: NodeRef<html::Div>,
+    config: ScrollTriggerConfig,
+) -> ScrollTriggerHandle
+
+/// Returns the current scroll velocity in px/sec for momentum-based effects.
+pub fn use_scroll_velocity() -> ReadSignal<f32>
+
+pub struct ScrollConfig {
+    pub axis: ScrollAxis,          // Vertical (default), Horizontal, Both
+    pub offset_start: f32,         // viewport offset to begin (default 0.0)
+    pub offset_end: f32,           // viewport offset to end (default 1.0)
+    pub smooth: bool,              // lerp smoothing (default true)
+    pub smooth_factor: f32,        // smoothing speed (default 0.1)
+}
+
+pub struct ScrollTriggerConfig {
+    pub threshold: f32,            // intersection ratio 0.0..=1.0
+    pub once: bool,                // fire only on first enter
+    pub start: &'static str,      // e.g. "top bottom" (element top hits viewport bottom)
+    pub end: &'static str,        // e.g. "bottom top"
+    pub scrub: bool,              // link animation progress to scroll position
+    pub pin: bool,                // pin element during scroll range
+}
+
+/// Smooth scroll container with momentum and overscroll damping.
+#[component]
+pub fn SmoothScroll(children: Children) -> impl IntoView
+```
+
+#### `src/presence.rs`
+
+```rust
+/// Mount/unmount transition wrapper. Children animate in on mount
+/// and animate out before unmount completes.
+#[component]
+pub fn AnimatePresence(
+    /// Show or hide the children.
+    show: ReadSignal<bool>,
+    /// Enter animation config.
+    #[prop(optional)] enter: Option<PresenceAnimation>,
+    /// Exit animation config.
+    #[prop(optional)] exit: Option<PresenceAnimation>,
+    /// Delay unmount until exit animation completes (default true).
+    #[prop(default = true)] wait_exit: bool,
+    children: Children,
+) -> impl IntoView
+
+pub struct PresenceAnimation {
+    pub duration: f32,
+    pub easing: Easing,
+    pub from: AnimatedStyle,   // CSS properties at animation start
+    pub to: AnimatedStyle,     // CSS properties at animation end
+}
+
+impl PresenceAnimation {
+    pub fn fade() -> Self;           // opacity 0 → 1
+    pub fn slide_up() -> Self;       // translateY(20px) + opacity
+    pub fn slide_down() -> Self;
+    pub fn slide_left() -> Self;
+    pub fn slide_right() -> Self;
+    pub fn zoom_in() -> Self;        // scale(0.8) + opacity
+    pub fn zoom_out() -> Self;
+    pub fn flip_x() -> Self;         // rotateX(90deg) + opacity
+    pub fn flip_y() -> Self;
+    pub fn blur_in() -> Self;        // filter: blur(10px) + opacity
+    pub fn spring(config: SpringConfig) -> Self;
+}
+```
+
+#### `src/transition.rs`
+
+```rust
+/// Route-change transition wrapper. Animates the outgoing page out
+/// and the incoming page in with configurable transition modes.
+#[component]
+pub fn PageTransition(
+    #[prop(optional)] mode: TransitionMode,
+    #[prop(optional)] enter: Option<PresenceAnimation>,
+    #[prop(optional)] exit: Option<PresenceAnimation>,
+    children: Children,
+) -> impl IntoView
+
+pub enum TransitionMode {
+    Sequential,     // old exits, then new enters
+    Parallel,       // old exits and new enters simultaneously
+    CrossFade,      // both overlap with opposing opacity
+    SlideOver,      // new slides on top of old
+    MorphHero,      // shared-element morph between pages
+}
+```
+
+#### `src/list.rs`
+
+```rust
+/// FLIP-animated list. Automatically animates item insertion, removal,
+/// and reordering using layout-aware FLIP transitions.
+#[component]
+pub fn AnimatedFor<T, K, V>(
+    each: Signal<Vec<T>>,
+    key: impl Fn(&T) -> K + 'static,
+    children: impl Fn(T) -> V + 'static,
+    #[prop(optional)] enter: Option<PresenceAnimation>,
+    #[prop(optional)] exit: Option<PresenceAnimation>,
+    #[prop(optional)] move_duration: Option<f32>,
+    #[prop(optional)] move_easing: Option<Easing>,
+    #[prop(optional)] stagger_delay: Option<f32>,
+) -> impl IntoView
+```
+
+#### `src/gesture.rs`
+
+```rust
+/// Draggable element hook. Returns position signal and drag handle.
+pub fn use_drag(
+    target: NodeRef<html::Div>,
+    config: DragConfig,
+) -> (ReadSignal<[f32; 2]>, DragHandle)
+
+/// Gesture recognition hook. Emits Gesture signals from pointer events.
+pub fn use_gesture(
+    target: NodeRef<html::Div>,
+    config: GestureConfig,
+) -> ReadSignal<Option<Gesture>>
+
+/// Pinch-zoom hook for touch interfaces.
+pub fn use_pinch(
+    target: NodeRef<html::Div>,
+) -> (ReadSignal<f32>, PinchHandle)    // scale signal
+
+/// Swipe detection hook with direction and velocity.
+pub fn use_swipe(
+    target: NodeRef<html::Div>,
+    config: SwipeConfig,
+) -> ReadSignal<Option<SwipeEvent>>
+
+pub struct DragConfig {
+    pub axis: DragAxis,
+    pub constraints: Option<DragConstraints>,
+    pub inertia: bool,             // enable inertia on release
+    pub inertia_config: InertiaConfig,
+    pub snap_points: Vec<f32>,     // snap-to positions after release
+    pub elastic_edges: bool,       // rubber-band at constraints
+}
+```
+
+#### `src/css.rs`
+
+```rust
+/// CSS property bag for animated styles.
+pub struct AnimatedStyle {
+    pub opacity: Option<f32>,
+    pub transform: Option<String>,
+    pub scale: Option<f32>,
+    pub translate_x: Option<f32>,
+    pub translate_y: Option<f32>,
+    pub rotate: Option<f32>,
+    pub skew_x: Option<f32>,
+    pub skew_y: Option<f32>,
+    pub blur: Option<f32>,
+    pub background_color: Option<[f32; 4]>,
+    pub border_radius: Option<f32>,
+    pub width: Option<f32>,
+    pub height: Option<f32>,
+    pub clip_path: Option<String>,
+    pub custom: Vec<(String, String)>,
+}
+
+/// Animate CSS properties with a spring. Returns a style string signal.
+pub fn css_spring(
+    target: AnimatedStyle,
+    config: SpringConfig,
+) -> ReadSignal<String>
+
+/// Animate CSS properties with a tween. Returns a style string signal.
+pub fn css_tween(
+    from: AnimatedStyle,
+    to: AnimatedStyle,
+    duration: f32,
+    easing: Easing,
+) -> ReadSignal<String>
+```
+
+#### `src/ssr.rs`
+
+```rust
+/// Returns true during hydration — animations skip to final state.
+pub fn is_hydrating() -> bool
+
+/// Guard that prevents animation hooks from running on the server.
+/// On the server the signal returns the final target value immediately.
+pub fn use_client_only<T: Animatable>(server_value: T) -> ReadSignal<T>
+
+/// Wrapper that renders a static fallback during SSR and swaps in
+/// the animated version after hydration.
+#[component]
+pub fn SsrFallback(
+    fallback: View,
+    children: Children,
+) -> impl IntoView
+```
+
+#### `Cargo.toml`
+
+```toml
+[package]
+name        = "animato-leptos"
+version     = "1.1.0"
+description = "Leptos integration for the Animato animation library — signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, and SSR."
+
+[features]
+default    = ["scroll", "presence", "transition", "list", "gesture", "css"]
+scroll     = []
+presence   = []
+transition = ["dep:leptos_router"]
+list       = []
+gesture    = ["dep:animato-physics"]
+css        = []
+ssr        = []
+path       = ["dep:animato-path"]
+color      = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true }
+animato-spring   = { workspace = true }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true }
+animato-path     = { workspace = true, optional = true }
+animato-physics  = { workspace = true, optional = true }
+animato-color    = { workspace = true, optional = true }
+leptos           = { workspace = true }
+leptos_router    = { workspace = true, optional = true }
+wasm-bindgen     = { workspace = true }
+web-sys          = { workspace = true, features = ["Window", "Document", "Element", "HtmlElement", "DomRect", "IntersectionObserver", "IntersectionObserverEntry", "IntersectionObserverInit", "ScrollToOptions"] }
+```
+
+---
+
+### 4.13 `animato-dioxus`
+
+**Responsibility:** Cross-platform Dioxus integration. Hook-based animation primitives that work identically on web (WASM), desktop, mobile, and TUI targets. Platform-adaptive rendering, native window animation helpers, scroll-driven animations, presence transitions, FLIP lists, page transitions, and gesture bindings.
+
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `dioxus`, `dioxus-router`
+
+**Version:** Starts at `1.2.0`.
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `hooks.rs` | `use_tween`, `use_spring`, `use_timeline`, `use_keyframes` — core animation hooks |
+| `motion.rs` | `use_motion` — unified all-in-one hook (tween, spring, or keyframes in one call) |
+| `scroll.rs` | `use_scroll_progress`, `use_scroll_trigger`, `use_scroll_velocity` — scroll-driven animations |
+| `presence.rs` | `AnimatePresence` — mount/unmount transitions with enter/exit configs |
+| `transition.rs` | `PageTransition` — route-change animation wrapper with mode presets |
+| `list.rs` | `AnimatedFor` — FLIP-powered list reordering with stagger support |
+| `gesture.rs` | `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — cross-platform pointer/touch bindings |
+| `platform.rs` | `PlatformAdapter`, `AnimationBackend` — platform-adaptive tick source and rendering strategy |
+| `native.rs` | `use_window_animation`, `use_window_spring` — native window position/size animation (desktop/mobile) |
+
+#### `src/hooks.rs`
+
+```rust
+/// Tween hook. Returns the current value and a control handle.
+/// Works on all Dioxus targets: web, desktop, mobile, TUI.
+pub fn use_tween<T: Animatable + Send + Sync + 'static>(
+    from: T,
+    to: T,
+    config: impl FnOnce(TweenBuilder<T>) -> TweenBuilder<T>,
+) -> (T, TweenHandle)
+
+/// Spring hook. The returned value follows the target with physics.
+pub fn use_spring<T: Animatable + Send + Sync + 'static>(
+    initial: T,
+    config: SpringConfig,
+) -> (T, SpringHandle)
+
+/// Timeline hook for composing multiple animations.
+pub fn use_timeline(
+    builder: impl FnOnce(&mut Timeline),
+) -> TimelineHandle
+
+/// Keyframe track hook for multi-stop animations.
+pub fn use_keyframes<T: Animatable + Send + Sync + 'static>(
+    builder: impl FnOnce(KeyframeTrack<T>) -> KeyframeTrack<T>,
+) -> (T, KeyframeHandle)
+```
+
+#### `src/motion.rs`
+
+```rust
+/// All-in-one motion hook. Combines tween, spring, and keyframe capabilities
+/// behind a single ergonomic API.
+pub fn use_motion<T: Animatable + Send + Sync + 'static>(
+    initial: T,
+) -> MotionHandle<T>
+
+impl<T: Animatable> MotionHandle<T> {
+    pub fn value(&self) -> T;
+    pub fn animate_to(&self, target: T, config: MotionConfig);
+    pub fn spring_to(&self, target: T, config: SpringConfig);
+    pub fn keyframes(&self, track: KeyframeTrack<T>);
+    pub fn stop(&self);
+    pub fn snap_to(&self, value: T);
+    pub fn is_animating(&self) -> bool;
+}
+
+pub enum MotionConfig {
+    Tween { duration: f32, easing: Easing, delay: f32 },
+    Spring(SpringConfig),
+}
+```
+
+#### `src/platform.rs`
+
+```rust
+/// Detects the current Dioxus rendering platform and selects
+/// the optimal animation tick source.
+pub struct PlatformAdapter;
+
+impl PlatformAdapter {
+    /// Detect platform at runtime.
+    pub fn detect() -> AnimationBackend;
+}
+
+pub enum AnimationBackend {
+    /// Web — uses requestAnimationFrame via animato-wasm RafDriver.
+    WebRaf,
+    /// Desktop/Mobile — uses std::time::Instant with a 60fps event loop tick.
+    NativeClock,
+    /// TUI — uses crossterm event poll intervals as the tick source.
+    TerminalPoll,
+}
+```
+
+#### `src/native.rs`
+
+```rust
+/// Animate the native window position on desktop.
+pub fn use_window_animation(
+    config: impl FnOnce(TweenBuilder<[f32; 2]>) -> TweenBuilder<[f32; 2]>,
+) -> WindowAnimationHandle
+
+/// Spring-based window position animation for desktop.
+pub fn use_window_spring(
+    config: SpringConfig,
+) -> WindowSpringHandle
+
+impl WindowAnimationHandle {
+    pub fn move_to(&self, x: f32, y: f32);
+    pub fn resize_to(&self, w: f32, h: f32);
+    pub fn opacity_to(&self, opacity: f32);
+}
+```
+
+The `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `scroll.rs` modules follow the same API contract as `animato-leptos` but use Dioxus `Signal<T>` and RSX instead of Leptos `ReadSignal<T>` and `view!{}`. All hooks use `use_future` internally to drive the rAF/clock loop.
+
+#### `Cargo.toml`
+
+```toml
+[package]
+name        = "animato-dioxus"
+version     = "1.2.0"
+description = "Dioxus integration for the Animato animation library — cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, and native window animation."
+
+[features]
+default    = ["scroll", "presence", "transition", "list", "gesture", "motion"]
+scroll     = []
+presence   = []
+transition = ["dep:dioxus-router"]
+list       = []
+gesture    = ["dep:animato-physics"]
+motion     = []
+native     = []
+path       = ["dep:animato-path"]
+color      = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true }
+animato-spring   = { workspace = true }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true, optional = true }
+animato-path     = { workspace = true, optional = true }
+animato-physics  = { workspace = true, optional = true }
+animato-color    = { workspace = true, optional = true }
+dioxus           = { workspace = true }
+dioxus-router    = { workspace = true, optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen     = { workspace = true }
+web-sys          = { workspace = true, features = ["Window", "Document", "Element", "HtmlElement", "DomRect", "IntersectionObserver", "IntersectionObserverEntry", "ScrollToOptions"] }
+```
+
+---
+
+### 4.14 `animato-yew`
+
+**Responsibility:** Yew integration providing hook-based and agent-based animation primitives. Functional component hooks for tweens, springs, timelines, and keyframes. Scroll-driven animations, mount/unmount presence transitions, FLIP list reordering, page transitions, gesture bindings, CSS helpers, and an `AnimationAgent` for cross-component animation coordination.
+
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `yew`, `yew-router`
+
+**Version:** Starts at `1.3.0`.
+
+#### Module breakdown
+
+| File | Contents |
+|------|----------|
+| `hooks.rs` | `use_tween`, `use_spring`, `use_timeline`, `use_keyframes` — functional component hooks |
+| `scroll.rs` | `use_scroll_progress`, `use_scroll_trigger`, `use_scroll_velocity` — scroll-driven animations |
+| `presence.rs` | `AnimatePresence` — mount/unmount transitions with configurable enter/exit |
+| `transition.rs` | `PageTransition` — route-change animation wrapper |
+| `list.rs` | `AnimatedFor` — FLIP-powered list with insert/remove/reorder animations |
+| `gesture.rs` | `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — pointer event bindings |
+| `agent.rs` | `AnimationAgent` — Yew agent for cross-component animation message coordination |
+| `css.rs` | `AnimatedStyle`, `css_transform()`, `css_spring()` — CSS property helpers |
+
+#### `src/hooks.rs`
+
+```rust
+/// Tween hook for Yew functional components. Returns a UseStateHandle<T>
+/// that re-renders the component when the animated value changes.
+/// Uses use_raf internally to limit updates to one per frame.
+pub fn use_tween<T: Animatable + 'static>(
+    from: T,
+    to: T,
+    config: impl FnOnce(TweenBuilder<T>) -> TweenBuilder<T>,
+) -> (UseStateHandle<T>, TweenHandle)
+
+/// Spring hook. Re-renders the component per-frame while the spring is active.
+pub fn use_spring<T: Animatable + 'static>(
+    initial: T,
+    config: SpringConfig,
+) -> (UseStateHandle<T>, SpringHandle)
+
+/// Timeline composition hook.
+pub fn use_timeline(
+    builder: impl FnOnce(&mut Timeline),
+) -> TimelineHandle
+
+/// Multi-stop keyframe animation hook.
+pub fn use_keyframes<T: Animatable + 'static>(
+    builder: impl FnOnce(KeyframeTrack<T>) -> KeyframeTrack<T>,
+) -> (UseStateHandle<T>, KeyframeHandle)
+```
+
+#### `src/agent.rs`
+
+```rust
+/// Yew agent that coordinates animations across multiple components.
+/// Components send messages to the agent to start, stop, or synchronize
+/// animations without direct parent-child coupling.
+pub struct AnimationAgent {
+    driver: AnimationDriver,
+    subscribers: HashMap<AnimationId, Vec<HandlerId>>,
+}
+
+pub enum AgentInput {
+    AddTween { id: String, tween: Box<dyn Playable + Send> },
+    AddSpring { id: String, spring: Box<dyn Update + Send> },
+    Play(String),
+    Pause(String),
+    Reset(String),
+    Cancel(String),
+    CancelAll,
+    Tick(f32),
+}
+
+pub enum AgentOutput {
+    ValueChanged { id: String, progress: f32 },
+    Completed { id: String },
+    Settled { id: String },
+}
+```
+
+The `scroll.rs`, `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `css.rs` modules follow the same API contract as `animato-leptos` but use Yew `Html`, `UseStateHandle<T>`, `NodeRef`, and `Callback` instead of Leptos equivalents. Per-frame updates use `use_raf` from `gloo` or a custom rAF closure to avoid VDOM diffing overhead on non-animated nodes.
+
+#### `Cargo.toml`
+
+```toml
+[package]
+name        = "animato-yew"
+version     = "1.3.0"
+description = "Yew integration for the Animato animation library — hooks, agents, scroll, presence, transitions, FLIP lists, gestures, and CSS animation helpers."
+
+[features]
+default    = ["scroll", "presence", "transition", "list", "gesture", "css"]
+scroll     = []
+presence   = []
+transition = ["dep:yew-router"]
+list       = []
+gesture    = ["dep:animato-physics"]
+css        = []
+agent      = []
+path       = ["dep:animato-path"]
+color      = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true }
+animato-spring   = { workspace = true }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true }
+animato-path     = { workspace = true, optional = true }
+animato-physics  = { workspace = true, optional = true }
+animato-color    = { workspace = true, optional = true }
+yew              = { workspace = true }
+yew-router       = { workspace = true, optional = true }
+wasm-bindgen     = { workspace = true }
+web-sys          = { workspace = true, features = ["Window", "Document", "Element", "HtmlElement", "DomRect", "IntersectionObserver", "IntersectionObserverEntry", "ScrollToOptions"] }
+gloo             = { version = "0.11" }
+```
+
+---
+
+### 4.15 `animato` (facade)
 
 **Responsibility:** The one crate users put in their `Cargo.toml`. Feature flags on this crate activate the matching sub-crates and re-export their public APIs.
 
@@ -1114,6 +1769,9 @@ gpu      = ["dep:animato-gpu"]
 bevy     = ["dep:animato-bevy"]
 wasm     = ["dep:animato-wasm"]
 wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
+leptos   = ["dep:animato-leptos"]
+dioxus   = ["dep:animato-dioxus"]
+yew      = ["dep:animato-yew"]
 serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde", "animato-color?/serde"]
 tokio    = ["animato-timeline/tokio"]
 no_std   = []
@@ -1188,7 +1846,65 @@ Browser
   Write values to DOM via wasm-bindgen JS closures
 ```
 
----
+### Leptos Signal Loop
+
+```
+Leptos component mounts
+       │
+       ▼
+  use_tween() / use_spring() / use_keyframes()
+       │
+       ▼
+  Spawns rAF loop via request_animation_frame closure
+       │
+       ├── Tween::update(dt) / Spring::update(dt)
+       ├── WriteSignal::set(new_value)      ← fine-grained signal update
+       └── Only the DOM node reading the signal re-renders
+       │
+       ▼
+  On unmount: rAF closure dropped, animation cleaned up
+  On SSR: signal returns target value immediately (no rAF)
+```
+
+### Dioxus Hook Loop (cross-platform)
+
+```
+Dioxus component renders (any platform)
+       │
+       ▼
+  use_tween() / use_spring() / use_motion()
+       │
+       ▼
+  PlatformAdapter::detect() → WebRaf | NativeClock | TerminalPoll
+       │
+       ├── Web:     use_future + RafDriver::tick(timestamp_ms)
+       ├── Desktop:  use_future + WallClock::delta()
+       ├── Mobile:   use_future + WallClock::delta()
+       └── TUI:      use_future + crossterm poll interval
+       │
+       ▼
+  Signal<T>::set(new_value) → component re-renders
+```
+
+### Yew Hook Loop
+
+```
+Yew functional component
+       │
+       ▼
+  use_tween() / use_spring()
+       │
+       ▼
+  use_effect → gloo::request_animation_frame loop
+       │
+       ├── Tween::update(dt) / Spring::update(dt)
+       ├── UseStateHandle<T>::set(new_value)    ← triggers VDOM diff
+       └── Only the changed node in the VDOM is patched
+       │
+       ▼
+  AnimationAgent (optional) coordinates cross-component animations
+  via message passing without parent-child coupling
+```
 
 ## 6. Type System Design
 
@@ -1264,6 +1980,9 @@ NOT available in no_std (require allocation):
 | `gpu` | `GpuAnimationBatch` via wgpu | `animato-gpu`, `wgpu` |
 | `bevy` | `AnimatoPlugin` | `animato-bevy`, bevy crates |
 | `wasm` | `RafDriver` + WASM binding | `animato-wasm`, `wasm-bindgen` |
+| `leptos` | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | `animato-leptos`, `leptos` |
+| `dioxus` | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | `animato-dioxus`, `dioxus` |
+| `yew` | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | `animato-yew`, `yew` |
 | `serde` | `Serialize`/`Deserialize` on all public types | `serde` |
 | `tokio` | `.wait().await` on timelines | `tokio` |
 
@@ -1273,10 +1992,13 @@ NOT available in no_std (require allocation):
 |---------------------|----------------------|
 | TUI / CLI app | `default` |
 | Bevy game | `bevy` |
-| WASM web app | `wasm` |
+| WASM web app (raw) | `wasm` |
+| Leptos web app | `leptos` |
+| Dioxus cross-platform app | `dioxus` |
+| Yew web app | `yew` |
 | GPU particle system | `gpu` |
 | Embedded / no_std | `default-features = false` |
-| Everything | `default,path,physics,color,gpu,serde,tokio` |
+| Everything | `default,path,physics,color,gpu,leptos,dioxus,yew,serde,tokio` |
 
 ---
 
@@ -1588,7 +2310,8 @@ Before `cargo publish` for any crate:
 ```
 animato-core → animato-tween → animato-spring → animato-path → animato-physics
           → animato-color → animato-driver → animato-timeline
-          → animato-gpu → animato-bevy → animato-wasm → animato
+          → animato-gpu → animato-bevy → animato-wasm
+          → animato-leptos → animato-dioxus → animato-yew → animato
 ```
 
 ---
@@ -1629,5 +2352,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.0.0 — covers architecture through Animato 1.0.0*  
+*Document version: 1.3.0 — covers architecture through Animato 1.0.0 core + Leptos 1.1.0 + Dioxus 1.2.0 + Yew 1.3.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

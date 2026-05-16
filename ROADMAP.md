@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.0.0`.  
+This roadmap tracks every planned release from `v0.1.0` through `v1.3.0`.  
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -33,6 +33,9 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | ✅ |
 | `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | ✅ |
 | `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | ✅ |
+| `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | 📋 |
+| `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | 📋 |
+| `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | 📋 |
 
 ---
 
@@ -448,16 +451,216 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 ---
 
-## Post-1.0 Ideas (Future / `v1.x`)
+## v1.1.0 — Leptos
 
-These are not committed — they are ideas to revisit after the stable release.
+**Goal:** First-class Leptos integration. A developer can animate any value with a signal-backed hook, build scroll-triggered animations, mount/unmount transitions, FLIP list reordering, page transitions, drag/gesture-driven motion, and SSR-safe hydration — all with fine-grained reactivity and zero VDOM overhead.
+
+### Crates shipped
+
+- `animato-leptos` `v1.1.0` (new)
+
+### Deliverables
+
+**`animato-leptos` — hooks**
+- [ ] `use_tween(from, to, config)` → `(ReadSignal<T>, TweenHandle)` — signal-backed tween with play/pause/resume/reset/reverse/seek/time_scale control
+- [ ] `use_spring(initial, config)` → `(ReadSignal<T>, SpringHandle)` — signal-backed spring with set_target/snap_to/is_settled
+- [ ] `use_timeline(builder)` → `TimelineHandle` — compose multiple animations with `At` scheduling
+- [ ] `use_keyframes(builder)` → `(ReadSignal<T>, KeyframeHandle)` — multi-stop keyframe animation
+- [ ] rAF loop management: auto-start on mount, auto-cleanup on unmount, pause on tab visibility change
+- [ ] `TweenHandle` and `SpringHandle` expose `is_complete()` and `progress()` as `ReadSignal`
+
+**`animato-leptos` — scroll**
+- [ ] `use_scroll_progress(target, config)` → `ReadSignal<f32>` — 0.0..1.0 scroll progress of an element
+- [ ] `use_scroll_trigger(target, config)` → `ScrollTriggerHandle` — viewport enter/exit callbacks with threshold, once, scrub, and pin options
+- [ ] `use_scroll_velocity()` → `ReadSignal<f32>` — current scroll velocity in px/sec
+- [ ] `SmoothScroll` component — momentum scroll container with overscroll damping
+- [ ] `ScrollConfig` with axis, offset_start, offset_end, smooth, smooth_factor
+- [ ] `ScrollTriggerConfig` with GSAP-style `start`/`end` strings, scrub linking, pin support
+
+**`animato-leptos` — presence**
+- [ ] `AnimatePresence` component — mount/unmount transitions with configurable enter/exit animations
+- [ ] `PresenceAnimation` struct with duration, easing, from/to `AnimatedStyle`
+- [ ] Presets: `fade()`, `slide_up()`, `slide_down()`, `slide_left()`, `slide_right()`, `zoom_in()`, `zoom_out()`, `flip_x()`, `flip_y()`, `blur_in()`, `spring(config)`
+- [ ] `wait_exit` flag — delay DOM removal until exit animation completes
+
+**`animato-leptos` — transitions**
+- [ ] `PageTransition` component — route-change animation wrapper
+- [ ] `TransitionMode` enum: `Sequential`, `Parallel`, `CrossFade`, `SlideOver`, `MorphHero`
+- [ ] Integration with `leptos_router` for automatic route detection
+
+**`animato-leptos` — list**
+- [ ] `AnimatedFor` component — FLIP-powered list reordering with insert/remove/move animations
+- [ ] Configurable enter/exit animations per item
+- [ ] `move_duration`, `move_easing`, `stagger_delay` props
+- [ ] Automatic layout snapshot and FLIP calculation
+
+**`animato-leptos` — gesture**
+- [ ] `use_drag(target, config)` → `(ReadSignal<[f32; 2]>, DragHandle)` — draggable element with axis lock, constraints, inertia, snap points, elastic edges
+- [ ] `use_gesture(target, config)` → `ReadSignal<Option<Gesture>>` — tap, double tap, long press, swipe, pinch, rotation
+- [ ] `use_pinch(target)` → `(ReadSignal<f32>, PinchHandle)` — pinch-zoom scale signal
+- [ ] `use_swipe(target, config)` → `ReadSignal<Option<SwipeEvent>>` — swipe detection with direction and velocity
+
+**`animato-leptos` — CSS**
+- [ ] `AnimatedStyle` struct — CSS property bag (opacity, transform, scale, translate, rotate, skew, blur, background_color, border_radius, width, height, clip_path, custom)
+- [ ] `css_spring(target, config)` → `ReadSignal<String>` — animate CSS properties with a spring
+- [ ] `css_tween(from, to, duration, easing)` → `ReadSignal<String>` — animate CSS properties with a tween
+
+**`animato-leptos` — SSR**
+- [ ] `is_hydrating()` → `bool` — skip animations during hydration
+- [ ] `use_client_only(server_value)` → `ReadSignal<T>` — returns target value on server, animates on client
+- [ ] `SsrFallback` component — renders static fallback during SSR, swaps in animated version after hydration
+
+**`animato` facade**
+- [ ] `leptos` feature flag
+- [ ] Re-exports all `animato-leptos` public APIs
+
+**Documentation & Examples**
+- [ ] `docs/leptos.md` — Leptos integration guide
+- [ ] `examples/leptos_basic_tween/` — Leptos app with animated div
+- [ ] `examples/leptos_scroll_trigger/` — scroll-triggered entrance animations
+- [ ] `examples/leptos_page_transition/` — route transition demo
+- [ ] `examples/leptos_animated_list/` — FLIP list reordering demo
+- [ ] `examples/leptos_drag_gesture/` — draggable element with inertia
+
+**Testing**
+- [ ] Unit tests for all hooks (mock rAF, deterministic dt)
+- [ ] Integration tests for SSR guards (signal returns target value on server)
+- [ ] WASM compile check: `cargo check -p animato-leptos --target wasm32-unknown-unknown`
+- [ ] All examples compile: `cargo test -p animato-leptos --examples`
+
+---
+
+## v1.2.0 — Dioxus
+
+**Goal:** Cross-platform Dioxus integration. The same animation hooks work on web (WASM), desktop (Windows/macOS/Linux), mobile (iOS/Android), and TUI — with platform-adaptive tick sources and native window animation helpers.
+
+### Crates shipped
+
+- `animato-dioxus` `v1.2.0` (new)
+
+### Deliverables
+
+**`animato-dioxus` — hooks**
+- [ ] `use_tween(from, to, config)` → `(T, TweenHandle)` — tween hook working on all Dioxus targets
+- [ ] `use_spring(initial, config)` → `(T, SpringHandle)` — spring hook with physics
+- [ ] `use_timeline(builder)` → `TimelineHandle` — timeline composition
+- [ ] `use_keyframes(builder)` → `(T, KeyframeHandle)` — keyframe track
+- [ ] Platform-adaptive rAF/clock loop via `PlatformAdapter::detect()`
+
+**`animato-dioxus` — motion**
+- [ ] `use_motion(initial)` → `MotionHandle<T>` — all-in-one hook combining tween, spring, and keyframes
+- [ ] `MotionHandle::animate_to(target, config)` — tween or spring transition
+- [ ] `MotionHandle::keyframes(track)` — play a keyframe track
+- [ ] `MotionHandle::stop()`, `snap_to()`, `is_animating()`
+- [ ] `MotionConfig` enum: `Tween { duration, easing, delay }`, `Spring(SpringConfig)`
+
+**`animato-dioxus` — scroll**
+- [ ] `use_scroll_progress(target, config)` → scroll progress signal (web only)
+- [ ] `use_scroll_trigger(target, config)` → viewport enter/exit with scrub and pin (web only)
+- [ ] `use_scroll_velocity()` → scroll velocity signal (web only)
+- [ ] Graceful no-op on non-web platforms
+
+**`animato-dioxus` — presence, transition, list, gesture**
+- [ ] `AnimatePresence` component — same API as `animato-leptos` but using Dioxus `Signal<T>` and RSX
+- [ ] `PageTransition` component with `TransitionMode` enum and `dioxus-router` integration
+- [ ] `AnimatedFor` component — FLIP-powered list with stagger support
+- [ ] `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — cross-platform pointer/touch bindings
+- [ ] Touch gestures work on mobile targets via Dioxus event system
+
+**`animato-dioxus` — platform**
+- [ ] `PlatformAdapter::detect()` → `AnimationBackend` (`WebRaf`, `NativeClock`, `TerminalPoll`)
+- [ ] Web: uses `RafDriver` from `animato-wasm`
+- [ ] Desktop/Mobile: uses `WallClock` with 60fps event loop tick
+- [ ] TUI: uses crossterm event poll intervals as tick source
+
+**`animato-dioxus` — native**
+- [ ] `use_window_animation(config)` → `WindowAnimationHandle` — animate native window position on desktop
+- [ ] `use_window_spring(config)` → `WindowSpringHandle` — spring-based window animation
+- [ ] `WindowAnimationHandle::move_to()`, `resize_to()`, `opacity_to()`
+
+**`animato` facade**
+- [ ] `dioxus` feature flag
+- [ ] Re-exports all `animato-dioxus` public APIs
+
+**Documentation & Examples**
+- [ ] `docs/dioxus.md` — Dioxus integration guide (web + desktop + mobile + TUI)
+- [ ] `examples/dioxus_web_tween/` — web app with animated elements
+- [ ] `examples/dioxus_desktop_spring/` — desktop app with spring-animated window
+- [ ] `examples/dioxus_cross_platform/` — single codebase running on web + desktop
+- [ ] `examples/dioxus_tui_progress/` — TUI progress bar with Dioxus
+
+**Testing**
+- [ ] Unit tests for all hooks (mock clock, deterministic dt)
+- [ ] Platform adapter tests (backend detection)
+- [ ] WASM compile check: `cargo check -p animato-dioxus --target wasm32-unknown-unknown`
+- [ ] Desktop compile check: `cargo check -p animato-dioxus`
+- [ ] All examples compile
+
+---
+
+## v1.3.0 — Yew
+
+**Goal:** Full Yew integration with functional component hooks and an `AnimationAgent` for cross-component coordination. Scroll-driven animations, mount/unmount transitions, FLIP list reordering, page transitions, gesture bindings, and CSS helpers.
+
+### Crates shipped
+
+- `animato-yew` `v1.3.0` (new)
+
+### Deliverables
+
+**`animato-yew` — hooks**
+- [ ] `use_tween(from, to, config)` → `(UseStateHandle<T>, TweenHandle)` — tween with rAF-gated state updates
+- [ ] `use_spring(initial, config)` → `(UseStateHandle<T>, SpringHandle)` — spring with physics
+- [ ] `use_timeline(builder)` → `TimelineHandle` — timeline composition
+- [ ] `use_keyframes(builder)` → `(UseStateHandle<T>, KeyframeHandle)` — keyframe track
+- [ ] Per-frame updates via `gloo::request_animation_frame` to minimize VDOM diff overhead
+
+**`animato-yew` — scroll**
+- [ ] `use_scroll_progress(target, config)` → scroll progress state
+- [ ] `use_scroll_trigger(target, config)` → viewport enter/exit callbacks with scrub and pin
+- [ ] `use_scroll_velocity()` → scroll velocity state
+
+**`animato-yew` — presence, transition, list, gesture, CSS**
+- [ ] `AnimatePresence` component — mount/unmount transitions using Yew `Html` and `Callback`
+- [ ] `PageTransition` component with `TransitionMode` and `yew-router` integration
+- [ ] `AnimatedFor` component — FLIP-powered list reordering
+- [ ] `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — pointer event bindings via Yew `NodeRef`
+- [ ] `AnimatedStyle` struct and `css_spring()`, `css_tween()` CSS helpers
+
+**`animato-yew` — agent**
+- [ ] `AnimationAgent` — Yew agent for cross-component animation coordination
+- [ ] `AgentInput` enum: `AddTween`, `AddSpring`, `Play`, `Pause`, `Reset`, `Cancel`, `CancelAll`, `Tick`
+- [ ] `AgentOutput` enum: `ValueChanged`, `Completed`, `Settled`
+- [ ] Components subscribe to agent outputs without direct parent-child coupling
+- [ ] Agent manages an `AnimationDriver` internally and ticks all registered animations
+
+**`animato` facade**
+- [ ] `yew` feature flag
+- [ ] Re-exports all `animato-yew` public APIs
+
+**Documentation & Examples**
+- [ ] `docs/yew.md` — Yew integration guide
+- [ ] `examples/yew_basic_tween/` — Yew app with animated div
+- [ ] `examples/yew_scroll_trigger/` — scroll-triggered entrance animations
+- [ ] `examples/yew_animated_list/` — FLIP list reordering demo
+- [ ] `examples/yew_agent_coordination/` — cross-component animation via agent
+
+**Testing**
+- [ ] Unit tests for all hooks (mock rAF, deterministic dt)
+- [ ] Agent integration tests (message round-trip, completion events)
+- [ ] WASM compile check: `cargo check -p animato-yew --target wasm32-unknown-unknown`
+- [ ] All examples compile
+
+---
+
+## Post-1.3 Ideas (Future / `v1.x+`)
+
+These are not committed — they are ideas to revisit after the framework integrations ship.
 
 | Idea | Notes |
 |------|-------|
 | `animato-egui` | `EguiAnimatoPlugin` for egui animation helpers |
 | `animato-tauri` | Tauri IPC bridge for driving Animato from the JS frontend |
-| `animato-dioxus` | Dioxus signal integration for reactive animations |
-| `animato-leptos` | Leptos signal/resource integration |
 | Declarative animation DSL | A `animato!{ }` proc macro for GSAP-style chaining |
 | Spring from velocity | Start a spring with an initial velocity, not just a target |
 | Animation recording | Record and replay animation sequences as data |
@@ -475,6 +678,6 @@ The best way to contribute right now is to use the v1.0 stable API and open focu
 
 ---
 
-*Roadmap version: 1.0.0 — last updated May 2026*  
-*v1.0.0 shipped — stable API active*  
+*Roadmap version: 1.3.0 — last updated May 2026*  
+*v1.0.0 core shipped — framework integrations in progress*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
