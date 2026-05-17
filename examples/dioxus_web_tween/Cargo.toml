@@ -1,0 +1,8 @@
+[package]
+name = "dioxus_web_tween"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+animato = { path = "../../crates/animato", features = ["dioxus-web"] }
+dioxus = { version = "0.7.9", features = ["web"] }

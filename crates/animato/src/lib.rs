@@ -90,6 +90,7 @@
 //! | `bevy` | [`AnimatoPlugin`], Bevy tween/spring wrapper components |
 //! | `wasm` | [`RafDriver`] for `requestAnimationFrame` loops |
 //! | `leptos` | Signal-backed Leptos hooks and components |
+//! | `dioxus` | Dioxus signal hooks, motion, presence, gestures, and native helpers |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
@@ -178,3 +179,7 @@ pub use animato_wasm::{
 // ── Leptos ──────────────────────────────────────────────────────────────────
 #[cfg(feature = "leptos")]
 pub use animato_leptos::*;
+
+// ── Dioxus ──────────────────────────────────────────────────────────────────
+#[cfg(feature = "dioxus")]
+pub use animato_dioxus::*;

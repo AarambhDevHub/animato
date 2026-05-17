@@ -30,6 +30,11 @@ leptos   = ["dep:animato-leptos"]
 leptos-csr = ["leptos", "animato-leptos/csr"]
 leptos-hydrate = ["leptos", "animato-leptos/hydrate"]
 leptos-ssr = ["leptos", "animato-leptos/ssr"]
+dioxus   = ["dep:animato-dioxus"]
+dioxus-web = ["dioxus", "animato-dioxus/web"]
+dioxus-desktop = ["dioxus", "animato-dioxus/desktop"]
+dioxus-router = ["dioxus", "animato-dioxus/router"]
+dioxus-native = ["dioxus", "animato-dioxus/native"]
 tokio    = ["timeline", "animato-timeline/tokio"]
 serde    = [
     "dep:serde",
@@ -55,6 +60,7 @@ animato-gpu      = { workspace = true, optional = true }
 animato-bevy     = { workspace = true, optional = true }
 animato-wasm     = { workspace = true, optional = true }
 animato-leptos   = { workspace = true, optional = true }
+animato-dioxus   = { workspace = true, optional = true }
 palette          = { workspace = true, optional = true }
 serde            = { workspace = true, optional = true }
 
@@ -72,6 +78,7 @@ animato-gpu    = { workspace = true }
 animato-bevy   = { workspace = true }
 animato-wasm   = { workspace = true }
 animato-leptos = { workspace = true }
+animato-dioxus = { workspace = true }
 bevy_app       = { workspace = true }
 bevy_ecs       = { workspace = true }
 bevy_time      = { workspace = true }
@@ -141,6 +148,11 @@ required-features = ["bevy"]
 name = "wasm_raf_driver"
 path = "../../tests/wasm_raf_driver.rs"
 required-features = ["wasm", "tween"]
+
+[[test]]
+name = "dioxus_facade"
+path = "../../tests/dioxus_facade.rs"
+required-features = ["dioxus"]
 
 # ── v0.8.0 tests ──────────────────────────────────────────────────────────────
 [[test]]

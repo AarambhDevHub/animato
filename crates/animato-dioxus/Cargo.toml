@@ -1,0 +1,59 @@
+[package]
+name        = "animato-dioxus"
+description = "Dioxus integration for the Animato animation library: cross-platform hooks, motion, scroll, presence, lists, gestures, and native helpers."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "dioxus", "signals", "wasm", "gui"]
+categories  = ["wasm", "web-programming", "gui"]
+
+[features]
+default    = ["scroll", "presence", "transition", "list", "gesture", "motion", "css", "platform"]
+scroll     = []
+presence   = ["css"]
+transition = ["presence"]
+list       = ["presence"]
+gesture    = ["dep:animato-physics"]
+motion     = []
+css        = []
+platform   = []
+native     = []
+web        = ["dioxus/web", "dep:wasm-bindgen", "dep:web-sys", "animato-wasm"]
+desktop    = ["dioxus/desktop", "native"]
+mobile     = ["dioxus/mobile", "native"]
+router     = ["dep:dioxus-router", "dioxus/router", "transition"]
+path       = ["dep:animato-path"]
+color      = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true, features = ["std"] }
+animato-spring   = { workspace = true, features = ["std"] }
+animato-timeline = { workspace = true }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true, optional = true }
+animato-path     = { workspace = true, features = ["std"], optional = true }
+animato-physics  = { workspace = true, features = ["std"], optional = true }
+animato-color    = { workspace = true, optional = true }
+dioxus           = { workspace = true }
+dioxus-router    = { workspace = true, optional = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { workspace = true, optional = true }
+web-sys      = { workspace = true, optional = true, features = [
+    "Document",
+    "DomRect",
+    "Element",
+    "EventTarget",
+    "HtmlElement",
+    "Performance",
+    "PointerEvent",
+    "Window",
+] }
+
+[dev-dependencies]
+approx = { workspace = true }

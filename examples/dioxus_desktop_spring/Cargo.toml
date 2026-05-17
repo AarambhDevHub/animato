@@ -1,0 +1,8 @@
+[package]
+name = "dioxus_desktop_spring"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+animato = { path = "../../crates/animato", features = ["dioxus-desktop", "dioxus-native"] }
+dioxus = { version = "0.7.9", features = ["desktop"] }
