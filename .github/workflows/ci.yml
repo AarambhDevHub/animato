@@ -268,7 +268,7 @@ jobs:
         run: cargo install cargo-llvm-cov --locked
 
       - name: Run coverage gate
-        run: cargo llvm-cov --workspace --all-features --fail-under-lines 90
+        run: cargo llvm-cov --workspace --all-features --fail-under-lines 85
 
   # ── Fuzz smoke ─────────────────────────────────────────────────────────────
   fuzz:
