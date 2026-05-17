@@ -1,0 +1,10 @@
+[package]
+name = "leptos_page_transition"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+animato = { path = "../../crates/animato", features = ["leptos-csr"] }
+leptos = { version = "0.8.19", features = ["csr"] }
+leptos_router = "0.8.13"

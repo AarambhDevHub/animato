@@ -32,6 +32,16 @@ cd examples/wasm_counter
 wasm-pack build --target web
 ```
 
+## Leptos Examples
+
+```sh
+cargo check --manifest-path examples/leptos_basic_tween/Cargo.toml
+cargo check --manifest-path examples/leptos_scroll_trigger/Cargo.toml
+cargo check --manifest-path examples/leptos_page_transition/Cargo.toml
+cargo check --manifest-path examples/leptos_animated_list/Cargo.toml
+cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml
+```
+
 ## Compile Examples Without Running
 
 ```sh

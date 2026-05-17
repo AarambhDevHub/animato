@@ -4,7 +4,7 @@ Features: `wasm`, optional `wasm-dom`.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["wasm"] }
+animato = { version = "1.1", features = ["wasm"] }
 ```
 
 ## requestAnimationFrame Driver

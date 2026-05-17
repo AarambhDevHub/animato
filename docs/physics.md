@@ -4,7 +4,7 @@ Feature: `physics`.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["physics"] }
+animato = { version = "1.1", features = ["physics"] }
 ```
 
 ## Inertia

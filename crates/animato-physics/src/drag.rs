@@ -181,6 +181,15 @@ impl DragState {
         self
     }
 
+    /// Replace drag constraints and clamp the current position into them.
+    pub fn set_constraints(&mut self, constraints: DragConstraints) {
+        self.constraints = constraints;
+        self.position = self
+            .constraints
+            .constrain(self.position, self.axis, self.position);
+        self.last_position = self.position;
+    }
+
     /// Set the inertia configuration used on pointer release.
     pub fn inertia_config(mut self, config: InertiaConfig<[f32; 2]>) -> Self {
         self.inertia_config = config;
@@ -201,6 +210,17 @@ impl DragState {
     /// Current estimated drag velocity.
     pub fn velocity(&self) -> [f32; 2] {
         self.velocity
+    }
+
+    /// Move instantly to a position, applying axis filters and constraints.
+    pub fn snap_to(&mut self, position: [f32; 2]) {
+        self.active_pointer_id = None;
+        self.velocity = [0.0, 0.0];
+        self.position = self
+            .constraints
+            .constrain(position, self.axis, self.position);
+        self.start_position = self.position;
+        self.last_position = self.position;
     }
 
     /// `true` while a pointer is captured.
@@ -367,5 +387,20 @@ mod tests {
         drag.on_pointer_down(PointerData::new(0.0, 0.0, 1));
         drag.on_pointer_move(PointerData::new(16.0, 24.0, 1), 0.016);
         assert_eq!(drag.position(), [20.0, 20.0]);
+    }
+
+    #[cfg(any(feature = "std", feature = "alloc"))]
+    #[test]
+    fn snap_to_and_updated_constraints_clamp_position() {
+        let mut drag = DragState::new([0.0, 0.0])
+            .constraints(DragConstraints::bounded(-10.0, 10.0, -8.0, 8.0));
+
+        drag.snap_to([40.0, -30.0]);
+        assert_eq!(drag.position(), [10.0, -8.0]);
+
+        drag.set_constraints(DragConstraints::bounded(-4.0, 4.0, -3.0, 3.0));
+        assert_eq!(drag.position(), [4.0, -3.0]);
+        assert!(!drag.is_dragging());
+        assert_eq!(drag.velocity(), [0.0, 0.0]);
     }
 }

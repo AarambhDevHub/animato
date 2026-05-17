@@ -15,9 +15,10 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.0.0 API is stable. The current public crates cover easing, tweens,
+The v1.1.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
-drivers, GPU batch evaluation, Bevy integration, and WASM/browser helpers.
+drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
+first-class Leptos integration.
 
 ## Install
 
@@ -25,26 +26,34 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.0"
+animato = "1.1"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["path", "physics", "color"] }
+animato = { version = "1.1", features = ["path", "physics", "color"] }
+```
+
+Leptos applications enable the facade feature plus the app rendering mode:
+
+```toml
+[dependencies]
+animato = { version = "1.1", features = ["leptos-csr"] }
+leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
 For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.0", default-features = false }
-animato-tween   = { version = "1.0", default-features = false }
-animato-spring  = { version = "1.0", default-features = false }
-animato-path    = { version = "1.0", default-features = false }
-animato-physics = { version = "1.0", default-features = false }
-animato-color   = { version = "1.0", default-features = false }
+animato-core    = { version = "1.1", default-features = false }
+animato-tween   = { version = "1.1", default-features = false }
+animato-spring  = { version = "1.1", default-features = false }
+animato-path    = { version = "1.1", default-features = false }
+animato-physics = { version = "1.1", default-features = false }
+animato-color   = { version = "1.1", default-features = false }
 ```
 
 ## Quick Start
@@ -102,6 +111,7 @@ other target.
 | [`animato-gpu`](./crates/animato-gpu) | Batched `Tween<f32>` evaluation with CPU fallback | std |
 | [`animato-bevy`](./crates/animato-bevy) | Bevy ECS components, systems, completion messages | std |
 | [`animato-wasm`](./crates/animato-wasm) | rAF driver and optional DOM helpers | wasm/std |
+| [`animato-leptos`](./crates/animato-leptos) | Leptos signal hooks, scroll, presence, lists, gestures, CSS, SSR | wasm/std |
 | [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
 
 ## Feature Flags
@@ -121,6 +131,10 @@ other target.
 | `bevy` | `AnimatoPlugin`, tween/spring components, transform helpers |
 | `wasm` | `RafDriver`, `ScrollSmoother` |
 | `wasm-dom` | FLIP, split text, drag, observer, shared-element helpers |
+| `leptos` | Leptos hooks/components without forcing CSR/hydrate/SSR mode |
+| `leptos-csr` | `leptos` plus Leptos CSR mode |
+| `leptos-hydrate` | `leptos` plus Leptos hydration mode |
+| `leptos-ssr` | `leptos` plus Leptos SSR mode |
 | `serde` | Serialization for supported public types |
 | `tokio` | `Timeline::wait()` async completion helper |
 
@@ -149,6 +163,16 @@ cd examples/wasm_counter
 wasm-pack build --target web
 ```
 
+Leptos examples:
+
+```sh
+cargo check --manifest-path examples/leptos_basic_tween/Cargo.toml
+cargo check --manifest-path examples/leptos_scroll_trigger/Cargo.toml
+cargo check --manifest-path examples/leptos_page_transition/Cargo.toml
+cargo check --manifest-path examples/leptos_animated_list/Cargo.toml
+cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml
+```
+
 ## Documentation
 
 The v1.0 documentation lives in [`docs/`](./docs/):
@@ -160,6 +184,7 @@ The v1.0 documentation lives in [`docs/`](./docs/):
 | [Feature Flags](./docs/feature-flags.md) | Exact feature requirements. |
 | [Concepts](./docs/concepts.md) | `Interpolate`, `Update`, clocks, composition. |
 | [Recipes](./docs/recipes.md) | Practical patterns for UI, games, paths, and input. |
+| [Leptos](./docs/leptos.md) | Signal-backed hooks and Leptos integration examples. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
 | [Release](./docs/release.md) | v1.0 publishing checklist. |
 
@@ -178,6 +203,7 @@ cargo test --workspace --no-default-features
 cargo test -p animato --all-features --examples
 cargo doc --workspace --all-features --no-deps
 cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 cargo bench --workspace --no-run
 ```
 

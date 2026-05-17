@@ -5,7 +5,7 @@ dependencies.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["path", "physics"] }
+animato = { version = "1.1", features = ["path", "physics"] }
 ```
 
 ## Facade Features
@@ -25,6 +25,10 @@ animato = { version = "1.0", features = ["path", "physics"] }
 | `bevy` | `animato-bevy`, `tween`, `spring`, `std` |
 | `wasm` | `animato-wasm`, `driver` |
 | `wasm-dom` | `wasm` plus DOM helpers |
+| `leptos` | `animato-leptos` hooks/components without forcing an app mode |
+| `leptos-csr` | `leptos` plus Leptos CSR mode |
+| `leptos-hydrate` | `leptos` plus Leptos hydration mode |
+| `leptos-ssr` | `leptos` plus Leptos SSR mode |
 | `serde` | Serde derives and re-exports on supported types |
 | `tokio` | `Timeline::wait()` |
 
@@ -33,8 +37,8 @@ animato = { version = "1.0", features = ["path", "physics"] }
 Prefer focused crates for no_std:
 
 ```toml
-animato-core = { version = "1.0", default-features = false }
-animato-tween = { version = "1.0", default-features = false }
+animato-core = { version = "1.1", default-features = false }
+animato-tween = { version = "1.1", default-features = false }
 ```
 
 See [no-std.md](./no-std.md).
@@ -47,6 +51,8 @@ See [no-std.md](./no-std.md).
 - `RafDriver` requires `wasm`.
 - DOM helpers require `wasm-dom` and `wasm32`.
 - Bevy transform helpers require `bevy`.
+- Leptos apps should choose exactly one app mode feature: `leptos-csr`,
+  `leptos-hydrate`, or `leptos-ssr`.
 
 ## Related Docs
 

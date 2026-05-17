@@ -4,7 +4,7 @@ Feature: `color`.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["color"] }
+animato = { version = "1.1", features = ["color"] }
 ```
 
 Animato wraps `palette` color types so tweens can interpolate in perceptual or

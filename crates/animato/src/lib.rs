@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.0", default-features = false }
-//! animato-tween  = { version = "1.0", default-features = false }
-//! animato-spring = { version = "1.0", default-features = false }
-//! animato-physics = { version = "1.0", default-features = false }
-//! animato-color = { version = "1.0", default-features = false }
+//! animato-core   = { version = "1.1", default-features = false }
+//! animato-tween  = { version = "1.1", default-features = false }
+//! animato-spring = { version = "1.1", default-features = false }
+//! animato-physics = { version = "1.1", default-features = false }
+//! animato-color = { version = "1.1", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -89,6 +89,7 @@
 //! | `gpu` | [`GpuAnimationBatch`] for high-volume `Tween<f32>` batches |
 //! | `bevy` | [`AnimatoPlugin`], Bevy tween/spring wrapper components |
 //! | `wasm` | [`RafDriver`] for `requestAnimationFrame` loops |
+//! | `leptos` | Signal-backed Leptos hooks and components |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
@@ -173,3 +174,7 @@ pub use animato_wasm::{
     Draggable, FlipAnimation, FlipState, LayoutAnimator, Observer, ObserverEvent,
     SharedElementTransition, SplitMode, SplitText,
 };
+
+// ── Leptos ──────────────────────────────────────────────────────────────────
+#[cfg(feature = "leptos")]
+pub use animato_leptos::*;

@@ -5,6 +5,24 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] — 2026-05-16 — Leptos
+
+### Added
+- `animato-leptos`: new Leptos 0.8 integration crate with signal-backed `use_tween`, `use_spring`, `use_timeline`, and `use_keyframes` hooks.
+- Leptos scroll, presence, page transition, FLIP-ready list, gesture, CSS, and SSR helper APIs.
+- `animato` facade features: `leptos`, `leptos-csr`, `leptos-hydrate`, and `leptos-ssr`.
+- Leptos examples for basic tweening, scroll triggers, page transitions, animated lists, and drag/pinch gestures.
+- `docs/leptos.md` integration guide.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins from `1.0.0`/`1.0` to `1.1.0`/`1.1`.
+- Updated README, feature-flag docs, architecture notes, roadmap, CI, and publish workflow for `v1.1.0 — Leptos`.
+- Added Leptos 0.8.19 and Leptos Router 0.8.13 as workspace dependencies.
+
+### Verification
+- `cargo test -p animato-leptos --all-features`
+- `cargo check -p animato-leptos --all-features`
+
 ## [1.0.0] — 2026-05-14 — Stable
 
 ### Added
@@ -249,7 +267,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/AarambhDevHub/animato/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AarambhDevHub/animato/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/AarambhDevHub/animato/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/AarambhDevHub/animato/compare/v0.7.0...v0.8.0

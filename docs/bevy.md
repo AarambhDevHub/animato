@@ -4,7 +4,7 @@ Feature: `bevy`.
 
 ```toml
 [dependencies]
-animato = { version = "1.0", features = ["bevy"] }
+animato = { version = "1.1", features = ["bevy"] }
 ```
 
 Animato targets Bevy 0.18.1 through lightweight wrapper components and systems.

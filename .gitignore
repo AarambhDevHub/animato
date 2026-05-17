@@ -2,6 +2,9 @@
 /target
 **/target/
 
+/dist
+**/dist/
+
 # Cargo lock — committed at workspace root, ignored in sub-crates
 # (do NOT add Cargo.lock here — we want it tracked at root)
 

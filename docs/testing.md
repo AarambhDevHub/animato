@@ -1,6 +1,6 @@
 # Testing
 
-This is the v1.0.0 release verification set.
+This is the v1.1.0 release verification set.
 
 ## Required Local Gates
 
@@ -12,6 +12,7 @@ cargo test --workspace --no-default-features
 cargo test -p animato --all-features --examples
 cargo doc --workspace --all-features --no-deps
 cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 cargo bench --workspace --no-run
 ```
 
@@ -47,6 +48,7 @@ cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
 
 ```sh
 cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 cd examples/wasm_counter
 wasm-pack build --target web
 ```

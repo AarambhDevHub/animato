@@ -33,7 +33,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.8.0` | Advanced | Shape morphing, scroll-linked, layout animation (FLIP) | ✅ |
 | `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | ✅ |
 | `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | ✅ |
-| `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | 📋 |
+| `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | ✅ |
 | `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | 📋 |
 | `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | 📋 |
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | 📋 |
@@ -465,75 +465,72 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-leptos` — hooks**
-- [ ] `use_tween(from, to, config)` → `(ReadSignal<T>, TweenHandle)` — signal-backed tween with play/pause/resume/reset/reverse/seek/time_scale control
-- [ ] `use_spring(initial, config)` → `(ReadSignal<T>, SpringHandle)` — signal-backed spring with set_target/snap_to/is_settled
-- [ ] `use_timeline(builder)` → `TimelineHandle` — compose multiple animations with `At` scheduling
-- [ ] `use_keyframes(builder)` → `(ReadSignal<T>, KeyframeHandle)` — multi-stop keyframe animation
-- [ ] rAF loop management: auto-start on mount, auto-cleanup on unmount, pause on tab visibility change
-- [ ] `TweenHandle` and `SpringHandle` expose `is_complete()` and `progress()` as `ReadSignal`
+- [x] `use_tween(from, to, config)` → `(ReadSignal<T>, TweenHandle)` — signal-backed tween with play/pause/resume/reset/reverse/seek/time_scale control
+- [x] `use_spring(initial, config)` → `(ReadSignal<T>, SpringHandle)` — signal-backed spring with set_target/snap_to/is_settled
+- [x] `use_timeline(builder)` → `TimelineHandle` — compose multiple animations with `At` scheduling
+- [x] `use_keyframes(builder)` → `(ReadSignal<T>, KeyframeHandle)` — multi-stop keyframe animation
+- [x] rAF loop management: auto-start on mount, auto-cleanup on unmount, pause on tab visibility change
+- [x] `TweenHandle` and `SpringHandle` expose `is_complete()` and `progress()` as `ReadSignal`
 
 **`animato-leptos` — scroll**
-- [ ] `use_scroll_progress(target, config)` → `ReadSignal<f32>` — 0.0..1.0 scroll progress of an element
-- [ ] `use_scroll_trigger(target, config)` → `ScrollTriggerHandle` — viewport enter/exit callbacks with threshold, once, scrub, and pin options
-- [ ] `use_scroll_velocity()` → `ReadSignal<f32>` — current scroll velocity in px/sec
-- [ ] `SmoothScroll` component — momentum scroll container with overscroll damping
-- [ ] `ScrollConfig` with axis, offset_start, offset_end, smooth, smooth_factor
-- [ ] `ScrollTriggerConfig` with GSAP-style `start`/`end` strings, scrub linking, pin support
+- [x] `use_scroll_progress(target, config)` → `ReadSignal<f32>` — 0.0..1.0 scroll progress of an element
+- [x] `use_scroll_trigger(target, config)` → `ScrollTriggerHandle` — viewport enter/exit callbacks with threshold, once, scrub, and pin options
+- [x] `use_scroll_velocity()` → `ReadSignal<f32>` — current scroll velocity in px/sec
+- [x] `SmoothScroll` component — momentum scroll container with overscroll damping
+- [x] `ScrollConfig` with axis, offset_start, offset_end, smooth, smooth_factor
+- [x] `ScrollTriggerConfig` with GSAP-style `start`/`end` strings, scrub linking, pin support
 
 **`animato-leptos` — presence**
-- [ ] `AnimatePresence` component — mount/unmount transitions with configurable enter/exit animations
-- [ ] `PresenceAnimation` struct with duration, easing, from/to `AnimatedStyle`
-- [ ] Presets: `fade()`, `slide_up()`, `slide_down()`, `slide_left()`, `slide_right()`, `zoom_in()`, `zoom_out()`, `flip_x()`, `flip_y()`, `blur_in()`, `spring(config)`
-- [ ] `wait_exit` flag — delay DOM removal until exit animation completes
+- [x] `AnimatePresence` component — mount/unmount transitions with configurable enter/exit animations
+- [x] `PresenceAnimation` struct with duration, easing, from/to `AnimatedStyle`
+- [x] Presets: `fade()`, `slide_up()`, `slide_down()`, `slide_left()`, `slide_right()`, `zoom_in()`, `zoom_out()`, `flip_x()`, `flip_y()`, `blur_in()`, `spring(config)`
+- [x] `wait_exit` flag — delay DOM removal until exit animation completes
 
 **`animato-leptos` — transitions**
-- [ ] `PageTransition` component — route-change animation wrapper
-- [ ] `TransitionMode` enum: `Sequential`, `Parallel`, `CrossFade`, `SlideOver`, `MorphHero`
-- [ ] Integration with `leptos_router` for automatic route detection
+- [x] `PageTransition` component — route-change animation wrapper
+- [x] `TransitionMode` enum: `Sequential`, `Parallel`, `CrossFade`, `SlideOver`, `MorphHero`
+- [x] Integration with `leptos_router` for automatic route detection
 
 **`animato-leptos` — list**
-- [ ] `AnimatedFor` component — FLIP-powered list reordering with insert/remove/move animations
-- [ ] Configurable enter/exit animations per item
-- [ ] `move_duration`, `move_easing`, `stagger_delay` props
-- [ ] Automatic layout snapshot and FLIP calculation
+- [x] `AnimatedFor` component — FLIP-powered list reordering with insert/remove/move animations
+- [x] Configurable enter/exit animations per item
+- [x] `move_duration`, `move_easing`, `stagger_delay` props
+- [x] Automatic layout snapshot and FLIP calculation
 
 **`animato-leptos` — gesture**
-- [ ] `use_drag(target, config)` → `(ReadSignal<[f32; 2]>, DragHandle)` — draggable element with axis lock, constraints, inertia, snap points, elastic edges
-- [ ] `use_gesture(target, config)` → `ReadSignal<Option<Gesture>>` — tap, double tap, long press, swipe, pinch, rotation
-- [ ] `use_pinch(target)` → `(ReadSignal<f32>, PinchHandle)` — pinch-zoom scale signal
-- [ ] `use_swipe(target, config)` → `ReadSignal<Option<SwipeEvent>>` — swipe detection with direction and velocity
+- [x] `use_drag(target, config)` → `(ReadSignal<[f32; 2]>, DragHandle)` — draggable element with axis lock, constraints, inertia, snap points, elastic edges
+- [x] `use_gesture(target, config)` → `ReadSignal<Option<Gesture>>` — tap, double tap, long press, swipe, pinch, rotation
+- [x] `use_pinch(target)` → `(ReadSignal<f32>, PinchHandle)` — pinch-zoom scale signal
+- [x] `use_swipe(target, config)` → `ReadSignal<Option<SwipeEvent>>` — swipe detection with direction and velocity
 
 **`animato-leptos` — CSS**
-- [ ] `AnimatedStyle` struct — CSS property bag (opacity, transform, scale, translate, rotate, skew, blur, background_color, border_radius, width, height, clip_path, custom)
-- [ ] `css_spring(target, config)` → `ReadSignal<String>` — animate CSS properties with a spring
-- [ ] `css_tween(from, to, duration, easing)` → `ReadSignal<String>` — animate CSS properties with a tween
+- [x] `AnimatedStyle` struct — CSS property bag (opacity, transform, scale, translate, rotate, skew, blur, background_color, border_radius, width, height, clip_path, custom)
+- [x] `css_spring(target, config)` → `ReadSignal<String>` — animate CSS properties with a spring
+- [x] `css_tween(from, to, duration, easing)` → `ReadSignal<String>` — animate CSS properties with a tween
 
 **`animato-leptos` — SSR**
-- [ ] `is_hydrating()` → `bool` — skip animations during hydration
-- [ ] `use_client_only(server_value)` → `ReadSignal<T>` — returns target value on server, animates on client
-- [ ] `SsrFallback` component — renders static fallback during SSR, swaps in animated version after hydration
+- [x] `is_hydrating()` → `bool` — skip animations during hydration
+- [x] `use_client_only(server_value)` → `ReadSignal<T>` — returns target value on server, animates on client
+- [x] `SsrFallback` component — renders static fallback during SSR, swaps in animated version after hydration
 
 **`animato` facade**
-- [ ] `leptos` feature flag
-- [ ] Re-exports all `animato-leptos` public APIs
+- [x] `leptos` feature flag
+- [x] Re-exports all `animato-leptos` public APIs
 
 **Documentation & Examples**
-- [ ] `docs/leptos.md` — Leptos integration guide
-- [ ] `examples/leptos_basic_tween/` — Leptos app with animated div
-- [ ] `examples/leptos_scroll_trigger/` — scroll-triggered entrance animations
-- [ ] `examples/leptos_page_transition/` — route transition demo
-- [ ] `examples/leptos_animated_list/` — FLIP list reordering demo
-- [ ] `examples/leptos_drag_gesture/` — draggable element with inertia
+- [x] `docs/leptos.md` — Leptos integration guide
+- [x] `examples/leptos_basic_tween/` — Leptos app with animated div
+- [x] `examples/leptos_scroll_trigger/` — scroll-triggered entrance animations
+- [x] `examples/leptos_page_transition/` — route transition demo
+- [x] `examples/leptos_animated_list/` — FLIP list reordering demo
+- [x] `examples/leptos_drag_gesture/` — draggable element with inertia
 
 **Testing**
-- [ ] Unit tests for all hooks (mock rAF, deterministic dt)
-- [ ] Integration tests for SSR guards (signal returns target value on server)
-- [ ] WASM compile check: `cargo check -p animato-leptos --target wasm32-unknown-unknown`
-- [ ] All examples compile: `cargo test -p animato-leptos --examples`
-
----
-
-## v1.2.0 — Dioxus
+- [x] Unit tests for all hooks (mock rAF, deterministic dt)
+- [x] Integration tests for SSR guards (signal returns target value on server)
+- [x] WASM compile check: `cargo check -p animato-leptos --target wasm32-unknown-unknown`
+- [x] All examples compile: `cargo test -p animato-leptos --examples`
+ — Dioxus
 
 **Goal:** Cross-platform Dioxus integration. The same animation hooks work on web (WASM), desktop (Windows/macOS/Linux), mobile (iOS/Android), and TUI — with platform-adaptive tick sources and native window animation helpers.
 
@@ -888,10 +885,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.0 stable API and open focused issues for bugs, documentation gaps, or post-1.0 feature proposals.
+The best way to contribute right now is to use the v1.1 stable API and open focused issues for bugs, documentation gaps, or post-1.1 feature proposals.
 
 ---
 
 *Roadmap version: 1.6.0 — last updated May 2026*  
-*v1.0.0 core shipped — framework integrations and engine expansion in progress*  
+*v1.1.0 Leptos shipped — additional framework integrations and engine expansion in progress*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
