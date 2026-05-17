@@ -478,8 +478,10 @@ where
 mod tests {
     use super::*;
     use animato_core::Easing;
+    use animato_timeline::At;
     use animato_tween::KeyframeTrack;
-    use leptos::prelude::{Get, Owner};
+    use animato_tween::Tween;
+    use leptos::prelude::{Get, GetUntracked, Owner};
 
     #[test]
     fn tween_handle_ticks_deterministically() {
@@ -488,6 +490,29 @@ mod tests {
                 use_tween(0.0_f32, 10.0, |b| b.duration(1.0).easing(Easing::Linear));
             handle.tick(0.5);
             assert!((value.get() - 5.0).abs() < 0.001 || crate::ssr::is_hydrating());
+        });
+    }
+
+    #[test]
+    fn tween_handle_controls_sync_signals() {
+        Owner::new().with(|| {
+            let (value, handle) = use_tween(0.0_f32, 10.0, |b| b.duration(1.0));
+            handle.reset();
+            handle.pause();
+            handle.tick(0.5);
+            assert_eq!(value.get_untracked(), 0.0);
+
+            handle.resume();
+            handle.set_time_scale(2.0);
+            handle.tick(0.25);
+            assert!(handle.progress().get_untracked() >= 0.5 || crate::ssr::is_hydrating());
+
+            handle.seek(1.0);
+            assert_eq!(handle.progress().get_untracked(), 1.0);
+            handle.play();
+            handle.reverse();
+            handle.reset();
+            assert!(value.get_untracked().is_finite());
         });
     }
 
@@ -511,6 +536,56 @@ mod tests {
             handle.tick(0.5);
             assert!(value.get() >= 0.0);
             assert!(handle.progress().get() >= 0.0);
+        });
+    }
+
+    #[test]
+    fn timeline_handle_controls_state() {
+        Owner::new().with(|| {
+            let handle = use_timeline(|timeline| {
+                timeline.add(
+                    "x",
+                    Tween::new(0.0_f32, 1.0).duration(1.0).build(),
+                    At::Start,
+                )
+            });
+
+            handle.pause();
+            assert_eq!(handle.state().get(), TimelineState::Paused);
+            handle.resume();
+            handle.set_time_scale(2.0);
+            handle.tick(0.25);
+            assert!(handle.progress().get() >= 0.5 || crate::ssr::is_hydrating());
+            handle.seek(1.0);
+            assert!(handle.is_complete().get());
+            handle.reset();
+            handle.play();
+            assert!(matches!(
+                handle.state().get(),
+                TimelineState::Playing | TimelineState::Completed
+            ));
+        });
+    }
+
+    #[test]
+    fn keyframe_handle_pause_reset_and_time_scale() {
+        Owner::new().with(|| {
+            let (value, handle) =
+                use_keyframes(|track: KeyframeTrack<f32>| track.push(0.0, 0.0).push(1.0, 10.0));
+            handle.reset();
+
+            handle.pause();
+            handle.tick(0.5);
+            assert_eq!(value.get(), 0.0);
+
+            handle.play();
+            handle.set_time_scale(2.0);
+            handle.tick(0.25);
+            assert!(value.get() >= 5.0 || crate::ssr::is_hydrating());
+
+            handle.reset();
+            assert_eq!(value.get(), 0.0);
+            assert!(!handle.is_complete().get());
         });
     }
 }

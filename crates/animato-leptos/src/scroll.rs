@@ -113,12 +113,18 @@ impl ScrollProgressCalculator {
 
     fn apply_smoothing(&mut self, target: f32) -> f32 {
         let target = target.clamp(0.0, 1.0);
-        self.current = if self.config.smooth {
-            let factor = self.config.smooth_factor.clamp(0.0, 1.0);
-            self.current + (target - self.current) * factor
-        } else {
-            target
-        };
+        self.current =
+            if !self.config.smooth || target <= f32::EPSILON || target >= 1.0 - f32::EPSILON {
+                target
+            } else {
+                let factor = self.config.smooth_factor.clamp(0.0, 1.0);
+                let next = self.current + (target - self.current) * factor;
+                if (target - next).abs() <= 0.001 {
+                    target
+                } else {
+                    next
+                }
+            };
 
         self.current
     }
@@ -292,10 +298,24 @@ pub fn use_scroll_velocity() -> ReadSignal<f32> {
 
         let last_position = Rc::new(Cell::new(window_scroll_position(ScrollAxis::Vertical)));
         let last_time = Rc::new(Cell::new(crate::now_ms()));
+        let scrolling = Rc::new(Cell::new(false));
+
+        {
+            let last_time = Rc::clone(&last_time);
+            let scrolling = Rc::clone(&scrolling);
+            crate::spawn_raf_loop(move |_| {
+                if scrolling.get() && crate::now_ms() - last_time.get() > 140.0 {
+                    scrolling.set(false);
+                    set_velocity.set(0.0);
+                }
+                true
+            });
+        }
 
         let scroll_handle = {
             let last_position = Rc::clone(&last_position);
             let last_time = Rc::clone(&last_time);
+            let scrolling = Rc::clone(&scrolling);
             window_event_listener(ev::scroll, move |_| {
                 let now = crate::now_ms();
                 let position = window_scroll_position(ScrollAxis::Vertical);
@@ -306,6 +326,7 @@ pub fn use_scroll_velocity() -> ReadSignal<f32> {
                 } else {
                     0.0
                 };
+                scrolling.set(value != 0.0);
                 set_velocity.set(crate::finite_or(value, 0.0));
             })
         };
@@ -437,6 +458,19 @@ mod tests {
     }
 
     #[test]
+    fn smoothed_progress_snaps_to_edges() {
+        let mut calc = ScrollProgressCalculator::new(ScrollConfig {
+            smooth: true,
+            smooth_factor: 0.1,
+            ..ScrollConfig::default()
+        });
+
+        assert_eq!(calc.calculate(100.0, 100.0, 100.0, 50.0), 0.025);
+        assert_eq!(calc.calculate(100.0, 100.0, 100.0, 300.0), 1.0);
+        assert_eq!(calc.calculate(100.0, 100.0, 100.0, -100.0), 0.0);
+    }
+
+    #[test]
     fn trigger_threshold_activates() {
         let config = ScrollTriggerConfig {
             threshold: 0.5,
@@ -459,6 +493,30 @@ mod tests {
             assert!(handle.active().get());
             handle.update_ratio(0.0, &config);
             assert!(handle.active().get());
+        });
+    }
+
+    #[test]
+    fn trigger_handle_updates_progress_when_reusable() {
+        Owner::new().with(|| {
+            let config = ScrollTriggerConfig {
+                threshold: 0.25,
+                once: false,
+                ..ScrollTriggerConfig::default()
+            };
+            let handle = use_scroll_trigger(NodeRef::new(), config.clone());
+
+            handle.update_ratio(0.5, &config);
+            assert!(handle.active().get());
+            assert_eq!(handle.progress().get(), 0.5);
+
+            handle.update_ratio(-1.0, &config);
+            assert!(!handle.active().get());
+            assert_eq!(handle.progress().get(), 0.0);
+
+            handle.update_ratio(2.0, &config);
+            assert!(handle.active().get());
+            assert_eq!(handle.progress().get(), 1.0);
         });
     }
 }

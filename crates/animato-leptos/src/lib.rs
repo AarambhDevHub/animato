@@ -31,8 +31,8 @@ mod transition;
 pub use css::{AnimatedStyle, css_spring, css_tween};
 #[cfg(feature = "gesture")]
 pub use gesture::{
-    DragConfig, DragHandle, Gesture, GestureConfig, PinchHandle, SwipeConfig, SwipeDirection,
-    SwipeEvent, use_drag, use_gesture, use_pinch, use_swipe,
+    DragAxis, DragConfig, DragConstraints, DragHandle, Gesture, GestureConfig, PinchHandle,
+    SwipeConfig, SwipeDirection, SwipeEvent, use_drag, use_gesture, use_pinch, use_swipe,
 };
 pub use hooks::{
     KeyframeHandle, SpringHandle, TimelineHandle, TweenHandle, use_keyframes, use_spring,

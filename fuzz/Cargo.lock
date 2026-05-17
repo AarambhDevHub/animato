@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "animato-core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "libm",
 ]
@@ -19,7 +19,7 @@ dependencies = [
 
 [[package]]
 name = "animato-path"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -28,7 +28,7 @@ dependencies = [
 
 [[package]]
 name = "animato-tween"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "animato-core",
 ]

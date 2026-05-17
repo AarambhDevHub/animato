@@ -272,3 +272,14 @@ fn css_timing_function(easing: &Easing) -> &'static str {
         _ => "ease",
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn stable_key_is_deterministic_and_distinguishes_values() {
+        assert_eq!(stable_key(&"row-1"), stable_key(&"row-1"));
+        assert_ne!(stable_key(&"row-1"), stable_key(&"row-2"));
+    }
+}

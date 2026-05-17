@@ -1,7 +1,7 @@
 //! Pointer, drag, pinch, and swipe helpers.
 
 use animato_core::Update;
-use animato_physics::{DragAxis, DragConstraints, DragState, InertiaConfig, InertiaN, PointerData};
+use animato_physics::{DragState, InertiaConfig, InertiaN, PointerData};
 use leptos::html;
 use leptos::prelude::*;
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
 use wasm_bindgen::JsCast;
 
-pub use animato_physics::{Gesture, GestureConfig, SwipeDirection};
+pub use animato_physics::{DragAxis, DragConstraints, Gesture, GestureConfig, SwipeDirection};
 
 /// Draggable element configuration.
 #[derive(Clone, Debug, PartialEq)]
@@ -100,6 +100,23 @@ impl DragHandle {
             inertia
         });
         crate::with_lock(&self.inertia, |slot| *slot = inertia);
+    }
+
+    /// Replace the active drag constraints and clamp the current position.
+    pub fn set_constraints(&self, constraints: Option<DragConstraints>) {
+        crate::with_lock(&self.state, |state| {
+            state.set_constraints(constraints.unwrap_or_else(DragConstraints::unbounded));
+            self.position.set(state.position());
+        });
+    }
+
+    /// Move instantly to a position, applying the current constraints.
+    pub fn snap_to(&self, position: [f32; 2]) {
+        crate::with_lock(&self.inertia, |inertia| *inertia = None);
+        crate::with_lock(&self.state, |state| {
+            state.snap_to(position);
+            self.position.set(state.position());
+        });
     }
 
     /// Advance any post-release inertia by `dt` seconds.
@@ -571,6 +588,43 @@ mod tests {
             handle.pointer_down(0.0, 0.0, 1);
             handle.pointer_move(12.0, 6.0, 1, 0.016);
             assert_eq!(position.get(), [12.0, 6.0]);
+        });
+    }
+
+    #[test]
+    fn drag_handle_snaps_and_updates_constraints() {
+        Owner::new().with(|| {
+            let (position, handle) = use_drag(
+                NodeRef::new(),
+                DragConfig {
+                    constraints: Some(DragConstraints::bounded(-10.0, 10.0, -5.0, 5.0)),
+                    inertia: false,
+                    ..DragConfig::default()
+                },
+            );
+
+            handle.snap_to([30.0, -30.0]);
+            assert_eq!(position.get(), [10.0, -5.0]);
+
+            handle.set_constraints(Some(DragConstraints::bounded(-4.0, 4.0, -2.0, 2.0)));
+            assert_eq!(position.get(), [4.0, -2.0]);
+
+            handle.set_constraints(None);
+            handle.snap_to([30.0, -30.0]);
+            assert_eq!(position.get(), [30.0, -30.0]);
+        });
+    }
+
+    #[test]
+    fn pinch_handle_clamps_and_resets() {
+        Owner::new().with(|| {
+            let (scale, handle) = use_pinch(NodeRef::new());
+            handle.set_scale(-2.0);
+            assert_eq!(scale.get(), 0.0);
+            handle.set_scale(f32::NAN);
+            assert_eq!(scale.get(), 1.0);
+            handle.reset();
+            assert_eq!(scale.get(), 1.0);
         });
     }
 

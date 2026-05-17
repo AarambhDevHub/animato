@@ -20,13 +20,13 @@ fn App() -> impl IntoView {
                             <h1 style=TITLE>"Route cards"</h1>
                         </div>
                         <nav style=NAV>
-                            <A href="" exact=true>
+                            <A href="/" exact=true>
                                 <span style=NAV_ITEM>"Overview"</span>
                             </A>
-                            <A href="reports">
+                            <A href="/reports">
                                 <span style=NAV_ITEM>"Reports"</span>
                             </A>
-                            <A href="settings">
+                            <A href="/settings">
                                 <span style=NAV_ITEM>"Settings"</span>
                             </A>
                         </nav>

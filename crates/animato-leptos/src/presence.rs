@@ -195,4 +195,40 @@ mod tests {
         assert_eq!(slide.from.translate_y, Some(20.0));
         assert_eq!(slide.to.translate_y, Some(0.0));
     }
+
+    #[test]
+    fn all_presence_presets_are_well_formed() {
+        let presets = [
+            PresenceAnimation::slide_down(),
+            PresenceAnimation::slide_left(),
+            PresenceAnimation::slide_right(),
+            PresenceAnimation::zoom_in(),
+            PresenceAnimation::zoom_out(),
+            PresenceAnimation::flip_x(),
+            PresenceAnimation::flip_y(),
+            PresenceAnimation::blur_in(),
+        ];
+
+        for preset in presets {
+            assert!(preset.duration > 0.0);
+            assert!(preset.to.to_css().contains("opacity:1;"));
+            assert_eq!(preset.reversed().from, preset.to);
+        }
+    }
+
+    #[test]
+    fn spring_presence_keeps_config_and_reverses() {
+        let config = SpringConfig::wobbly();
+        let spring = PresenceAnimation::spring(config.clone());
+        let stored = spring.spring.as_ref().expect("spring config");
+        assert_eq!(stored.stiffness, config.stiffness);
+        assert_eq!(stored.damping, config.damping);
+        assert_eq!(spring.from.scale, Some(0.8));
+        assert_eq!(spring.to.scale, Some(1.0));
+
+        let reversed = spring.reversed();
+        assert_eq!(reversed.from.scale, Some(1.0));
+        assert_eq!(reversed.to.scale, Some(0.8));
+        assert_eq!(reversed.easing, spring.easing);
+    }
 }

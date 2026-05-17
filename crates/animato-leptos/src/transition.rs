@@ -43,6 +43,7 @@ pub fn PageTransition(
         _ => PresenceAnimation::fade(),
     });
     let _exit = exit.unwrap_or_else(|| enter.reversed());
+    let base_style = container_css(mode);
     let style = match mode {
         TransitionMode::Sequential => enter.to.to_css(),
         TransitionMode::Parallel => enter.to.to_css(),
@@ -51,12 +52,14 @@ pub fn PageTransition(
         TransitionMode::MorphHero => PresenceAnimation::zoom_in().to.to_css(),
     };
     let transition = transition_css(&enter);
-    let (style, set_style) = signal(format!("{style}{transition}"));
+    let (style, set_style) = signal(format!("{base_style}{style}{transition}"));
     let previous_path = Arc::new(Mutex::new(None::<String>));
+    let (route_key, set_route_key) = signal(String::new());
     let child = children();
 
     Effect::new(move || {
         let path = location.pathname.get();
+        set_route_key.set(path.clone());
         let mut previous = previous_path
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner());
@@ -65,19 +68,30 @@ pub fn PageTransition(
         drop(previous);
 
         if changed {
-            let from = format!("{}transition:none;", enter.from.to_css());
-            let to = format!("{}{transition}", enter.to.to_css());
+            let from = format!("{base_style}{}transition:none;", enter.from.to_css());
+            let to = format!("{base_style}{}{transition}", enter.to.to_css());
             set_style.set(from);
             schedule_style(set_style, to);
         } else {
-            set_style.set(format!("{}{transition}", enter.to.to_css()));
+            set_style.set(format!("{base_style}{}{transition}", enter.to.to_css()));
         }
     });
 
     view! {
-        <div data-animato-page-transition=format!("{mode:?}") style=move || style.get()>
+        <div
+            data-animato-page-transition=format!("{mode:?}")
+            data-animato-route=move || route_key.get()
+            style=move || style.get()
+        >
             {child}
         </div>
+    }
+}
+
+fn container_css(mode: TransitionMode) -> &'static str {
+    match mode {
+        TransitionMode::SlideOver => "display:block; position:relative; overflow:hidden;",
+        _ => "display:block; position:relative;",
     }
 }
 
@@ -93,11 +107,37 @@ fn transition_css(animation: &PresenceAnimation) -> String {
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
 fn schedule_style(set_style: WriteSignal<String>, style: String) {
     let _ = leptos::prelude::request_animation_frame_with_handle(move || {
-        set_style.set(style);
+        let _ = leptos::prelude::request_animation_frame_with_handle(move || {
+            set_style.set(style);
+        });
     });
 }
 
 #[cfg(not(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate"))))]
 fn schedule_style(set_style: WriteSignal<String>, style: String) {
     set_style.set(style);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn container_css_matches_transition_mode() {
+        assert!(container_css(TransitionMode::SlideOver).contains("overflow:hidden"));
+        assert_eq!(
+            container_css(TransitionMode::Sequential),
+            "display:block; position:relative;"
+        );
+    }
+
+    #[test]
+    fn transition_css_uses_non_negative_duration() {
+        let mut animation = PresenceAnimation::fade();
+        animation.duration = -1.0;
+        let css = transition_css(&animation);
+
+        assert!(css.contains("opacity 0.000s"));
+        assert!(css.contains("will-change:opacity,transform,filter;"));
+    }
 }

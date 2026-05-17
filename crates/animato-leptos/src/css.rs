@@ -350,4 +350,71 @@ mod tests {
         assert_eq!(mid.translate_x, Some(50.0));
         assert_eq!(mid.translate_y, Some(25.0));
     }
+
+    #[test]
+    fn serializes_extended_fields_and_clamps_inputs() {
+        let mut style = AnimatedStyle::new()
+            .opacity(2.0)
+            .translate(f32::NAN, 12.25)
+            .scale(-1.0)
+            .rotate(45.5)
+            .blur(-4.0)
+            .width(120.0)
+            .height(80.5)
+            .background_color([2.0, -1.0, 0.25, 1.5])
+            .border_radius(6.0)
+            .clip_path("inset(10%)")
+            .transform("translateZ(0)")
+            .custom("pointer-events", "none");
+        style.skew_x = Some(10.0);
+        style.skew_y = Some(-5.0);
+
+        let css = style.to_css();
+        assert!(css.contains("opacity:1;"));
+        assert!(css.contains("translate(0px,12.25px)"));
+        assert!(css.contains("scale(0)"));
+        assert!(css.contains("rotate(45.5deg)"));
+        assert!(css.contains("skewX(10deg)"));
+        assert!(css.contains("skewY(-5deg)"));
+        assert!(css.contains("filter:blur(0px);"));
+        assert!(css.contains("background-color:rgba(255,0,64,1);"));
+        assert!(css.contains("border-radius:6px;"));
+        assert!(css.contains("width:120px;"));
+        assert!(css.contains("height:80.5px;"));
+        assert!(css.contains("clip-path:inset(10%);"));
+        assert!(css.contains("pointer-events:none;"));
+    }
+
+    #[test]
+    fn interpolation_handles_missing_fields_and_string_switches() {
+        let from = AnimatedStyle::new()
+            .opacity(0.4)
+            .transform("rotate(0deg)")
+            .custom("color", "red");
+        let to = AnimatedStyle::new()
+            .scale(2.0)
+            .clip_path("circle(50%)")
+            .transform("rotate(90deg)")
+            .custom("color", "blue");
+
+        let mid = from.interpolate(&to, 0.5);
+        assert_eq!(mid.opacity, Some(0.4));
+        assert_eq!(mid.scale, Some(1.0));
+        assert_eq!(mid.transform.as_deref(), Some("rotate(0deg)"));
+        assert_eq!(mid.clip_path.as_deref(), Some("circle(50%)"));
+        assert_eq!(mid.custom[0].1, "red");
+
+        let end = from.interpolate(&to, 1.0);
+        assert_eq!(end.transform.as_deref(), Some("rotate(90deg)"));
+        assert_eq!(end.custom[0].1, "blue");
+    }
+
+    #[test]
+    fn formatting_helpers_are_stable() {
+        assert_eq!(format_num(f32::NAN), "0");
+        assert_eq!(format_num(2.0), "2");
+        assert_eq!(format_num(2.125), "2.125");
+        assert_eq!(format_px(3.5), "3.5px");
+        assert_eq!(rgba_to_css([-1.0, 0.5, 2.0, f32::NAN]), "rgba(0,128,255,0)");
+    }
 }
