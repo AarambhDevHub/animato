@@ -1,4 +1,4 @@
-use animato::{
+use animato::dioxus::{
     AnimatedStyle, AnimationBackend, PlatformAdapter, PresenceAnimation, ScrollConfig,
     ScrollProgressCalculator,
 };

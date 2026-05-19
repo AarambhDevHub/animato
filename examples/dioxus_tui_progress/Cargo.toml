@@ -4,5 +4,5 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-animato = { path = "../../crates/animato", features = ["dioxus"] }
-dioxus = { version = "0.7.9" }
+animato = { path = "../../crates/animato", features = ["dioxus-desktop"] }
+dioxus = { version = "0.7.9", default-features = false, features = ["desktop", "launch"] }

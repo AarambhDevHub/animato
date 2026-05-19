@@ -4,7 +4,7 @@ Feature: `tween`.
 
 ```toml
 [dependencies]
-animato = "1.1"
+animato = "1.2"
 ```
 
 ## Tween

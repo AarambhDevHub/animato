@@ -15,10 +15,10 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.1.0 API is stable. The current public crates cover easing, tweens,
+The v1.2.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
-first-class Leptos integration.
+first-class Leptos and Dioxus integration.
 
 ## Install
 
@@ -26,34 +26,42 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.1"
+animato = "1.2"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.1", features = ["path", "physics", "color"] }
+animato = { version = "1.2", features = ["path", "physics", "color"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.1", features = ["leptos-csr"] }
+animato = { version = "1.2", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
+```
+
+Dioxus applications enable the facade feature plus the renderer they ship:
+
+```toml
+[dependencies]
+animato = { version = "1.2", features = ["dioxus-web"] }
+dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
 For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.1", default-features = false }
-animato-tween   = { version = "1.1", default-features = false }
-animato-spring  = { version = "1.1", default-features = false }
-animato-path    = { version = "1.1", default-features = false }
-animato-physics = { version = "1.1", default-features = false }
-animato-color   = { version = "1.1", default-features = false }
+animato-core    = { version = "1.2", default-features = false }
+animato-tween   = { version = "1.2", default-features = false }
+animato-spring  = { version = "1.2", default-features = false }
+animato-path    = { version = "1.2", default-features = false }
+animato-physics = { version = "1.2", default-features = false }
+animato-color   = { version = "1.2", default-features = false }
 ```
 
 ## Quick Start
@@ -112,6 +120,7 @@ other target.
 | [`animato-bevy`](./crates/animato-bevy) | Bevy ECS components, systems, completion messages | std |
 | [`animato-wasm`](./crates/animato-wasm) | rAF driver and optional DOM helpers | wasm/std |
 | [`animato-leptos`](./crates/animato-leptos) | Leptos signal hooks, scroll, presence, lists, gestures, CSS, SSR | wasm/std |
+| [`animato-dioxus`](./crates/animato-dioxus) | Dioxus signals, motion hooks, scroll, presence, lists, gestures, native helpers | wasm/std |
 | [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
 
 ## Feature Flags
@@ -135,6 +144,11 @@ other target.
 | `leptos-csr` | `leptos` plus Leptos CSR mode |
 | `leptos-hydrate` | `leptos` plus Leptos hydration mode |
 | `leptos-ssr` | `leptos` plus Leptos SSR mode |
+| `dioxus` | Dioxus hooks/components without forcing a renderer |
+| `dioxus-web` | `dioxus` plus Dioxus web renderer support |
+| `dioxus-desktop` | `dioxus` plus Dioxus desktop renderer support |
+| `dioxus-router` | `dioxus` plus route transition helpers |
+| `dioxus-native` | `dioxus` plus portable native window animation handles |
 | `serde` | Serialization for supported public types |
 | `tokio` | `Timeline::wait()` async completion helper |
 
@@ -173,9 +187,19 @@ cargo check --manifest-path examples/leptos_animated_list/Cargo.toml
 cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml
 ```
 
+Dioxus examples:
+
+```sh
+cargo check --manifest-path examples/dioxus_web_tween/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
+cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
+cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
+```
+
 ## Documentation
 
-The v1.0 documentation lives in [`docs/`](./docs/):
+The v1.2 documentation lives in [`docs/`](./docs/):
 
 | Start here | Details |
 |------------|---------|
@@ -185,15 +209,16 @@ The v1.0 documentation lives in [`docs/`](./docs/):
 | [Concepts](./docs/concepts.md) | `Interpolate`, `Update`, clocks, composition. |
 | [Recipes](./docs/recipes.md) | Practical patterns for UI, games, paths, and input. |
 | [Leptos](./docs/leptos.md) | Signal-backed hooks and Leptos integration examples. |
+| [Dioxus](./docs/dioxus.md) | Cross-platform Dioxus hooks and native helpers. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
-| [Release](./docs/release.md) | v1.0 publishing checklist. |
+| [Release](./docs/release.md) | v1.2 publishing checklist. |
 
 The generated Rust API docs are available on
 [docs.rs/animato](https://docs.rs/animato).
 
 ## Testing
 
-The v1.0 release gate is:
+The v1.2 release gate is:
 
 ```sh
 cargo fmt --check
@@ -204,6 +229,8 @@ cargo test -p animato --all-features --examples
 cargo doc --workspace --all-features --no-deps
 cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
 cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
+cargo check -p animato-dioxus
+cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo bench --workspace --no-run
 ```
 

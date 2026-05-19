@@ -74,6 +74,7 @@ pub(crate) fn set_signal<T: 'static>(signal: dioxus::prelude::Signal<T>, value: 
     signal.set(value);
 }
 
+#[allow(dead_code)]
 pub(crate) fn read_signal<T: Clone + 'static>(signal: dioxus::prelude::Signal<T>) -> T {
     signal.read().clone()
 }
@@ -119,7 +120,6 @@ pub(crate) fn spawn_animation_loop(tick: impl FnMut(f32) -> bool + 'static) {
                 }
             }
         });
-        return;
     }
 
     #[cfg(all(target_arch = "wasm32", not(feature = "web")))]
@@ -129,7 +129,7 @@ pub(crate) fn spawn_animation_loop(tick: impl FnMut(f32) -> bool + 'static) {
 }
 
 #[cfg(all(target_arch = "wasm32", feature = "web"))]
-fn spawn_raf_loop(mut tick: impl FnMut(f32) -> bool + 'static) {
+fn spawn_raf_loop(tick: impl FnMut(f32) -> bool + 'static) {
     use std::cell::{Cell, RefCell};
     use std::rc::Rc;
     use wasm_bindgen::JsCast;

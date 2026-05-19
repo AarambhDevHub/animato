@@ -9,6 +9,9 @@ fn main() {
 fn App() -> Element {
     let (scale, spring) = use_spring(1.0_f32, SpringConfig::snappy());
     let window = use_window_spring(SpringConfig::stiff());
+    let grow = spring.clone();
+    let reset = spring.clone();
+    let move_window = window.clone();
     let panel_style = format!(
         "height:140px; display:grid; place-items:center; background:white; border:1px solid #cbd5e1; transform:scale({:.3});",
         *scale.read()
@@ -26,9 +29,9 @@ fn App() -> Element {
                 }
                 div {
                     style: "display:flex; gap:10px;",
-                    button { onclick: move |_| spring.set_target(1.12), "Grow" }
-                    button { onclick: move |_| spring.set_target(1.0), "Reset" }
-                    button { onclick: move |_| window.move_to(80.0, 80.0), "Track Window Move" }
+                    button { onclick: move |_| grow.set_target(1.12), "Grow" }
+                    button { onclick: move |_| reset.set_target(1.0), "Reset" }
+                    button { onclick: move |_| move_window.move_to(80.0, 80.0), "Track Window Move" }
                 }
             }
         }

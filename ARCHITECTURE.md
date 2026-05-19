@@ -197,7 +197,7 @@ animato/
 │   │       ├── draggable.rs
 │   │       └── observer.rs
 │   │
-│   ├── animato-leptos/                   ← Leptos signal-based animation hooks (v1.1.0)
+│   ├── animato-leptos/                   ← Leptos signal-based animation hooks (introduced v1.1.0)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -322,7 +322,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "1.1.0"
+version      = "1.2.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -331,18 +331,18 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.1" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.1" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.1" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.1" }
-animato-path     = { path = "crates/animato-path",     version = "1.1" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.1" }
-animato-color    = { path = "crates/animato-color",    version = "1.1" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.1" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.1" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.1" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.1" }
-animato-leptos   = { path = "crates/animato-leptos",   version = "1.1" }
+animato-core     = { path = "crates/animato-core",     version = "1.2" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.2" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.2" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.2" }
+animato-path     = { path = "crates/animato-path",     version = "1.2" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.2" }
+animato-color    = { path = "crates/animato-color",    version = "1.2" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.2" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.2" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.2" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.2" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.2" }
 animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.2" }
 animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
 animato-js       = { path = "crates/animato-js",       version = "1.4" }
@@ -367,8 +367,8 @@ approx       = { version = "0.5" }
 criterion    = { version = "0.5",  features = ["html_reports"] }
 leptos       = { version = "0.8.19" }
 leptos_router = { version = "0.8.13" }
-dioxus       = { version = "0.7" }
-dioxus-router = { version = "0.7" }
+dioxus       = { version = "0.7.9", default-features = false, features = ["hooks", "html", "macro", "signals"] }
+dioxus-router = { version = "0.7.9", default-features = false }
 yew          = { version = "0.21" }
 yew-router   = { version = "0.18" }
 ```
@@ -1469,7 +1469,7 @@ pub fn SsrFallback(
 ```toml
 [package]
 name        = "animato-leptos"
-version     = "1.1.0"
+version     = "1.2.0"
 description = "Leptos integration for the Animato animation library — signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, and SSR."
 
 [features]
@@ -1630,14 +1630,20 @@ version     = "1.2.0"
 description = "Dioxus integration for the Animato animation library — cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, and native window animation."
 
 [features]
-default    = ["scroll", "presence", "transition", "list", "gesture", "motion"]
+default    = ["scroll", "presence", "transition", "list", "gesture", "motion", "css", "platform"]
 scroll     = []
-presence   = []
-transition = ["dep:dioxus-router"]
+presence   = ["css"]
+transition = ["presence"]
 list       = []
 gesture    = ["dep:animato-physics"]
 motion     = []
+css        = []
+platform   = []
 native     = []
+web        = ["dioxus/web", "dep:wasm-bindgen", "dep:web-sys", "animato-wasm"]
+desktop    = ["dioxus/desktop", "native"]
+mobile     = ["dioxus/mobile", "native"]
+router     = ["dep:dioxus-router", "dioxus/router", "transition"]
 path       = ["dep:animato-path"]
 color      = ["dep:animato-color"]
 
@@ -2173,6 +2179,10 @@ leptos-csr = ["leptos", "animato-leptos/csr"]
 leptos-hydrate = ["leptos", "animato-leptos/hydrate"]
 leptos-ssr = ["leptos", "animato-leptos/ssr"]
 dioxus   = ["dep:animato-dioxus"]
+dioxus-web = ["dioxus", "animato-dioxus/web"]
+dioxus-desktop = ["dioxus", "animato-dioxus/desktop"]
+dioxus-router = ["dioxus", "animato-dioxus/router"]
+dioxus-native = ["dioxus", "animato-dioxus/native"]
 yew      = ["dep:animato-yew"]
 js       = ["dep:animato-js"]
 devtools = ["dep:animato-devtools"]
@@ -2634,12 +2644,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "1.1", default-features = false }
-animato-tween = { version = "1.1", default-features = false }
-animato-spring = { version = "1.1", default-features = false }
-animato-path = { version = "1.1", default-features = false }
-animato-physics = { version = "1.1", default-features = false }
-animato-color = { version = "1.1", default-features = false }
+animato-core  = { version = "1.2", default-features = false }
+animato-tween = { version = "1.2", default-features = false }
+animato-spring = { version = "1.2", default-features = false }
+animato-path = { version = "1.2", default-features = false }
+animato-physics = { version = "1.2", default-features = false }
+animato-color = { version = "1.2", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -2663,9 +2673,10 @@ Jobs:
   docs:
     - cargo doc --workspace --all-features --no-deps
 
-  wasm:
-    - cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
-    - cd examples/wasm_counter && wasm-pack test --headless --chrome
+	  wasm:
+	    - cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+	    - cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
+	    - cd examples/wasm_counter && wasm-pack test --headless --chrome
 
   bench:
     - cargo bench --workspace --no-run
@@ -2761,5 +2772,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.6.0 — covers architecture through Animato 1.1.0 core + Leptos 1.1.0 + Dioxus 1.2.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
+*Document version: 1.6.0 — covers architecture through Animato 1.2.0 core + Leptos 1.2.0 + Dioxus 1.2.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

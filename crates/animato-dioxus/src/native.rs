@@ -2,7 +2,7 @@
 
 use animato_core::Update;
 use animato_spring::{SpringConfig, SpringN};
-use animato_tween::{Tween, TweenBuilder};
+use animato_tween::{Loop, Tween, TweenBuilder};
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
@@ -27,6 +27,37 @@ impl Default for NativeWindowState {
     }
 }
 
+#[derive(Clone, Debug)]
+struct WindowTweenOptions {
+    duration: f32,
+    easing: animato_core::Easing,
+    delay: f32,
+    time_scale: f32,
+    looping: Loop,
+}
+
+impl WindowTweenOptions {
+    fn from_tween<T: animato_core::Animatable>(tween: &Tween<T>) -> Self {
+        Self {
+            duration: tween.duration,
+            easing: tween.easing.clone(),
+            delay: tween.delay,
+            time_scale: tween.time_scale,
+            looping: tween.looping.clone(),
+        }
+    }
+
+    fn apply<T: animato_core::Animatable>(&self, builder: TweenBuilder<T>) -> Tween<T> {
+        builder
+            .duration(self.duration)
+            .easing(self.easing.clone())
+            .delay(self.delay)
+            .time_scale(self.time_scale)
+            .looping(self.looping.clone())
+            .build()
+    }
+}
+
 /// Handle for tween-driven native window animation.
 #[derive(Clone)]
 pub struct WindowAnimationHandle {
@@ -34,6 +65,7 @@ pub struct WindowAnimationHandle {
     position: Arc<Mutex<Option<Tween<[f32; 2]>>>>,
     size: Arc<Mutex<Option<Tween<[f32; 2]>>>>,
     opacity: Arc<Mutex<Option<Tween<f32>>>>,
+    options: WindowTweenOptions,
 }
 
 impl fmt::Debug for WindowAnimationHandle {
@@ -56,25 +88,25 @@ impl WindowAnimationHandle {
     /// Animate the tracked window position.
     pub fn move_to(&self, x: f32, y: f32) {
         let start = self.state().position;
-        let tween = Tween::new(start, [x, y]).duration(0.25).build();
+        let tween = self.options.apply(Tween::new(start, [x, y]));
         crate::with_lock(&self.position, |slot| *slot = Some(tween));
     }
 
     /// Animate the tracked window size.
     pub fn resize_to(&self, w: f32, h: f32) {
         let start = self.state().size;
-        let tween = Tween::new(start, [w.max(1.0), h.max(1.0)])
-            .duration(0.25)
-            .build();
+        let tween = self
+            .options
+            .apply(Tween::new(start, [w.max(1.0), h.max(1.0)]));
         crate::with_lock(&self.size, |slot| *slot = Some(tween));
     }
 
     /// Animate the tracked window opacity.
     pub fn opacity_to(&self, opacity: f32) {
         let start = self.state().opacity;
-        let tween = Tween::new(start, opacity.clamp(0.0, 1.0))
-            .duration(0.25)
-            .build();
+        let tween = self
+            .options
+            .apply(Tween::new(start, opacity.clamp(0.0, 1.0)));
         crate::with_lock(&self.opacity, |slot| *slot = Some(tween));
     }
 
@@ -178,12 +210,14 @@ impl WindowSpringHandle {
 pub fn use_window_animation(
     config: impl FnOnce(TweenBuilder<[f32; 2]>) -> TweenBuilder<[f32; 2]>,
 ) -> WindowAnimationHandle {
-    let _ = config(Tween::new([0.0, 0.0], [0.0, 0.0]));
+    let template = config(Tween::new([0.0, 0.0], [0.0, 0.0])).build();
+    let options = WindowTweenOptions::from_tween(&template);
     WindowAnimationHandle {
         state: Arc::new(Mutex::new(NativeWindowState::default())),
         position: Arc::new(Mutex::new(None)),
         size: Arc::new(Mutex::new(None)),
         opacity: Arc::new(Mutex::new(None)),
+        options,
     }
 }
 

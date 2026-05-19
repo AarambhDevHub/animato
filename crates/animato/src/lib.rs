@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.1", default-features = false }
-//! animato-tween  = { version = "1.1", default-features = false }
-//! animato-spring = { version = "1.1", default-features = false }
-//! animato-physics = { version = "1.1", default-features = false }
-//! animato-color = { version = "1.1", default-features = false }
+//! animato-core   = { version = "1.2", default-features = false }
+//! animato-tween  = { version = "1.2", default-features = false }
+//! animato-spring = { version = "1.2", default-features = false }
+//! animato-physics = { version = "1.2", default-features = false }
+//! animato-color = { version = "1.2", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -178,8 +178,19 @@ pub use animato_wasm::{
 
 // ── Leptos ──────────────────────────────────────────────────────────────────
 #[cfg(feature = "leptos")]
+pub mod leptos {
+    //! Leptos integration namespace.
+    pub use animato_leptos::*;
+}
+
+#[cfg(all(feature = "leptos", not(feature = "dioxus")))]
 pub use animato_leptos::*;
 
-// ── Dioxus ──────────────────────────────────────────────────────────────────
 #[cfg(feature = "dioxus")]
+pub mod dioxus {
+    //! Dioxus integration namespace.
+    pub use animato_dioxus::*;
+}
+
+#[cfg(all(feature = "dioxus", not(feature = "leptos")))]
 pub use animato_dioxus::*;

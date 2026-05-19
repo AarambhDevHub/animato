@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.1.0 API surface by crate. For signatures,
+This file lists the stable v1.2.0 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.1"
+animato = "1.2"
 ```
 
 ## animato-core
@@ -302,6 +302,27 @@ Stable public items include `use_tween`, `use_spring`, `use_timeline`,
 `is_hydrating`, `use_client_only`, and `SsrFallback`.
 
 Use [leptos.md](./leptos.md) for app setup and examples.
+
+## animato-dioxus
+
+Features: `dioxus`, plus renderer-specific helpers such as `dioxus-web`,
+`dioxus-desktop`, `dioxus-router`, or `dioxus-native`.
+
+The facade re-exports these at the crate root when `dioxus` is enabled by
+itself. If another framework integration is also enabled, use
+`animato::dioxus::*` for the Dioxus namespace.
+
+Stable public items include `use_tween`, `use_spring`, `use_timeline`,
+`use_keyframes`, `TweenHandle`, `SpringHandle`, `TimelineHandle`,
+`KeyframeHandle`, `use_motion`, `MotionHandle`, `MotionConfig`,
+`AnimatedStyle`, `css_tween`, `css_spring`, `AnimatePresence`,
+`PresenceAnimation`, `PageTransition`, `TransitionMode`, `AnimatedFor`,
+`use_scroll_progress`, `use_scroll_trigger`, `use_scroll_velocity`,
+`use_drag`, `use_gesture`, `use_pinch`, `use_swipe`, `PlatformAdapter`,
+`AnimationBackend`, `use_window_animation`, `use_window_spring`, and
+`WindowAnimationHandle`.
+
+Use [dioxus.md](./dioxus.md) for app setup, renderer features, and examples.
 
 ## Related Docs
 

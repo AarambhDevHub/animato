@@ -11,7 +11,6 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
-  # ── Tests ──────────────────────────────────────────────────────────────────
   test:
     name: Test (${{ matrix.rust }})
     runs-on: ubuntu-latest
@@ -40,17 +39,18 @@ jobs:
             ${{ runner.os }}-cargo-${{ matrix.rust }}-
             ${{ runner.os }}-cargo-
 
-      - name: Test (default features)
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
+      - name: Test default features
         run: cargo test --workspace
 
-      - name: Test (all features)
+      - name: Test all features
         run: cargo test --workspace --all-features
 
-      # Only test no_std-compatible crates without default features.
-      # animato-driver requires std (WallClock uses std::time::Instant).
-      # animato-bevy, animato-timeline, and animato-wasm also require std/hosted.
-      # animato-path draw.rs tests are gated on std/alloc (poly module dependency).
-      - name: Test no_std crates (no default features)
+      - name: Test no_std crates
         run: |
           cargo test \
             -p animato-core \
@@ -61,7 +61,6 @@ jobs:
             -p animato-color \
             --no-default-features
 
-  # ── Lint ───────────────────────────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -86,13 +85,17 @@ jobs:
             ${{ runner.os }}-cargo-lint-
             ${{ runner.os }}-cargo-
 
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
       - name: Check formatting
         run: cargo fmt --check
 
-      - name: Clippy (all features)
+      - name: Clippy all features
         run: cargo clippy --workspace --all-features -- -D warnings
 
-  # ── Docs ───────────────────────────────────────────────────────────────────
   docs:
     name: Docs
     runs-on: ubuntu-latest
@@ -115,12 +118,16 @@ jobs:
             ${{ runner.os }}-cargo-docs-
             ${{ runner.os }}-cargo-
 
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
       - name: Build docs
         run: cargo doc --workspace --all-features --no-deps
         env:
           RUSTDOCFLAGS: "-D warnings"
 
-  # ── Benchmarks compile ─────────────────────────────────────────────────────
   benches:
     name: Benches compile
     runs-on: ubuntu-latest
@@ -146,7 +153,6 @@ jobs:
       - name: Check benches compile
         run: cargo bench --workspace --no-run
 
-  # ── no_std cross-compile ───────────────────────────────────────────────────
   no-std:
     name: no_std cross-compile
     runs-on: ubuntu-latest
@@ -171,28 +177,15 @@ jobs:
             ${{ runner.os }}-cargo-nostd-
             ${{ runner.os }}-cargo-
 
-      # Build all no_std-compatible crates for bare-metal.
-      # animato-driver, animato-bevy, animato-timeline, and animato-wasm are
-      # excluded — they require std or a hosted runtime.
-      - name: Build animato-core (no_std)
-        run: cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
+      - name: Build no_std crates
+        run: |
+          cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-color --target thumbv7m-none-eabi --no-default-features
 
-      - name: Build animato-tween (no_std)
-        run: cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-spring (no_std)
-        run: cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-path (no_std)
-        run: cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-physics (no_std)
-        run: cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features
-
-      - name: Build animato-color (no_std)
-        run: cargo build -p animato-color --target thumbv7m-none-eabi --no-default-features
-
-  # ── WASM compile ───────────────────────────────────────────────────────────
   wasm:
     name: WASM integration compile
     runs-on: ubuntu-latest
@@ -223,6 +216,9 @@ jobs:
       - name: Check animato-leptos CSR
         run: cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 
+      - name: Check animato-dioxus web
+        run: cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
+
       - name: Check Leptos examples
         run: |
           cargo check --manifest-path examples/leptos_basic_tween/Cargo.toml --target wasm32-unknown-unknown
@@ -230,6 +226,9 @@ jobs:
           cargo check --manifest-path examples/leptos_page_transition/Cargo.toml --target wasm32-unknown-unknown
           cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown
           cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+
+      - name: Check Dioxus web example
+        run: cargo check --manifest-path examples/dioxus_web_tween/Cargo.toml --target wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: cargo install wasm-pack --locked
@@ -239,7 +238,42 @@ jobs:
           cd examples/wasm_counter
           wasm-pack test --headless --chrome
 
-  # ── Coverage ───────────────────────────────────────────────────────────────
+  dioxus:
+    name: Dioxus integration compile
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-dioxus-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-dioxus-
+            ${{ runner.os }}-cargo-
+
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
+      - name: Check animato-dioxus
+        run: cargo check -p animato-dioxus
+
+      - name: Check Dioxus desktop examples
+        run: |
+          cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
+          cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
+          cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
+
   coverage:
     name: Coverage
     runs-on: ubuntu-latest
@@ -264,13 +298,17 @@ jobs:
             ${{ runner.os }}-cargo-coverage-
             ${{ runner.os }}-cargo-
 
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
       - name: Install cargo-llvm-cov
         run: cargo install cargo-llvm-cov --locked
 
       - name: Run coverage gate
         run: cargo llvm-cov --workspace --all-features --fail-under-lines 85
 
-  # ── Fuzz smoke ─────────────────────────────────────────────────────────────
   fuzz:
     name: Fuzz SVG parser
     runs-on: ubuntu-latest
@@ -293,10 +331,9 @@ jobs:
             ${{ runner.os }}-cargo-fuzz-
             ${{ runner.os }}-cargo-
 
-      - name: Build fuzz target (compile check)
+      - name: Build fuzz target
         run: cargo build --manifest-path fuzz/Cargo.toml --bin svg_path_parser
 
-  # ── Security audit ─────────────────────────────────────────────────────────
   audit:
     name: Security audit
     runs-on: ubuntu-latest

@@ -3,6 +3,11 @@ name = "dioxus_cross_platform"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+default = ["web"]
+web = ["animato/dioxus-web", "dioxus/web", "dioxus/launch"]
+desktop = ["animato/dioxus-desktop", "dioxus/desktop", "dioxus/launch"]
+
 [dependencies]
 animato = { path = "../../crates/animato", features = ["dioxus"] }
-dioxus = { version = "0.7.9" }
+dioxus = { version = "0.7.9", default-features = false, features = ["hooks", "html", "macro", "signals"] }

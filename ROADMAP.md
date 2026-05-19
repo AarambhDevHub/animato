@@ -34,7 +34,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v0.9.0` | Performance | GPU batch compute, benchmarks, no_std hardening | ✅ |
 | `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | ✅ |
 | `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | ✅ |
-| `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | 📋 |
+| `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | ✅ |
 | `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | 📋 |
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | 📋 |
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | 📋 |
@@ -530,7 +530,10 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 - [x] Integration tests for SSR guards (signal returns target value on server)
 - [x] WASM compile check: `cargo check -p animato-leptos --target wasm32-unknown-unknown`
 - [x] All examples compile: `cargo test -p animato-leptos --examples`
- — Dioxus
+
+---
+
+## v1.2.0 — Dioxus
 
 **Goal:** Cross-platform Dioxus integration. The same animation hooks work on web (WASM), desktop (Windows/macOS/Linux), mobile (iOS/Android), and TUI — with platform-adaptive tick sources and native window animation helpers.
 
@@ -541,60 +544,60 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-dioxus` — hooks**
-- [ ] `use_tween(from, to, config)` → `(T, TweenHandle)` — tween hook working on all Dioxus targets
-- [ ] `use_spring(initial, config)` → `(T, SpringHandle)` — spring hook with physics
-- [ ] `use_timeline(builder)` → `TimelineHandle` — timeline composition
-- [ ] `use_keyframes(builder)` → `(T, KeyframeHandle)` — keyframe track
-- [ ] Platform-adaptive rAF/clock loop via `PlatformAdapter::detect()`
+- [x] `use_tween(from, to, config)` → `(Signal<T>, TweenHandle)` — tween hook working on Dioxus targets
+- [x] `use_spring(initial, config)` → `(Signal<T>, SpringHandle)` — spring hook with physics
+- [x] `use_timeline(builder)` → `TimelineHandle` — timeline composition
+- [x] `use_keyframes(builder)` → `(Signal<T>, KeyframeHandle)` — keyframe track
+- [x] Platform-adaptive rAF/clock loop via `PlatformAdapter::detect()`
 
 **`animato-dioxus` — motion**
-- [ ] `use_motion(initial)` → `MotionHandle<T>` — all-in-one hook combining tween, spring, and keyframes
-- [ ] `MotionHandle::animate_to(target, config)` — tween or spring transition
-- [ ] `MotionHandle::keyframes(track)` — play a keyframe track
-- [ ] `MotionHandle::stop()`, `snap_to()`, `is_animating()`
-- [ ] `MotionConfig` enum: `Tween { duration, easing, delay }`, `Spring(SpringConfig)`
+- [x] `use_motion(initial)` → `MotionHandle<T>` — all-in-one hook combining tween, spring, and keyframes
+- [x] `MotionHandle::animate_to(target, config)` — tween or spring transition
+- [x] `MotionHandle::keyframes(track)` — play a keyframe track
+- [x] `MotionHandle::stop()`, `snap_to()`, `is_animating()`
+- [x] `MotionConfig` enum: `Tween { duration, easing, delay }`, `Spring(SpringConfig)`
 
 **`animato-dioxus` — scroll**
-- [ ] `use_scroll_progress(target, config)` → scroll progress signal (web only)
-- [ ] `use_scroll_trigger(target, config)` → viewport enter/exit with scrub and pin (web only)
-- [ ] `use_scroll_velocity()` → scroll velocity signal (web only)
-- [ ] Graceful no-op on non-web platforms
+- [x] `use_scroll_progress(target, config)` → scroll progress signal (web only)
+- [x] `use_scroll_trigger(target, config)` → viewport enter/exit with scrub and pin (web only)
+- [x] `use_scroll_velocity()` → scroll velocity signal (web only)
+- [x] Graceful no-op on non-web platforms
 
 **`animato-dioxus` — presence, transition, list, gesture**
-- [ ] `AnimatePresence` component — same API as `animato-leptos` but using Dioxus `Signal<T>` and RSX
-- [ ] `PageTransition` component with `TransitionMode` enum and `dioxus-router` integration
-- [ ] `AnimatedFor` component — FLIP-powered list with stagger support
-- [ ] `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — cross-platform pointer/touch bindings
-- [ ] Touch gestures work on mobile targets via Dioxus event system
+- [x] `AnimatePresence` component — same API as `animato-leptos` but using Dioxus `Signal<T>` and RSX
+- [x] `PageTransition` component with `TransitionMode` enum and optional `dioxus-router` integration
+- [x] `AnimatedFor` component — stable-key list helper with presence styling
+- [x] `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — deterministic cross-platform state handles
+- [x] Touch gesture state is exposed portably; renderer-specific event binding remains app-side
 
 **`animato-dioxus` — platform**
-- [ ] `PlatformAdapter::detect()` → `AnimationBackend` (`WebRaf`, `NativeClock`, `TerminalPoll`)
-- [ ] Web: uses `RafDriver` from `animato-wasm`
-- [ ] Desktop/Mobile: uses `WallClock` with 60fps event loop tick
-- [ ] TUI: uses crossterm event poll intervals as tick source
+- [x] `PlatformAdapter::detect()` → `AnimationBackend` (`WebRaf`, `NativeClock`, `TerminalPoll`)
+- [x] Web: uses rAF under the `web` feature on `wasm32`
+- [x] Desktop/Mobile: uses hosted clock polling through the Dioxus future loop
+- [x] TUI: exposes `TerminalPoll` as a stable backend mode
 
 **`animato-dioxus` — native**
-- [ ] `use_window_animation(config)` → `WindowAnimationHandle` — animate native window position on desktop
-- [ ] `use_window_spring(config)` → `WindowSpringHandle` — spring-based window animation
-- [ ] `WindowAnimationHandle::move_to()`, `resize_to()`, `opacity_to()`
+- [x] `use_window_animation(config)` → `WindowAnimationHandle` — portable window state animation
+- [x] `use_window_spring(config)` → `WindowSpringHandle` — spring-based window animation state
+- [x] `WindowAnimationHandle::move_to()`, `resize_to()`, `opacity_to()`
 
 **`animato` facade**
-- [ ] `dioxus` feature flag
-- [ ] Re-exports all `animato-dioxus` public APIs
+- [x] `dioxus` feature flag
+- [x] Re-exports all `animato-dioxus` public APIs
 
 **Documentation & Examples**
-- [ ] `docs/dioxus.md` — Dioxus integration guide (web + desktop + mobile + TUI)
-- [ ] `examples/dioxus_web_tween/` — web app with animated elements
-- [ ] `examples/dioxus_desktop_spring/` — desktop app with spring-animated window
-- [ ] `examples/dioxus_cross_platform/` — single codebase running on web + desktop
-- [ ] `examples/dioxus_tui_progress/` — TUI progress bar with Dioxus
+- [x] `docs/dioxus.md` — Dioxus integration guide (web + desktop + mobile + TUI)
+- [x] `examples/dioxus_web_tween/` — web app with animated elements
+- [x] `examples/dioxus_desktop_spring/` — desktop app with spring-animated window state
+- [x] `examples/dioxus_cross_platform/` — single codebase running on web + desktop
+- [x] `examples/dioxus_tui_progress/` — TUI-style progress bar with Dioxus
 
 **Testing**
-- [ ] Unit tests for all hooks (mock clock, deterministic dt)
-- [ ] Platform adapter tests (backend detection)
-- [ ] WASM compile check: `cargo check -p animato-dioxus --target wasm32-unknown-unknown`
-- [ ] Desktop compile check: `cargo check -p animato-dioxus`
-- [ ] All examples compile
+- [x] Unit tests for deterministic CSS, scroll, presence, transition, list, gesture, platform, and native helpers
+- [x] Platform adapter tests (backend detection)
+- [x] WASM compile check: `cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web`
+- [x] Desktop compile check: `cargo check -p animato-dioxus`
+- [x] All Dioxus examples are wired into CI compile checks
 
 ---
 
@@ -885,10 +888,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.1 stable API and open focused issues for bugs, documentation gaps, or post-1.1 feature proposals.
+The best way to contribute right now is to use the v1.2 stable API and open focused issues for bugs, documentation gaps, or post-1.2 feature proposals.
 
 ---
 
 *Roadmap version: 1.6.0 — last updated May 2026*  
-*v1.1.0 Leptos shipped — additional framework integrations and engine expansion in progress*  
+*v1.2.0 Dioxus shipped — additional framework integrations and engine expansion in progress*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

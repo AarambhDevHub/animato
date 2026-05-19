@@ -35,6 +35,11 @@ jobs:
             ${{ runner.os }}-cargo-publish-
             ${{ runner.os }}-cargo-
 
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
       - name: Install release tools
         run: |
           rustup toolchain install nightly
@@ -76,6 +81,7 @@ jobs:
         run: |
           cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
           cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
+          cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 
       - name: Check Leptos examples
         run: |
@@ -84,6 +90,13 @@ jobs:
           cargo check --manifest-path examples/leptos_page_transition/Cargo.toml --target wasm32-unknown-unknown
           cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown
           cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+
+      - name: Check Dioxus examples
+        run: |
+          cargo check --manifest-path examples/dioxus_web_tween/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
+          cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
+          cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
 
       - name: Run WASM browser tests
         run: |
@@ -174,6 +187,7 @@ jobs:
             animato-wasm \
             animato-bevy \
             animato-leptos \
+            animato-dioxus \
             animato
           do
             publish_crate "$crate"
@@ -247,14 +261,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Leptos"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Dioxus"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Leptos
+            ## Animato ${{ steps.version.outputs.TAG }} — Dioxus
 
-            Animato v1.1.0 adds first-class Leptos integration with
-            signal-backed hooks, scroll helpers, presence and page transitions,
-            FLIP-ready lists, gesture helpers, CSS style helpers, and SSR
-            guards while preserving the stable v1 API.
+            Animato v1.2.0 adds first-class Dioxus integration with
+            signal-backed hooks, motion handles, scroll helpers, presence and
+            page transitions, list helpers, gesture state, platform detection,
+            and portable native window animation handles while preserving the
+            stable v1 API.
 
             ### Install
 
@@ -279,6 +294,7 @@ jobs:
             | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | rAF and DOM helpers |
             | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | Bevy integration plugin |
             | [`animato-leptos`](https://crates.io/crates/animato-leptos) | `${{ steps.version.outputs.VERSION }}` | Leptos signal hooks and components |
+            | [`animato-dioxus`](https://crates.io/crates/animato-dioxus) | `${{ steps.version.outputs.VERSION }}` | Dioxus signal hooks and native helpers |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Stable facade crate |
 
             ### Verification
@@ -291,7 +307,8 @@ jobs:
             - `cargo doc --workspace --all-features --no-deps`
             - `cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom`
             - `cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr`
-            - Leptos example compile checks for all v1.1.0 examples
+            - `cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web`
+            - Leptos and Dioxus example compile checks for all v1.2.0 examples
             - `wasm-pack test --headless --chrome`
             - `cargo bench --workspace --no-run`
             - `cargo llvm-cov --workspace --all-features --fail-under-lines 90`
@@ -305,6 +322,7 @@ jobs:
             - [Getting started](./docs/getting-started.md)
             - [Feature flags](./docs/feature-flags.md)
             - [Leptos integration](./docs/leptos.md)
+            - [Dioxus integration](./docs/dioxus.md)
             - [Testing](./docs/testing.md)
             - [Release process](./docs/release.md)
             - [Changelog](./CHANGELOG.md)

@@ -11,6 +11,7 @@ use std::hash::{Hash, Hasher};
 /// This helper keeps Dioxus ownership simple: callers pass a `Signal<Vec<T>>`,
 /// a stable key extractor, and a child renderer returning an `Element`.
 #[allow(non_snake_case)]
+#[allow(clippy::too_many_arguments)]
 pub fn AnimatedFor<T, K, KF, CF>(
     each: Signal<Vec<T>>,
     key: KF,

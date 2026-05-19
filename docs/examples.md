@@ -42,6 +42,16 @@ cargo check --manifest-path examples/leptos_animated_list/Cargo.toml
 cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml
 ```
 
+## Dioxus Examples
+
+```sh
+cargo check --manifest-path examples/dioxus_web_tween/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
+cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
+cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
+```
+
 ## Compile Examples Without Running
 
 ```sh

@@ -5,6 +5,25 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] — 2026-05-19 — Dioxus
+
+### Added
+- `animato-dioxus`: new Dioxus 0.7.9 integration crate with signal-backed tween, spring, timeline, keyframe, and motion hooks.
+- Dioxus CSS, presence, page transition, animated list, scroll, gesture, platform, and portable native window helper APIs.
+- `animato` facade features: `dioxus`, `dioxus-web`, `dioxus-desktop`, `dioxus-router`, and `dioxus-native`.
+- Dioxus examples for web tweening, desktop springs, cross-platform motion, and TUI-style progress.
+- `docs/dioxus.md` integration guide.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins from `1.1.0`/`1.1` to `1.2.0`/`1.2`.
+- Updated README, feature-flag docs, API map, architecture notes, roadmap, CI, and publish workflow for `v1.2.0 — Dioxus`.
+- Added Dioxus 0.7.9 and Dioxus Router 0.7.9 as workspace dependencies with minimal library features.
+
+### Verification
+- `cargo check -p animato-dioxus`
+- `cargo test -p animato-dioxus --all-features`
+- `cargo test -p animato --features dioxus --test dioxus_facade`
+
 ## [1.1.0] — 2026-05-16 — Leptos
 
 ### Added
@@ -267,7 +286,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/AarambhDevHub/animato/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/AarambhDevHub/animato/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/AarambhDevHub/animato/compare/v0.9.0...v1.0.0
 [0.9.0]: https://github.com/AarambhDevHub/animato/compare/v0.8.0...v0.9.0
