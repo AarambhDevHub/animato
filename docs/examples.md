@@ -44,11 +44,47 @@ cargo check --manifest-path examples/leptos_drag_gesture/Cargo.toml
 
 ## Dioxus Examples
 
+Run the Dioxus examples from the workspace root. Web examples use Dioxus CLI;
+desktop examples can be launched directly with Cargo.
+
 ```sh
+# Install once if `dx` is not already available.
+cargo install dioxus-cli --version 0.7.9 --locked
+
+# Web tween UI, served by Dioxus CLI.
+cd examples/dioxus_web_tween
+dx serve --web
+cd ../..
+
+# Desktop spring/system UI.
+cargo run --manifest-path examples/dioxus_desktop_spring/Cargo.toml
+
+# Cross-platform UI as a web app.
+cd examples/dioxus_cross_platform
+dx serve --web
+cd ../..
+
+# Cross-platform UI as a desktop app.
+cargo run --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
+
+# Terminal-styled Dioxus progress UI.
+cargo run --manifest-path examples/dioxus_tui_progress/Cargo.toml
+```
+
+Compile all Dioxus examples without launching a renderer:
+
+```sh
+# Web target check.
 cargo check --manifest-path examples/dioxus_web_tween/Cargo.toml --target wasm32-unknown-unknown
+
+# Desktop target check.
 cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
+
+# Cross-platform checks.
 cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --target wasm32-unknown-unknown
 cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
+
+# Terminal-styled desktop check.
 cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
 ```
 
