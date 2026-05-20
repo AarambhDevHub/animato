@@ -477,3 +477,234 @@ where
 
     (value, handle)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use animato_core::Easing;
+    use animato_timeline::{At, TimelineState};
+    use approx::assert_relative_eq;
+    use dioxus::prelude::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static TWEEN_CAPTURE: RefCell<Option<(Signal<f32>, TweenHandle<f32>)>> = const { RefCell::new(None) };
+        static SPRING_CAPTURE: RefCell<Option<(Signal<f32>, SpringHandle<f32>)>> = const { RefCell::new(None) };
+        static TIMELINE_CAPTURE: RefCell<Option<TimelineHandle>> = const { RefCell::new(None) };
+        static KEYFRAME_CAPTURE: RefCell<Option<(Signal<f32>, KeyframeHandle<f32>)>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn TweenHookApp() -> Element {
+        let pair = use_tween(0.0_f32, 10.0, |builder| {
+            builder.duration(1.0).easing(Easing::Linear)
+        });
+        TWEEN_CAPTURE.with(|slot| *slot.borrow_mut() = Some(pair));
+
+        rsx! { div {} }
+    }
+
+    #[allow(non_snake_case)]
+    fn SpringHookApp() -> Element {
+        let pair = use_spring(0.0_f32, SpringConfig::snappy());
+        SPRING_CAPTURE.with(|slot| *slot.borrow_mut() = Some(pair));
+
+        rsx! { div {} }
+    }
+
+    #[allow(non_snake_case)]
+    fn TimelineHookApp() -> Element {
+        let handle = use_timeline(|timeline| {
+            timeline.add(
+                "fade",
+                Tween::new(0.0_f32, 1.0)
+                    .duration(1.0)
+                    .easing(Easing::Linear)
+                    .build(),
+                At::Start,
+            )
+        });
+        TIMELINE_CAPTURE.with(|slot| *slot.borrow_mut() = Some(handle));
+
+        rsx! { div {} }
+    }
+
+    #[allow(non_snake_case)]
+    fn KeyframeHookApp() -> Element {
+        let pair = use_keyframes(|track| track.push(0.0, 0.0_f32).push(1.0, 10.0));
+        KEYFRAME_CAPTURE.with(|slot| *slot.borrow_mut() = Some(pair));
+
+        rsx! { div {} }
+    }
+
+    fn mount_tween() -> (VirtualDom, Signal<f32>, TweenHandle<f32>) {
+        TWEEN_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(TweenHookApp);
+        dom.rebuild_in_place();
+        let (value, handle) = TWEEN_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("tween hook captured")
+        });
+        (dom, value, handle)
+    }
+
+    fn mount_spring() -> (VirtualDom, Signal<f32>, SpringHandle<f32>) {
+        SPRING_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(SpringHookApp);
+        dom.rebuild_in_place();
+        let (value, handle) = SPRING_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("spring hook captured")
+        });
+        (dom, value, handle)
+    }
+
+    fn mount_timeline() -> (VirtualDom, TimelineHandle) {
+        TIMELINE_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(TimelineHookApp);
+        dom.rebuild_in_place();
+        let handle = TIMELINE_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("timeline hook captured")
+        });
+        (dom, handle)
+    }
+
+    fn mount_keyframes() -> (VirtualDom, Signal<f32>, KeyframeHandle<f32>) {
+        KEYFRAME_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(KeyframeHookApp);
+        dom.rebuild_in_place();
+        let (value, handle) = KEYFRAME_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("keyframe hook captured")
+        });
+        (dom, value, handle)
+    }
+
+    #[test]
+    fn tween_hook_handle_controls_signal_state() {
+        let (_dom, value, handle) = mount_tween();
+
+        assert_relative_eq!(crate::read_signal(value), 0.0);
+        assert_relative_eq!(crate::read_signal(handle.value()), 0.0);
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.0);
+        assert!(!crate::read_signal(handle.is_complete()));
+
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.25, epsilon = 0.001);
+
+        handle.pause();
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+
+        handle.resume();
+        handle.set_time_scale(f32::NAN);
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 5.0, epsilon = 0.001);
+
+        handle.seek(1.0);
+        assert_relative_eq!(crate::read_signal(value), 10.0, epsilon = 0.001);
+        assert!(!handle.tick(0.0));
+        assert!(crate::read_signal(handle.is_complete()));
+        handle.play();
+        assert!(!crate::read_signal(handle.is_complete()));
+
+        handle.seek(0.25);
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+        handle.reverse();
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+        handle.reset();
+        assert_relative_eq!(crate::read_signal(value), 10.0, epsilon = 0.001);
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.0, epsilon = 0.001);
+    }
+
+    #[test]
+    fn spring_hook_handle_tracks_target_and_snap() {
+        let (_dom, value, handle) = mount_spring();
+
+        assert_relative_eq!(crate::read_signal(value), 0.0);
+        assert!(crate::read_signal(handle.is_settled()));
+
+        handle.set_target(1.0);
+        assert!(!crate::read_signal(handle.is_settled()));
+        assert!(handle.tick(1.0 / 60.0));
+        assert!(crate::read_signal(handle.value()) > 0.0);
+
+        handle.snap_to(2.0);
+        assert_relative_eq!(crate::read_signal(value), 2.0, epsilon = 0.001);
+        assert!(crate::read_signal(handle.is_settled()));
+        assert!(!handle.tick(0.0));
+    }
+
+    #[test]
+    fn timeline_hook_handle_controls_clock_state() {
+        let (_dom, handle) = mount_timeline();
+
+        assert_eq!(crate::read_signal(handle.state()), TimelineState::Playing);
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.0);
+        assert!(!crate::read_signal(handle.is_complete()));
+
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.25, epsilon = 0.001);
+
+        handle.pause();
+        assert_eq!(crate::read_signal(handle.state()), TimelineState::Paused);
+        assert!(handle.tick(0.5));
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.25, epsilon = 0.001);
+
+        handle.resume();
+        handle.set_time_scale(2.0);
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.75, epsilon = 0.001);
+
+        handle.seek(1.0);
+        assert!(crate::read_signal(handle.is_complete()));
+        assert_eq!(crate::read_signal(handle.state()), TimelineState::Completed);
+
+        handle.reset();
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.0, epsilon = 0.001);
+        assert_eq!(crate::read_signal(handle.state()), TimelineState::Idle);
+
+        handle.play();
+        assert_eq!(crate::read_signal(handle.state()), TimelineState::Playing);
+    }
+
+    #[test]
+    fn keyframe_hook_handle_controls_track_state() {
+        let (_dom, value, handle) = mount_keyframes();
+
+        assert_relative_eq!(crate::read_signal(value), 0.0);
+        assert_relative_eq!(crate::read_signal(handle.progress()), 0.0);
+        assert!(!crate::read_signal(handle.is_complete()));
+
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+
+        handle.pause();
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+
+        handle.play();
+        handle.set_time_scale(f32::INFINITY);
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 5.0, epsilon = 0.001);
+
+        handle.set_time_scale(2.0);
+        assert!(!handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 10.0, epsilon = 0.001);
+        assert!(crate::read_signal(handle.is_complete()));
+
+        handle.reset();
+        assert_relative_eq!(crate::read_signal(value), 0.0, epsilon = 0.001);
+        assert!(!crate::read_signal(handle.is_complete()));
+    }
+}

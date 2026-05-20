@@ -253,7 +253,62 @@ fn distance_sq(a: [f32; 2], b: [f32; 2]) -> f32 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use animato_physics::GestureRecognizer;
+    use animato_physics::{GestureRecognizer, PointerData as PhysicsPointerData};
+    use dioxus::prelude::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static DRAG_CAPTURE: RefCell<Option<(Signal<[f32; 2]>, DragHandle)>> = const { RefCell::new(None) };
+        static INERTIA_DRAG_CAPTURE: RefCell<Option<(Signal<[f32; 2]>, DragHandle)>> = const { RefCell::new(None) };
+        static PINCH_CAPTURE: RefCell<Option<(Signal<f32>, PinchHandle)>> = const { RefCell::new(None) };
+        static GESTURE_CAPTURE: RefCell<Option<Signal<Option<Gesture>>>> = const { RefCell::new(None) };
+        static SWIPE_CAPTURE: RefCell<Option<Signal<Option<SwipeEvent>>>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn DragHookApp() -> Element {
+        let pair = use_drag(
+            "node",
+            DragConfig {
+                axis: DragAxis::X,
+                constraints: Some(DragConstraints::bounded(0.0, 100.0, 0.0, 100.0)),
+                inertia: false,
+                snap_points: vec![[0.0, 0.0], [100.0, 0.0]],
+                ..DragConfig::default()
+            },
+        );
+        DRAG_CAPTURE.with(|slot| *slot.borrow_mut() = Some(pair));
+
+        rsx! { div {} }
+    }
+
+    #[allow(non_snake_case)]
+    fn InertiaDragHookApp() -> Element {
+        let pair = use_drag(
+            "node",
+            DragConfig {
+                constraints: Some(DragConstraints::bounded(-500.0, 500.0, -500.0, 500.0)),
+                inertia: true,
+                inertia_config: InertiaConfig::new(500.0, 1.0),
+                ..DragConfig::default()
+            },
+        );
+        INERTIA_DRAG_CAPTURE.with(|slot| *slot.borrow_mut() = Some(pair));
+
+        rsx! { div {} }
+    }
+
+    #[allow(non_snake_case)]
+    fn GestureHookApp() -> Element {
+        let gesture = use_gesture("node", GestureConfig::default());
+        let pinch = use_pinch("node");
+        let swipe = use_swipe("node", SwipeConfig::default());
+        GESTURE_CAPTURE.with(|slot| *slot.borrow_mut() = Some(gesture));
+        PINCH_CAPTURE.with(|slot| *slot.borrow_mut() = Some(pinch));
+        SWIPE_CAPTURE.with(|slot| *slot.borrow_mut() = Some(swipe));
+
+        rsx! { div {} }
+    }
 
     #[test]
     fn nearest_snap_selects_closest_point() {
@@ -271,9 +326,9 @@ mod tests {
     #[test]
     fn gesture_recognizer_detects_swipe() {
         let mut recognizer = GestureRecognizer::new(GestureConfig::default());
-        recognizer.on_pointer_down(PointerData::new(0.0, 0.0, 1), 0.0);
-        recognizer.on_pointer_move(PointerData::new(100.0, 0.0, 1), 0.1);
-        let gesture = recognizer.on_pointer_up(PointerData::new(100.0, 0.0, 1), 0.1);
+        recognizer.on_pointer_down(PhysicsPointerData::new(0.0, 0.0, 1), 0.0);
+        recognizer.on_pointer_move(PhysicsPointerData::new(100.0, 0.0, 1), 0.1);
+        let gesture = recognizer.on_pointer_up(PhysicsPointerData::new(100.0, 0.0, 1), 0.1);
 
         assert!(matches!(
             gesture,
@@ -282,5 +337,96 @@ mod tests {
                 ..
             })
         ));
+    }
+
+    #[test]
+    fn drag_hook_updates_snaps_clamps_and_stops_without_inertia() {
+        DRAG_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(DragHookApp);
+        dom.rebuild_in_place();
+        let (position, handle) =
+            DRAG_CAPTURE.with(|slot| slot.borrow().as_ref().cloned().expect("drag hook captured"));
+
+        assert_eq!(crate::read_signal(position), [0.0, 0.0]);
+        handle.pointer_down(0.0, 0.0, 1);
+        handle.pointer_move(80.0, 40.0, 99, 0.1);
+        assert_eq!(crate::read_signal(position), [0.0, 0.0]);
+
+        handle.pointer_move(80.0, 40.0, 1, 0.1);
+        assert_eq!(crate::read_signal(handle.position()), [80.0, 0.0]);
+        handle.pointer_up(80.0, 40.0, 1);
+        assert_eq!(crate::read_signal(position), [100.0, 0.0]);
+        assert!(!handle.tick(0.016));
+
+        handle.set_constraints(Some(DragConstraints::bounded(-10.0, 40.0, -10.0, 40.0)));
+        assert_eq!(crate::read_signal(position), [40.0, 0.0]);
+        handle.snap_to([5.0, 20.0]);
+        assert_eq!(crate::read_signal(position), [5.0, 0.0]);
+        handle.set_constraints(None);
+        handle.snap_to([f32::INFINITY, f32::NAN]);
+        assert_eq!(crate::read_signal(position), [0.0, 0.0]);
+    }
+
+    #[test]
+    fn drag_hook_runs_release_inertia_until_settled_or_cancelled() {
+        INERTIA_DRAG_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(InertiaDragHookApp);
+        dom.rebuild_in_place();
+        let (position, handle) = INERTIA_DRAG_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("inertia drag hook captured")
+        });
+
+        handle.pointer_down(0.0, 0.0, 1);
+        handle.pointer_move(100.0, 0.0, 1, 0.01);
+        let release_position = crate::read_signal(position);
+        handle.pointer_up(100.0, 0.0, 1);
+        assert!(handle.tick(0.016));
+        assert!(crate::read_signal(position)[0] >= release_position[0]);
+
+        handle.snap_to([12.0, 24.0]);
+        assert_eq!(crate::read_signal(position), [12.0, 24.0]);
+        assert!(!handle.tick(0.016));
+    }
+
+    #[test]
+    fn gesture_pinch_and_swipe_hooks_return_stable_signals() {
+        GESTURE_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        PINCH_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        SWIPE_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(GestureHookApp);
+        dom.rebuild_in_place();
+
+        let gesture = GESTURE_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("gesture signal captured")
+        });
+        let (scale, pinch) = PINCH_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("pinch hook captured")
+        });
+        let swipe = SWIPE_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("swipe signal captured")
+        });
+
+        assert_eq!(crate::read_signal(gesture), None);
+        assert_eq!(crate::read_signal(swipe), None);
+        assert_eq!(crate::read_signal(scale), 1.0);
+
+        pinch.set_scale(f32::NAN);
+        assert_eq!(crate::read_signal(pinch.scale()), 1.0);
+        pinch.set_scale(-2.0);
+        assert_eq!(crate::read_signal(scale), 0.0);
+        pinch.reset();
+        assert_eq!(crate::read_signal(scale), 1.0);
     }
 }

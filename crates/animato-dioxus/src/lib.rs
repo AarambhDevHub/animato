@@ -169,3 +169,55 @@ fn spawn_raf_loop(tick: impl FnMut(f32) -> bool + 'static) {
         let _ = window.request_animation_frame(callback.as_ref().unchecked_ref());
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use dioxus::prelude::*;
+    use std::cell::RefCell;
+    use std::sync::{Arc, Mutex};
+
+    thread_local! {
+        static SIGNAL_CAPTURE: RefCell<Option<Signal<i32>>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn SignalHelperApp() -> Element {
+        let signal = use_signal(|| 1_i32);
+        SIGNAL_CAPTURE.with(|slot| *slot.borrow_mut() = Some(signal));
+
+        rsx! { div {} }
+    }
+
+    #[test]
+    fn finite_or_replaces_non_finite_values() {
+        assert_eq!(finite_or(2.0, 1.0), 2.0);
+        assert_eq!(finite_or(f32::NAN, 1.0), 1.0);
+        assert_eq!(finite_or(f32::INFINITY, 1.0), 1.0);
+    }
+
+    #[test]
+    fn signal_helpers_read_and_write_values() {
+        SIGNAL_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(SignalHelperApp);
+        dom.rebuild_in_place();
+        let signal =
+            SIGNAL_CAPTURE.with(|slot| slot.borrow().as_ref().copied().expect("signal captured"));
+
+        assert_eq!(read_signal(signal), 1);
+        set_signal(signal, 4);
+        assert_eq!(read_signal(signal), 4);
+    }
+
+    #[test]
+    fn with_lock_updates_inner_value() {
+        let value = Arc::new(Mutex::new(1_i32));
+        let updated = with_lock(&value, |inner| {
+            *inner += 2;
+            *inner
+        });
+
+        assert_eq!(updated, 3);
+        assert_eq!(*value.lock().expect("lock"), 3);
+    }
+}

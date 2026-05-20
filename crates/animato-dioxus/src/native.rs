@@ -249,4 +249,44 @@ mod tests {
         handle.snap_to(12.0, 24.0);
         assert_eq!(handle.state().position, [12.0, 24.0]);
     }
+
+    #[test]
+    fn window_animation_tracks_size_opacity_snap_and_debug() {
+        let handle = use_window_animation(|builder| {
+            builder
+                .duration(0.2)
+                .delay(0.05)
+                .time_scale(2.0)
+                .looping(Loop::Once)
+        });
+
+        assert_eq!(handle.state(), NativeWindowState::default());
+        handle.resize_to(-20.0, 120.0);
+        handle.opacity_to(2.0);
+        assert!(handle.tick(0.05));
+        assert_eq!(handle.state().size, [800.0, 600.0]);
+        let _ = handle.tick(0.1);
+        assert!(handle.state().size[0] <= 800.0);
+        assert!(handle.state().opacity <= 1.0);
+        assert!(format!("{handle:?}").contains("WindowAnimationHandle"));
+
+        let snapped = NativeWindowState {
+            position: [10.0, 20.0],
+            size: [320.0, 240.0],
+            opacity: 0.25,
+        };
+        handle.snap_to(snapped);
+        assert_eq!(handle.state(), snapped);
+        assert!(!handle.tick(1.0));
+    }
+
+    #[test]
+    fn window_spring_moves_ticks_and_debug_formats() {
+        let handle = use_window_spring(SpringConfig::stiff());
+        assert_eq!(handle.state().position, [0.0, 0.0]);
+        handle.move_to(40.0, -20.0);
+        assert!(handle.tick(1.0 / 60.0));
+        assert_ne!(handle.state().position, [0.0, 0.0]);
+        assert!(format!("{handle:?}").contains("WindowSpringHandle"));
+    }
 }

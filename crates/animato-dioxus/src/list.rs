@@ -70,10 +70,48 @@ pub fn stable_key<K: Hash>(key: &K) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static LIST_SIGNAL_CAPTURE: RefCell<Option<Signal<Vec<i32>>>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn AnimatedForApp() -> Element {
+        let items = use_signal(|| vec![1, 2, 3]);
+        LIST_SIGNAL_CAPTURE.with(|slot| *slot.borrow_mut() = Some(items));
+
+        AnimatedFor(
+            items,
+            |item: &i32| *item,
+            |item: i32| rsx! { span { "{item}" } },
+            Some(PresenceAnimation::slide_left()),
+            Some(PresenceAnimation::slide_right()),
+            Some(0.4),
+            Some(Easing::Linear),
+            Some(0.05),
+        )
+    }
 
     #[test]
     fn stable_key_is_deterministic_and_distinguishes_values() {
         assert_eq!(stable_key(&"row-1"), stable_key(&"row-1"));
         assert_ne!(stable_key(&"row-1"), stable_key(&"row-2"));
+    }
+
+    #[test]
+    fn animated_for_renders_keyed_children_with_animation_metadata() {
+        LIST_SIGNAL_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(AnimatedForApp);
+        let mutations = dom.rebuild_to_vec();
+
+        assert!(!mutations.edits.is_empty());
+        let items = LIST_SIGNAL_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("list signal captured")
+        });
+        assert_eq!(crate::read_signal(items), vec![1, 2, 3]);
     }
 }

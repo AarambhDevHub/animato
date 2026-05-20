@@ -158,3 +158,104 @@ where
 
     handle
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use approx::assert_relative_eq;
+    use dioxus::prelude::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static MOTION_CAPTURE: RefCell<Option<MotionHandle<f32>>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn MotionHookApp() -> Element {
+        let handle = use_motion(0.0_f32);
+        MOTION_CAPTURE.with(|slot| *slot.borrow_mut() = Some(handle));
+
+        rsx! { div {} }
+    }
+
+    fn mount_motion() -> (VirtualDom, MotionHandle<f32>) {
+        MOTION_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(MotionHookApp);
+        dom.rebuild_in_place();
+        let handle = MOTION_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("motion hook captured")
+        });
+        (dom, handle)
+    }
+
+    #[test]
+    fn motion_tween_stop_and_snap_are_deterministic() {
+        let (_dom, handle) = mount_motion();
+
+        assert_relative_eq!(handle.value(), 0.0);
+        assert!(!handle.is_animating());
+        assert!(!handle.tick(0.1));
+
+        handle.animate_to(
+            10.0,
+            MotionConfig::Tween {
+                duration: 1.0,
+                easing: Easing::Linear,
+                delay: 0.0,
+            },
+        );
+        assert!(handle.is_animating());
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(handle.value(), 2.5, epsilon = 0.001);
+        assert_relative_eq!(crate::read_signal(handle.signal()), 2.5, epsilon = 0.001);
+
+        handle.stop();
+        assert!(!handle.is_animating());
+        assert!(!handle.tick(0.25));
+        assert_relative_eq!(handle.value(), 2.5, epsilon = 0.001);
+
+        handle.snap_to(7.0);
+        assert_relative_eq!(handle.value(), 7.0, epsilon = 0.001);
+        assert!(!handle.is_animating());
+    }
+
+    #[test]
+    fn motion_tween_delay_spring_and_keyframes_update_value() {
+        let (_dom, handle) = mount_motion();
+
+        handle.animate_to(
+            10.0,
+            MotionConfig::Tween {
+                duration: 1.0,
+                easing: Easing::Linear,
+                delay: 0.25,
+            },
+        );
+        assert!(handle.tick(0.1));
+        assert_relative_eq!(handle.value(), 0.0, epsilon = 0.001);
+        assert!(handle.tick(0.15));
+        assert_relative_eq!(handle.value(), 0.0, epsilon = 0.001);
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(handle.value(), 2.5, epsilon = 0.001);
+
+        handle.animate_to(1.0, MotionConfig::Spring(SpringConfig::snappy()));
+        assert!(handle.is_animating());
+        assert!(handle.tick(1.0 / 60.0));
+        assert!(handle.value() < 2.5);
+
+        handle.keyframes(
+            KeyframeTrack::new()
+                .push(0.0, 4.0_f32)
+                .push(0.5, 8.0)
+                .push(1.0, 12.0),
+        );
+        assert!(handle.tick(0.5));
+        assert_relative_eq!(handle.value(), 8.0, epsilon = 0.001);
+        assert!(!handle.tick(0.5));
+        assert_relative_eq!(handle.value(), 12.0, epsilon = 0.001);
+        assert!(!handle.is_animating());
+    }
+}

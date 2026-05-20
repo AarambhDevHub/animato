@@ -227,6 +227,46 @@ fn scroll_progress_target(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use dioxus::prelude::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static SCROLL_PROGRESS_CAPTURE: RefCell<Option<Signal<f32>>> = const { RefCell::new(None) };
+        static SCROLL_TRIGGER_CAPTURE: RefCell<Option<ScrollTriggerHandle>> = const { RefCell::new(None) };
+        static SCROLL_VELOCITY_CAPTURE: RefCell<Option<Signal<f32>>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn ScrollHookApp() -> Element {
+        let progress = use_scroll_progress(
+            "node",
+            ScrollConfig {
+                axis: ScrollAxis::Both,
+                offset_start: 0.2,
+                offset_end: 0.8,
+                smooth: false,
+                smooth_factor: 1.0,
+            },
+        );
+        let trigger = use_scroll_trigger(
+            "node",
+            ScrollTriggerConfig {
+                threshold: 0.5,
+                once: true,
+                start: "top center".to_owned(),
+                end: "bottom center".to_owned(),
+                scrub: true,
+                pin: true,
+            },
+        );
+        let velocity = use_scroll_velocity();
+
+        SCROLL_PROGRESS_CAPTURE.with(|slot| *slot.borrow_mut() = Some(progress));
+        SCROLL_TRIGGER_CAPTURE.with(|slot| *slot.borrow_mut() = Some(trigger));
+        SCROLL_VELOCITY_CAPTURE.with(|slot| *slot.borrow_mut() = Some(velocity));
+
+        rsx! { div {} }
+    }
 
     #[test]
     fn progress_calculator_clamps() {
@@ -260,5 +300,87 @@ mod tests {
         };
         assert!(!ScrollProgressCalculator::triggered(0.49, &config));
         assert!(ScrollProgressCalculator::triggered(0.5, &config));
+    }
+
+    #[test]
+    fn calculator_handles_offsets_smoothing_and_threshold_clamps() {
+        let mut instant = ScrollProgressCalculator::new(ScrollConfig {
+            offset_start: 0.25,
+            offset_end: 0.75,
+            smooth: false,
+            ..ScrollConfig::default()
+        });
+        assert_eq!(instant.calculate(200.0, 100.0, 100.0, 125.0), 0.0);
+        assert_eq!(instant.calculate(200.0, 100.0, 100.0, 275.0), 1.0);
+
+        let mut fast_smooth = ScrollProgressCalculator::new(ScrollConfig {
+            smooth: true,
+            smooth_factor: 2.0,
+            ..ScrollConfig::default()
+        });
+        assert_eq!(fast_smooth.calculate(100.0, 100.0, 100.0, 150.0), 0.75);
+
+        assert!(ScrollProgressCalculator::triggered(
+            0.0,
+            &ScrollTriggerConfig {
+                threshold: -1.0,
+                ..ScrollTriggerConfig::default()
+            }
+        ));
+        assert!(!ScrollProgressCalculator::triggered(
+            0.99,
+            &ScrollTriggerConfig {
+                threshold: 2.0,
+                ..ScrollTriggerConfig::default()
+            }
+        ));
+    }
+
+    #[test]
+    fn scroll_hooks_return_noop_signals_and_once_trigger_handle() {
+        SCROLL_PROGRESS_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        SCROLL_TRIGGER_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        SCROLL_VELOCITY_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut dom = VirtualDom::new(ScrollHookApp);
+        dom.rebuild_in_place();
+
+        let progress = SCROLL_PROGRESS_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("scroll progress captured")
+        });
+        let trigger = SCROLL_TRIGGER_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("scroll trigger captured")
+        });
+        let velocity = SCROLL_VELOCITY_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("scroll velocity captured")
+        });
+
+        assert_eq!(crate::read_signal(progress), 0.0);
+        assert_eq!(crate::read_signal(velocity), 0.0);
+        assert!(!crate::read_signal(trigger.active()));
+        assert_eq!(crate::read_signal(trigger.progress()), 0.0);
+
+        let config = ScrollTriggerConfig {
+            threshold: 0.5,
+            once: true,
+            ..ScrollTriggerConfig::default()
+        };
+        trigger.update_ratio(0.4, &config);
+        assert!(!crate::read_signal(trigger.active()));
+        assert_eq!(crate::read_signal(trigger.progress()), 0.4);
+        trigger.update_ratio(0.75, &config);
+        assert!(crate::read_signal(trigger.active()));
+        assert_eq!(crate::read_signal(trigger.progress()), 0.75);
+        trigger.update_ratio(0.1, &config);
+        assert!(crate::read_signal(trigger.active()));
+        assert_eq!(crate::read_signal(trigger.progress()), 0.75);
     }
 }

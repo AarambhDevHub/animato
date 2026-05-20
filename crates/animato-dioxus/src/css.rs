@@ -318,6 +318,45 @@ fn rgba_to_css(color: [f32; 4]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use animato_core::Easing;
+    use animato_spring::SpringConfig;
+    use dioxus::prelude::*;
+    use std::cell::RefCell;
+
+    thread_local! {
+        static CSS_TWEEN_CAPTURE: RefCell<Option<Signal<String>>> = const { RefCell::new(None) };
+        static CSS_SPRING_CAPTURE: RefCell<Option<Signal<String>>> = const { RefCell::new(None) };
+    }
+
+    #[allow(non_snake_case)]
+    fn CssTweenApp() -> Element {
+        let style = css_tween(
+            AnimatedStyle::new().opacity(0.0),
+            AnimatedStyle::new()
+                .opacity(1.0)
+                .translate(10.0, 0.0)
+                .blur(2.0),
+            0.2,
+            Easing::Linear,
+        );
+        CSS_TWEEN_CAPTURE.with(|slot| *slot.borrow_mut() = Some(style));
+
+        rsx! { div {} }
+    }
+
+    #[allow(non_snake_case)]
+    fn CssSpringApp() -> Element {
+        let style = css_spring(
+            AnimatedStyle::new()
+                .opacity(1.0)
+                .scale(1.25)
+                .border_radius(8.0),
+            SpringConfig::snappy(),
+        );
+        CSS_SPRING_CAPTURE.with(|slot| *slot.borrow_mut() = Some(style));
+
+        rsx! { div {} }
+    }
 
     #[test]
     fn style_formats_transform_and_color() {
@@ -342,5 +381,101 @@ mod tests {
         assert_eq!(mid.opacity, Some(0.5));
         assert_eq!(mid.translate_x, Some(10.0));
         assert_eq!(mid.translate_y, Some(20.0));
+    }
+
+    #[test]
+    fn style_formats_all_supported_properties_and_clamps_inputs() {
+        let mut style = AnimatedStyle::new()
+            .opacity(2.0)
+            .translate(f32::NAN, 12.3456)
+            .scale(-1.0)
+            .rotate(f32::INFINITY)
+            .blur(-4.0)
+            .width(-100.0)
+            .height(42.25)
+            .background_color([2.0, -1.0, 0.25, 1.5])
+            .border_radius(-3.0)
+            .clip_path("inset(0)")
+            .transform("translateZ(0)")
+            .custom("pointer-events", "none");
+        style.skew_x = Some(15.0);
+        style.skew_y = Some(-10.0);
+
+        let transform = style.transform_string();
+        assert!(transform.contains("translate(0px,12.346px)"));
+        assert!(transform.contains("scale(0)"));
+        assert!(transform.contains("rotate(0deg)"));
+        assert!(transform.contains("skewX(15deg)"));
+        assert!(transform.contains("skewY(-10deg)"));
+        assert!(transform.contains("translateZ(0)"));
+
+        let css = style.to_css();
+        assert!(css.contains("opacity:1;"));
+        assert!(css.contains("filter:blur(0px);"));
+        assert!(css.contains("background-color:rgba(255,0,64,1);"));
+        assert!(css.contains("border-radius:0px;"));
+        assert!(css.contains("width:0px;"));
+        assert!(css.contains("height:42.25px;"));
+        assert!(css.contains("clip-path:inset(0);"));
+        assert!(css.contains("pointer-events:none;"));
+    }
+
+    #[test]
+    fn interpolation_handles_missing_values_strings_colors_and_custom_props() {
+        let from = AnimatedStyle::new()
+            .opacity(0.8)
+            .transform("scale(2)")
+            .background_color([1.0, 0.0, 0.0, 1.0])
+            .clip_path("circle(20%)")
+            .custom("left", "0px");
+        let to = AnimatedStyle::new()
+            .scale(2.0)
+            .blur(10.0)
+            .background_color([0.0, 0.0, 1.0, 0.5])
+            .clip_path("circle(80%)")
+            .custom("left", "10px");
+
+        let mid = from.interpolate(&to, 0.5);
+        assert_eq!(mid.opacity, Some(0.8));
+        assert_eq!(mid.scale, Some(1.0));
+        assert_eq!(mid.blur, Some(5.0));
+        assert_eq!(mid.background_color, Some([0.5, 0.0, 0.5, 0.75]));
+        assert_eq!(mid.transform.as_deref(), Some("scale(2)"));
+        assert_eq!(mid.clip_path.as_deref(), Some("circle(20%)"));
+        assert_eq!(mid.custom, vec![("left".to_owned(), "0px".to_owned())]);
+
+        let end = from.interpolate(&to, 1.0);
+        assert_eq!(end.transform.as_deref(), Some("scale(2)"));
+        assert_eq!(end.clip_path.as_deref(), Some("circle(80%)"));
+        assert_eq!(end.custom, vec![("left".to_owned(), "10px".to_owned())]);
+
+        let from_only = from.interpolate(&AnimatedStyle::new(), 0.5);
+        assert_eq!(from_only.background_color, Some([1.0, 0.0, 0.0, 1.0]));
+    }
+
+    #[test]
+    fn css_hooks_return_stable_style_signals() {
+        CSS_TWEEN_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut tween_dom = VirtualDom::new(CssTweenApp);
+        tween_dom.rebuild_in_place();
+        let tween_style = CSS_TWEEN_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("css tween signal captured")
+        });
+        assert!(crate::read_signal(tween_style).contains("opacity:0;"));
+
+        CSS_SPRING_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        let mut spring_dom = VirtualDom::new(CssSpringApp);
+        spring_dom.rebuild_in_place();
+        let spring_style = CSS_SPRING_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .copied()
+                .expect("css spring signal captured")
+        });
+        let spring_css = crate::read_signal(spring_style);
+        assert!(spring_css.is_empty() || spring_css.contains("opacity:"));
     }
 }

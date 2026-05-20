@@ -227,4 +227,42 @@ mod tests {
         assert_eq!(reversed.from.scale, Some(1.0));
         assert_eq!(reversed.to.scale, Some(0.8));
     }
+
+    #[test]
+    fn all_presence_presets_are_well_formed() {
+        let presets = [
+            PresenceAnimation::fade(),
+            PresenceAnimation::slide_down(),
+            PresenceAnimation::slide_left(),
+            PresenceAnimation::slide_right(),
+            PresenceAnimation::zoom_in(),
+            PresenceAnimation::zoom_out(),
+            PresenceAnimation::flip_x(),
+            PresenceAnimation::flip_y(),
+            PresenceAnimation::blur_in(),
+        ];
+
+        for preset in presets {
+            assert!(preset.duration > 0.0);
+            assert_eq!(preset.easing, Easing::EaseOutCubic);
+            assert_eq!(preset.from.opacity, Some(0.0));
+            assert_eq!(preset.to.opacity, Some(1.0));
+            assert!(preset.from.to_css().contains("opacity:0;"));
+            assert!(preset.to.to_css().contains("opacity:1;"));
+        }
+    }
+
+    #[test]
+    fn equality_and_transition_css_cover_edge_cases() {
+        assert_eq!(PresenceAnimation::fade(), PresenceAnimation::fade());
+        assert_ne!(
+            PresenceAnimation::spring(SpringConfig::snappy()),
+            PresenceAnimation::spring(SpringConfig::wobbly())
+        );
+        assert_ne!(PresenceAnimation::fade(), PresenceAnimation::slide_up());
+
+        let css = transition_css(-1.0);
+        assert!(css.contains("0.000s"));
+        assert!(css.contains("will-change:opacity,transform,filter;"));
+    }
 }

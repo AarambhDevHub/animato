@@ -91,6 +91,19 @@ pub(crate) fn container_css(mode: TransitionMode) -> &'static str {
 mod tests {
     use super::*;
 
+    #[allow(non_snake_case)]
+    fn PageTransitionApp() -> Element {
+        rsx! {
+            PageTransition {
+                mode: Some(TransitionMode::MorphHero),
+                route_key: Some("route-a".to_owned()),
+                enter: None::<PresenceAnimation>,
+                exit: None::<PresenceAnimation>,
+                div { "page" }
+            }
+        }
+    }
+
     #[test]
     fn container_css_matches_transition_mode() {
         assert!(container_css(TransitionMode::SlideOver).contains("overflow:hidden"));
@@ -103,5 +116,27 @@ mod tests {
     #[test]
     fn display_matches_debug_label() {
         assert_eq!(TransitionMode::CrossFade.to_string(), "CrossFade");
+    }
+
+    #[test]
+    fn all_transition_modes_have_stable_container_css() {
+        for mode in [
+            TransitionMode::Sequential,
+            TransitionMode::Parallel,
+            TransitionMode::CrossFade,
+            TransitionMode::SlideOver,
+            TransitionMode::MorphHero,
+        ] {
+            let css = container_css(mode);
+            assert!(css.contains("display:block"));
+            assert!(css.contains("position:relative"));
+        }
+    }
+
+    #[test]
+    fn page_transition_component_renders_with_default_mode_animation() {
+        let mut dom = VirtualDom::new(PageTransitionApp);
+        let mutations = dom.rebuild_to_vec();
+        assert!(!mutations.edits.is_empty());
     }
 }
