@@ -82,6 +82,7 @@ jobs:
           cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
           cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
           cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
+          cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 
       - name: Check Leptos examples
         run: |
@@ -97,6 +98,15 @@ jobs:
           cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
           cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
           cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
+
+      - name: Check Yew examples
+        run: |
+          cargo check --manifest-path examples/yew_basic_tween/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_scroll_trigger/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_animated_list/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_page_transition/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target wasm32-unknown-unknown
 
       - name: Run WASM browser tests
         run: |
@@ -188,6 +198,7 @@ jobs:
             animato-bevy \
             animato-leptos \
             animato-dioxus \
+            animato-yew \
             animato
           do
             publish_crate "$crate"
@@ -216,14 +227,14 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Dioxus"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Yew"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Dioxus
+            ## Animato ${{ steps.version.outputs.TAG }} — Yew
 
-            Animato v1.2.0 adds first-class Dioxus integration with
-            signal-backed hooks, motion handles, scroll helpers, presence and
-            page transitions, list helpers, gesture state, platform detection,
-            and portable native window animation handles while preserving the
+            Animato v1.3.0 adds first-class Yew integration with
+            `UseStateHandle`-backed hooks, CSS helpers, scroll helpers,
+            presence and page transitions, keyed list helpers, gesture state,
+            and serializable `f32` agent coordination while preserving the
             stable v1 API.
 
             ### Install
@@ -250,6 +261,7 @@ jobs:
             | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | Bevy integration plugin |
             | [`animato-leptos`](https://crates.io/crates/animato-leptos) | `${{ steps.version.outputs.VERSION }}` | Leptos signal hooks and components |
             | [`animato-dioxus`](https://crates.io/crates/animato-dioxus) | `${{ steps.version.outputs.VERSION }}` | Dioxus signal hooks and native helpers |
+            | [`animato-yew`](https://crates.io/crates/animato-yew) | `${{ steps.version.outputs.VERSION }}` | Yew hooks, components, gestures, and agents |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Stable facade crate |
 
             ### Verification

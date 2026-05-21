@@ -28,18 +28,19 @@ animato-wasm
 animato-bevy
 animato-leptos
 animato-dioxus
+animato-yew
 animato
 ```
 
 ## Tag
 
 ```sh
-git tag v1.2.0
-git push origin v1.2.0
+git tag v1.3.0
+git push origin v1.3.0
 ```
 
-The publish workflow validates that `v1.2.0` matches the workspace package
-version `1.2.0`.
+The publish workflow validates that `v1.3.0` matches the workspace package
+version `1.3.0`.
 
 ## GitHub Release
 

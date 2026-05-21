@@ -35,7 +35,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.0.0` | Stable | API freeze, full docs, examples, all CI green | ✅ |
 | `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | ✅ |
 | `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | ✅ |
-| `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | 📋 |
+| `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | ✅ |
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | 📋 |
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | 📋 |
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | 📋 |
@@ -612,47 +612,49 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 ### Deliverables
 
 **`animato-yew` — hooks**
-- [ ] `use_tween(from, to, config)` → `(UseStateHandle<T>, TweenHandle)` — tween with rAF-gated state updates
-- [ ] `use_spring(initial, config)` → `(UseStateHandle<T>, SpringHandle)` — spring with physics
-- [ ] `use_timeline(builder)` → `TimelineHandle` — timeline composition
-- [ ] `use_keyframes(builder)` → `(UseStateHandle<T>, KeyframeHandle)` — keyframe track
-- [ ] Per-frame updates via `gloo::request_animation_frame` to minimize VDOM diff overhead
+- [x] `use_tween(from, to, config)` → `(UseStateHandle<T>, TweenHandle)` — tween with rAF-gated state updates
+- [x] `use_spring(initial, config)` → `(UseStateHandle<T>, SpringHandle)` — spring with physics
+- [x] `use_timeline(builder)` → `TimelineHandle` — timeline composition
+- [x] `use_keyframes(builder)` → `(UseStateHandle<T>, KeyframeHandle)` — keyframe track
+- [x] Per-frame updates via a private rAF loop to minimize VDOM diff overhead
 
 **`animato-yew` — scroll**
-- [ ] `use_scroll_progress(target, config)` → scroll progress state
-- [ ] `use_scroll_trigger(target, config)` → viewport enter/exit callbacks with scrub and pin
-- [ ] `use_scroll_velocity()` → scroll velocity state
+- [x] `use_scroll_progress(target, config)` → scroll progress state
+- [x] `use_scroll_trigger(target, config)` → viewport enter/exit callbacks with scrub and pin
+- [x] `use_scroll_velocity()` → scroll velocity state
 
 **`animato-yew` — presence, transition, list, gesture, CSS**
-- [ ] `AnimatePresence` component — mount/unmount transitions using Yew `Html` and `Callback`
-- [ ] `PageTransition` component with `TransitionMode` and `yew-router` integration
-- [ ] `AnimatedFor` component — FLIP-powered list reordering
-- [ ] `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — pointer event bindings via Yew `NodeRef`
-- [ ] `AnimatedStyle` struct and `css_spring()`, `css_tween()` CSS helpers
+- [x] `AnimatePresence` component — mount/hide transitions using Yew `Html`
+- [x] `PageTransition` component with `TransitionMode` and `yew-router` route key hook
+- [x] `AnimatedFor` component — keyed list wrapper with stable item keys
+- [x] `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — Yew `NodeRef` gesture hooks
+- [x] `AnimatedStyle` struct and `use_css_spring()`, `use_css_tween()` CSS helpers
 
 **`animato-yew` — agent**
-- [ ] `AnimationAgent` — Yew agent for cross-component animation coordination
-- [ ] `AgentInput` enum: `AddTween`, `AddSpring`, `Play`, `Pause`, `Reset`, `Cancel`, `CancelAll`, `Tick`
-- [ ] `AgentOutput` enum: `ValueChanged`, `Completed`, `Settled`
-- [ ] Components subscribe to agent outputs without direct parent-child coupling
-- [ ] Agent manages an `AnimationDriver` internally and ticks all registered animations
+- [x] `AnimationAgent` marker and `use_animation_agent` hook for serializable `f32` coordination
+- [x] `AgentInput` enum: `Tween`, `Spring`, `Stop`, `Reset`
+- [x] `AgentOutput` enum: `Started`, `Tick`, `Completed`, `Stopped`, `Reset`
+- [x] Components receive outputs through a Yew `Callback<AgentOutput>`
+- [x] Runtime ticks registered `Tween<f32>` and `Spring` channels
 
 **`animato` facade**
-- [ ] `yew` feature flag
-- [ ] Re-exports all `animato-yew` public APIs
+- [x] `yew`, `yew-csr`, `yew-hydration`, `yew-ssr`, and `yew-agent` feature flags
+- [x] Re-exports all `animato-yew` public APIs
 
 **Documentation & Examples**
-- [ ] `docs/yew.md` — Yew integration guide
-- [ ] `examples/yew_basic_tween/` — Yew app with animated div
-- [ ] `examples/yew_scroll_trigger/` — scroll-triggered entrance animations
-- [ ] `examples/yew_animated_list/` — FLIP list reordering demo
-- [ ] `examples/yew_agent_coordination/` — cross-component animation via agent
+- [x] `docs/yew.md` — Yew integration guide
+- [x] `examples/yew_basic_tween/` — Yew app with animated div
+- [x] `examples/yew_scroll_trigger/` — scroll-triggered entrance animations
+- [x] `examples/yew_animated_list/` — keyed list reordering demo
+- [x] `examples/yew_drag_gesture/` — drag, pinch, and swipe handle demo
+- [x] `examples/yew_page_transition/` — Yew Router page transition demo
+- [x] `examples/yew_agent_coordination/` — cross-component animation via agent
 
 **Testing**
-- [ ] Unit tests for all hooks (mock rAF, deterministic dt)
-- [ ] Agent integration tests (message round-trip, completion events)
-- [ ] WASM compile check: `cargo check -p animato-yew --target wasm32-unknown-unknown`
-- [ ] All examples compile
+- [x] Unit tests for CSS formatting, scroll math, presence presets, list keys, gestures, and agent runtime flow
+- [x] Facade integration test: `tests/yew_facade.rs`
+- [x] WASM compile check: `cargo check -p animato-yew --target wasm32-unknown-unknown --features csr`
+- [x] Yew examples wired into CI compile checks
 
 ---
 
@@ -888,10 +890,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.2 stable API and open focused issues for bugs, documentation gaps, or post-1.2 feature proposals.
+The best way to contribute right now is to use the v1.3 stable API and open focused issues for bugs, documentation gaps, or post-1.3 feature proposals.
 
 ---
 
 *Roadmap version: 1.6.0 — last updated May 2026*  
-*v1.2.0 Dioxus shipped — additional framework integrations and engine expansion in progress*  
+*v1.3.0 Yew shipped — JavaScript bindings and engine expansion in progress*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.2", default-features = false }
-//! animato-tween  = { version = "1.2", default-features = false }
-//! animato-spring = { version = "1.2", default-features = false }
-//! animato-physics = { version = "1.2", default-features = false }
-//! animato-color = { version = "1.2", default-features = false }
+//! animato-core   = { version = "1.3", default-features = false }
+//! animato-tween  = { version = "1.3", default-features = false }
+//! animato-spring = { version = "1.3", default-features = false }
+//! animato-physics = { version = "1.3", default-features = false }
+//! animato-color = { version = "1.3", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -91,6 +91,7 @@
 //! | `wasm` | [`RafDriver`] for `requestAnimationFrame` loops |
 //! | `leptos` | Signal-backed Leptos hooks and components |
 //! | `dioxus` | Dioxus signal hooks, motion, presence, gestures, and native helpers |
+//! | `yew` | Yew hooks, CSS helpers, scroll, presence, FLIP lists, gestures, and agents |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
@@ -194,3 +195,13 @@ pub mod dioxus {
 
 #[cfg(all(feature = "dioxus", not(feature = "leptos")))]
 pub use animato_dioxus::*;
+
+// ── Yew ─────────────────────────────────────────────────────────────────────
+#[cfg(feature = "yew")]
+pub mod yew {
+    //! Yew integration namespace.
+    pub use animato_yew::*;
+}
+
+#[cfg(all(feature = "yew", not(feature = "leptos"), not(feature = "dioxus")))]
+pub use animato_yew::*;

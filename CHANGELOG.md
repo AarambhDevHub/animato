@@ -5,6 +5,24 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] — 2026-05-21 — Yew
+
+### Added
+- `animato-yew`: new Yew 0.23 integration crate with `UseStateHandle`-backed tween, spring, timeline, and keyframe hooks.
+- Yew CSS, scroll, presence, page transition, keyed list, gesture, and serializable `f32` agent coordination APIs.
+- `animato` facade features: `yew`, `yew-csr`, `yew-hydration`, `yew-ssr`, and `yew-agent`.
+- Yew examples for basic tweening, scroll triggers, animated lists, drag gestures, page transitions, and agent coordination.
+- `docs/yew.md` integration guide.
+
+### Changed
+- Bumped all workspace crates and internal dependency pins from `1.2.0`/`1.2` to `1.3.0`/`1.3`.
+- Updated README, feature-flag docs, API map, architecture notes, roadmap, CI, and publish workflow for `v1.3.0 — Yew`.
+- Added Yew 0.23.0, Yew Router 0.20.0, and Yew Agent 0.5.0 as workspace dependencies.
+
+### Verification
+- `cargo check -p animato-yew --all-features`
+- `cargo check --manifest-path examples/yew_basic_tween/Cargo.toml --target wasm32-unknown-unknown`
+
 ## [1.2.0] — 2026-05-19 — Dioxus
 
 ### Added

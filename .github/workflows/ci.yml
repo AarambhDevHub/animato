@@ -219,6 +219,9 @@ jobs:
       - name: Check animato-dioxus web
         run: cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 
+      - name: Check animato-yew CSR
+        run: cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
+
       - name: Check Leptos examples
         run: |
           cargo check --manifest-path examples/leptos_basic_tween/Cargo.toml --target wasm32-unknown-unknown
@@ -229,6 +232,15 @@ jobs:
 
       - name: Check Dioxus web example
         run: cargo check --manifest-path examples/dioxus_web_tween/Cargo.toml --target wasm32-unknown-unknown
+
+      - name: Check Yew examples
+        run: |
+          cargo check --manifest-path examples/yew_basic_tween/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_scroll_trigger/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_animated_list/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_page_transition/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target wasm32-unknown-unknown
 
       - name: Install wasm-pack
         run: cargo install wasm-pack --locked

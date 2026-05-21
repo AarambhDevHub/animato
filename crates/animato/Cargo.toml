@@ -35,6 +35,11 @@ dioxus-web = ["dioxus", "animato-dioxus/web"]
 dioxus-desktop = ["dioxus", "animato-dioxus/desktop"]
 dioxus-router = ["dioxus", "animato-dioxus/router"]
 dioxus-native = ["dioxus", "animato-dioxus/native"]
+yew      = ["dep:animato-yew"]
+yew-csr  = ["yew", "animato-yew/csr"]
+yew-hydration = ["yew", "animato-yew/hydration"]
+yew-ssr  = ["yew", "animato-yew/ssr"]
+yew-agent = ["yew", "animato-yew/agent"]
 tokio    = ["timeline", "animato-timeline/tokio"]
 serde    = [
     "dep:serde",
@@ -61,6 +66,7 @@ animato-bevy     = { workspace = true, optional = true }
 animato-wasm     = { workspace = true, optional = true }
 animato-leptos   = { workspace = true, optional = true }
 animato-dioxus   = { workspace = true, optional = true }
+animato-yew      = { workspace = true, optional = true }
 palette          = { workspace = true, optional = true }
 serde            = { workspace = true, optional = true }
 
@@ -79,6 +85,7 @@ animato-bevy   = { workspace = true }
 animato-wasm   = { workspace = true }
 animato-leptos = { workspace = true }
 animato-dioxus = { workspace = true }
+animato-yew    = { workspace = true }
 bevy_app       = { workspace = true }
 bevy_ecs       = { workspace = true }
 bevy_time      = { workspace = true }
@@ -153,6 +160,11 @@ required-features = ["wasm", "tween"]
 name = "dioxus_facade"
 path = "../../tests/dioxus_facade.rs"
 required-features = ["dioxus"]
+
+[[test]]
+name = "yew_facade"
+path = "../../tests/yew_facade.rs"
+required-features = ["yew"]
 
 # ── v0.8.0 tests ──────────────────────────────────────────────────────────────
 [[test]]

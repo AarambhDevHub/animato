@@ -322,7 +322,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "1.2.0"
+version      = "1.3.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -331,19 +331,19 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.2" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.2" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.2" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.2" }
-animato-path     = { path = "crates/animato-path",     version = "1.2" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.2" }
-animato-color    = { path = "crates/animato-color",    version = "1.2" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.2" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.2" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.2" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.2" }
-animato-leptos   = { path = "crates/animato-leptos",   version = "1.2" }
-animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.2" }
+animato-core     = { path = "crates/animato-core",     version = "1.3" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.3" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.3" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.3" }
+animato-path     = { path = "crates/animato-path",     version = "1.3" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.3" }
+animato-color    = { path = "crates/animato-color",    version = "1.3" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.3" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.3" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.3" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.3" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.3" }
+animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.3" }
 animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
 animato-js       = { path = "crates/animato-js",       version = "1.4" }
 animato-devtools = { path = "crates/animato-devtools", version = "1.6" }
@@ -1685,8 +1685,9 @@ web-sys          = { workspace = true, features = ["Window", "Document", "Elemen
 | `transition.rs` | `PageTransition` — route-change animation wrapper |
 | `list.rs` | `AnimatedFor` — FLIP-powered list with insert/remove/reorder animations |
 | `gesture.rs` | `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` — pointer event bindings |
-| `agent.rs` | `AnimationAgent` — Yew agent for cross-component animation message coordination |
-| `css.rs` | `AnimatedStyle`, `css_transform()`, `css_spring()` — CSS property helpers |
+| `agent.rs` | `AnimationAgent`, `use_animation_agent`, `AgentInput`, `AgentOutput` — serializable `f32` coordination |
+| `css.rs` | `AnimatedStyle`, `use_css_tween()`, `use_css_spring()` — CSS property helpers |
+| `raf.rs` | Private rAF loop that schedules frames only while animation is active |
 
 #### `src/hooks.rs`
 
@@ -1694,25 +1695,25 @@ web-sys          = { workspace = true, features = ["Window", "Document", "Elemen
 /// Tween hook for Yew functional components. Returns a UseStateHandle<T>
 /// that re-renders the component when the animated value changes.
 /// Uses use_raf internally to limit updates to one per frame.
-pub fn use_tween<T: Animatable + 'static>(
+pub fn use_tween<T: Animatable + PartialEq + 'static>(
     from: T,
     to: T,
     config: impl FnOnce(TweenBuilder<T>) -> TweenBuilder<T>,
 ) -> (UseStateHandle<T>, TweenHandle)
 
 /// Spring hook. Re-renders the component per-frame while the spring is active.
-pub fn use_spring<T: Animatable + 'static>(
+pub fn use_spring<T: Decompose + Clone + PartialEq + 'static>(
     initial: T,
     config: SpringConfig,
 ) -> (UseStateHandle<T>, SpringHandle)
 
 /// Timeline composition hook.
 pub fn use_timeline(
-    builder: impl FnOnce(&mut Timeline),
+    builder: impl FnOnce(Timeline) -> Timeline,
 ) -> TimelineHandle
 
 /// Multi-stop keyframe animation hook.
-pub fn use_keyframes<T: Animatable + 'static>(
+pub fn use_keyframes<T: Animatable + PartialEq + 'static>(
     builder: impl FnOnce(KeyframeTrack<T>) -> KeyframeTrack<T>,
 ) -> (UseStateHandle<T>, KeyframeHandle)
 ```
@@ -1720,33 +1721,29 @@ pub fn use_keyframes<T: Animatable + 'static>(
 #### `src/agent.rs`
 
 ```rust
-/// Yew agent that coordinates animations across multiple components.
-/// Components send messages to the agent to start, stop, or synchronize
-/// animations without direct parent-child coupling.
-pub struct AnimationAgent {
-    driver: AnimationDriver,
-    subscribers: HashMap<AnimationId, Vec<HandlerId>>,
-}
+/// Marker type for the Yew animation agent integration.
+pub struct AnimationAgent;
+
+/// Hook handle for serializable f32 tween/spring coordination.
+pub fn use_animation_agent(callback: Callback<AgentOutput>) -> AnimationAgentHandle;
 
 pub enum AgentInput {
-    AddTween { id: String, tween: Box<dyn Playable + Send> },
-    AddSpring { id: String, spring: Box<dyn Update + Send> },
-    Play(String),
-    Pause(String),
-    Reset(String),
-    Cancel(String),
-    CancelAll,
-    Tick(f32),
+    Tween(AgentTweenSpec),
+    Spring(AgentSpringSpec),
+    Stop { id: String },
+    Reset,
 }
 
 pub enum AgentOutput {
-    ValueChanged { id: String, progress: f32 },
-    Completed { id: String },
-    Settled { id: String },
+    Started { id: String, value: f32 },
+    Tick { id: String, value: f32, progress: f32 },
+    Completed { id: String, value: f32 },
+    Stopped { id: String },
+    Reset,
 }
 ```
 
-The `scroll.rs`, `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `css.rs` modules follow the same API contract as `animato-leptos` but use Yew `Html`, `UseStateHandle<T>`, `NodeRef`, and `Callback` instead of Leptos equivalents. Per-frame updates use `use_raf` from `gloo` or a custom rAF closure to avoid VDOM diffing overhead on non-animated nodes.
+The `scroll.rs`, `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `css.rs` modules follow the same API contract as `animato-leptos` but use Yew `Html`, `UseStateHandle<T>`, `NodeRef`, and `Callback` instead of Leptos equivalents. Per-frame updates use a private rAF closure, cap `dt` at `0.25`, and schedule frames only while an animation channel remains active.
 
 #### `Cargo.toml`
 
@@ -1757,14 +1754,17 @@ version     = "1.3.0"
 description = "Yew integration for the Animato animation library — hooks, agents, scroll, presence, transitions, FLIP lists, gestures, and CSS animation helpers."
 
 [features]
-default    = ["scroll", "presence", "transition", "list", "gesture", "css"]
+default    = ["css", "scroll", "presence", "transition", "list", "gesture", "agent"]
+csr        = ["yew/csr"]
+hydration  = ["yew/hydration"]
+ssr        = ["yew/ssr"]
 scroll     = []
-presence   = []
-transition = ["dep:yew-router"]
-list       = []
+presence   = ["css"]
+transition = ["presence", "dep:yew-router"]
+list       = ["presence"]
 gesture    = ["dep:animato-physics"]
 css        = []
-agent      = []
+agent      = ["dep:yew-agent", "dep:serde"]
 path       = ["dep:animato-path"]
 color      = ["dep:animato-color"]
 
@@ -1773,16 +1773,15 @@ animato-core     = { workspace = true }
 animato-tween    = { workspace = true }
 animato-spring   = { workspace = true }
 animato-timeline = { workspace = true }
-animato-driver   = { workspace = true }
-animato-wasm     = { workspace = true }
 animato-path     = { workspace = true, optional = true }
 animato-physics  = { workspace = true, optional = true }
 animato-color    = { workspace = true, optional = true }
 yew              = { workspace = true }
 yew-router       = { workspace = true, optional = true }
+yew-agent        = { workspace = true, optional = true }
+serde            = { workspace = true, optional = true }
 wasm-bindgen     = { workspace = true }
-web-sys          = { workspace = true, features = ["Window", "Document", "Element", "HtmlElement", "DomRect", "IntersectionObserver", "IntersectionObserverEntry", "ScrollToOptions"] }
-gloo             = { version = "0.11" }
+web-sys          = { workspace = true }
 ```
 
 ---
@@ -2184,6 +2183,10 @@ dioxus-desktop = ["dioxus", "animato-dioxus/desktop"]
 dioxus-router = ["dioxus", "animato-dioxus/router"]
 dioxus-native = ["dioxus", "animato-dioxus/native"]
 yew      = ["dep:animato-yew"]
+yew-csr  = ["yew", "animato-yew/csr"]
+yew-hydration = ["yew", "animato-yew/hydration"]
+yew-ssr  = ["yew", "animato-yew/ssr"]
+yew-agent = ["yew", "animato-yew/agent"]
 js       = ["dep:animato-js"]
 devtools = ["dep:animato-devtools"]
 serde    = ["animato-core/serde", "animato-tween/serde", "animato-spring/serde", "animato-path?/serde", "animato-color?/serde"]
@@ -2644,12 +2647,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "1.2", default-features = false }
-animato-tween = { version = "1.2", default-features = false }
-animato-spring = { version = "1.2", default-features = false }
-animato-path = { version = "1.2", default-features = false }
-animato-physics = { version = "1.2", default-features = false }
-animato-color = { version = "1.2", default-features = false }
+animato-core  = { version = "1.3", default-features = false }
+animato-tween = { version = "1.3", default-features = false }
+animato-spring = { version = "1.3", default-features = false }
+animato-path = { version = "1.3", default-features = false }
+animato-physics = { version = "1.3", default-features = false }
+animato-color = { version = "1.3", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -2772,5 +2775,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.6.0 — covers architecture through Animato 1.2.0 core + Leptos 1.2.0 + Dioxus 1.2.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
+*Document version: 1.6.0 — covers architecture through Animato 1.3.0 core + Leptos 1.3.0 + Dioxus 1.3.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

@@ -15,10 +15,10 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.2.0 API is stable. The current public crates cover easing, tweens,
+The v1.3.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
-first-class Leptos and Dioxus integration.
+first-class Leptos, Dioxus, and Yew integration.
 
 ## Install
 
@@ -26,21 +26,21 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.2"
+animato = "1.3"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.2", features = ["path", "physics", "color"] }
+animato = { version = "1.3", features = ["path", "physics", "color"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.2", features = ["leptos-csr"] }
+animato = { version = "1.3", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -48,20 +48,28 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.2", features = ["dioxus-web"] }
+animato = { version = "1.3", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
+```
+
+Yew applications enable the facade feature plus the app rendering mode:
+
+```toml
+[dependencies]
+animato = { version = "1.3", features = ["yew-csr"] }
+yew = { version = "0.23", features = ["csr"] }
 ```
 
 For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.2", default-features = false }
-animato-tween   = { version = "1.2", default-features = false }
-animato-spring  = { version = "1.2", default-features = false }
-animato-path    = { version = "1.2", default-features = false }
-animato-physics = { version = "1.2", default-features = false }
-animato-color   = { version = "1.2", default-features = false }
+animato-core    = { version = "1.3", default-features = false }
+animato-tween   = { version = "1.3", default-features = false }
+animato-spring  = { version = "1.3", default-features = false }
+animato-path    = { version = "1.3", default-features = false }
+animato-physics = { version = "1.3", default-features = false }
+animato-color   = { version = "1.3", default-features = false }
 ```
 
 ## Quick Start
@@ -121,6 +129,7 @@ other target.
 | [`animato-wasm`](./crates/animato-wasm) | rAF driver and optional DOM helpers | wasm/std |
 | [`animato-leptos`](./crates/animato-leptos) | Leptos signal hooks, scroll, presence, lists, gestures, CSS, SSR | wasm/std |
 | [`animato-dioxus`](./crates/animato-dioxus) | Dioxus signals, motion hooks, scroll, presence, lists, gestures, native helpers | wasm/std |
+| [`animato-yew`](./crates/animato-yew) | Yew hooks, CSS, scroll, presence, lists, gestures, transitions, agents | wasm/std |
 | [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
 
 ## Feature Flags
@@ -149,6 +158,11 @@ other target.
 | `dioxus-desktop` | `dioxus` plus Dioxus desktop renderer support |
 | `dioxus-router` | `dioxus` plus route transition helpers |
 | `dioxus-native` | `dioxus` plus portable native window animation handles |
+| `yew` | Yew hooks/components without forcing an app mode |
+| `yew-csr` | `yew` plus Yew CSR mode |
+| `yew-hydration` | `yew` plus Yew hydration mode |
+| `yew-ssr` | `yew` plus Yew SSR mode |
+| `yew-agent` | `yew` plus serializable `f32` animation agent coordination |
 | `serde` | Serialization for supported public types |
 | `tokio` | `Timeline::wait()` async completion helper |
 
@@ -197,9 +211,20 @@ cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-defau
 cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
 ```
 
+Yew examples:
+
+```sh
+cargo check --manifest-path examples/yew_basic_tween/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_scroll_trigger/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_animated_list/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_page_transition/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target wasm32-unknown-unknown
+```
+
 ## Documentation
 
-The v1.2 documentation lives in [`docs/`](./docs/):
+The v1.3 documentation lives in [`docs/`](./docs/):
 
 | Start here | Details |
 |------------|---------|
@@ -210,15 +235,16 @@ The v1.2 documentation lives in [`docs/`](./docs/):
 | [Recipes](./docs/recipes.md) | Practical patterns for UI, games, paths, and input. |
 | [Leptos](./docs/leptos.md) | Signal-backed hooks and Leptos integration examples. |
 | [Dioxus](./docs/dioxus.md) | Cross-platform Dioxus hooks and native helpers. |
+| [Yew](./docs/yew.md) | Yew hooks, components, gestures, and agent coordination. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
-| [Release](./docs/release.md) | v1.2 publishing checklist. |
+| [Release](./docs/release.md) | v1.3 publishing checklist. |
 
 The generated Rust API docs are available on
 [docs.rs/animato](https://docs.rs/animato).
 
 ## Testing
 
-The v1.2 release gate is:
+The v1.3 release gate is:
 
 ```sh
 cargo fmt --check
@@ -231,6 +257,7 @@ cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
 cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 cargo check -p animato-dioxus
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
+cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 cargo bench --workspace --no-run
 ```
 

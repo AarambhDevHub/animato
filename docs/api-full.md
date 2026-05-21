@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.2.0 API surface by crate. For signatures,
+This file lists the stable v1.3.0 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.2"
+animato = "1.3"
 ```
 
 ## animato-core
@@ -323,6 +323,28 @@ Stable public items include `use_tween`, `use_spring`, `use_timeline`,
 `WindowAnimationHandle`.
 
 Use [dioxus.md](./dioxus.md) for app setup, renderer features, and examples.
+
+## animato-yew
+
+Features: `yew`, plus one app mode feature such as `yew-csr`,
+`yew-hydration`, or `yew-ssr`. Agent coordination is behind `yew-agent`.
+
+The facade re-exports these at the crate root when `yew` is enabled by itself.
+If another framework integration is also enabled, use `animato::yew::*`.
+
+Stable public items include `use_tween`, `use_spring`, `use_timeline`,
+`use_keyframes`, `TweenHandle`, `SpringHandle`, `TimelineHandle`,
+`KeyframeHandle`, `AnimatedStyle`, `use_css_tween`, `use_css_spring`,
+`css_tween`, `css_spring`, `use_scroll_progress`, `use_scroll_trigger`,
+`use_scroll_velocity`, `SmoothScroll`, `PresenceAnimation`, `AnimatePresence`,
+`TransitionMode`, `PageTransition`, `use_route_transition_key`,
+`route_transition_key`, `AnimatedFor`, `AnimatedForProps`, `stable_key`,
+`DragConfig`, `DragHandle`, `PinchHandle`, `SwipeConfig`, `SwipeEvent`,
+`use_drag`, `use_gesture`, `use_pinch`, `use_swipe`, `AnimationAgent`,
+`AnimationAgentHandle`, `AgentTweenSpec`, `AgentSpringSpec`, `AgentInput`,
+`AgentOutput`, and `use_animation_agent`.
+
+Use [yew.md](./yew.md) for app setup and examples.
 
 ## Related Docs
 

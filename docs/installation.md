@@ -6,7 +6,7 @@ Animato is published as focused crates plus the `animato` facade.
 
 ```toml
 [dependencies]
-animato = "1.2"
+animato = "1.3"
 ```
 
 Default features include `std`, `tween`, `timeline`, `spring`, and `driver`.
@@ -15,23 +15,25 @@ Default features include `std`, `tween`, `timeline`, `spring`, and `driver`.
 
 ```toml
 [dependencies]
-animato = { version = "1.2", features = ["path", "physics", "color", "serde"] }
+animato = { version = "1.3", features = ["path", "physics", "color", "serde"] }
 ```
 
 Common combinations:
 
 | Use case | Dependency |
 |----------|------------|
-| TUI or CLI app | `animato = "1.2"` |
-| Bevy game | `animato = { version = "1.2", features = ["bevy"] }` |
-| Browser rAF loop | `animato = { version = "1.2", features = ["wasm"] }` |
-| Browser DOM helpers | `animato = { version = "1.2", features = ["wasm-dom"] }` |
-| Leptos CSR app | `animato = { version = "1.2", features = ["leptos-csr"] }` |
-| Dioxus web app | `animato = { version = "1.2", features = ["dioxus-web"] }` |
-| Dioxus desktop app | `animato = { version = "1.2", features = ["dioxus-desktop"] }` |
-| SVG paths and morphing | `animato = { version = "1.2", features = ["path"] }` |
-| Drag and gestures | `animato = { version = "1.2", features = ["physics"] }` |
-| GPU batches | `animato = { version = "1.2", features = ["gpu"] }` |
+| TUI or CLI app | `animato = "1.3"` |
+| Bevy game | `animato = { version = "1.3", features = ["bevy"] }` |
+| Browser rAF loop | `animato = { version = "1.3", features = ["wasm"] }` |
+| Browser DOM helpers | `animato = { version = "1.3", features = ["wasm-dom"] }` |
+| Leptos CSR app | `animato = { version = "1.3", features = ["leptos-csr"] }` |
+| Dioxus web app | `animato = { version = "1.3", features = ["dioxus-web"] }` |
+| Dioxus desktop app | `animato = { version = "1.3", features = ["dioxus-desktop"] }` |
+| Yew CSR app | `animato = { version = "1.3", features = ["yew-csr"] }` |
+| Yew agent coordination | `animato = { version = "1.3", features = ["yew-csr", "yew-agent"] }` |
+| SVG paths and morphing | `animato = { version = "1.3", features = ["path"] }` |
+| Drag and gestures | `animato = { version = "1.3", features = ["physics"] }` |
+| GPU batches | `animato = { version = "1.3", features = ["gpu"] }` |
 
 ## Focused Crates
 
@@ -39,17 +41,17 @@ Use focused crates when dependency size matters:
 
 ```toml
 [dependencies]
-animato-core = "1.2"
-animato-tween = "1.2"
+animato-core = "1.3"
+animato-tween = "1.3"
 ```
 
 ## no_std
 
 ```toml
 [dependencies]
-animato-core = { version = "1.2", default-features = false }
-animato-tween = { version = "1.2", default-features = false }
-animato-spring = { version = "1.2", default-features = false }
+animato-core = { version = "1.3", default-features = false }
+animato-tween = { version = "1.3", default-features = false }
+animato-spring = { version = "1.3", default-features = false }
 ```
 
 See [no-std.md](./no-std.md) for details.

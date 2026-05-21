@@ -1,0 +1,62 @@
+[package]
+name        = "animato-yew"
+description = "Yew integration for Animato: hooks, CSS, scroll, presence, lists, gestures, transitions, and agent coordination."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "yew", "wasm", "web", "gui"]
+categories  = ["wasm", "web-programming", "gui"]
+
+[features]
+default = ["css", "scroll", "presence", "transition", "list", "gesture", "agent"]
+csr = ["yew/csr"]
+hydration = ["yew/hydration"]
+ssr = ["yew/ssr"]
+css = []
+scroll = []
+presence = ["css"]
+transition = ["presence", "dep:yew-router"]
+list = ["presence"]
+gesture = ["dep:animato-physics"]
+agent = ["dep:yew-agent", "dep:serde", "animato-core/serde", "animato-tween/serde", "animato-spring/serde"]
+path = ["dep:animato-path"]
+color = ["dep:animato-color"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true, features = ["std"] }
+animato-timeline = { workspace = true, features = ["std"] }
+animato-spring   = { workspace = true, features = ["std"] }
+animato-path     = { workspace = true, features = ["std"], optional = true }
+animato-physics  = { workspace = true, features = ["std"], optional = true }
+animato-color    = { workspace = true, optional = true }
+yew              = { workspace = true }
+yew-router       = { workspace = true, optional = true }
+yew-agent        = { workspace = true, optional = true }
+serde            = { workspace = true, optional = true }
+wasm-bindgen     = { workspace = true }
+web-sys          = { workspace = true, features = [
+    "CssStyleDeclaration",
+    "Document",
+    "DomRect",
+    "Element",
+    "Event",
+    "EventTarget",
+    "HtmlCollection",
+    "HtmlElement",
+    "MouseEvent",
+    "Node",
+    "Performance",
+    "PointerEvent",
+    "Touch",
+    "TouchEvent",
+    "TouchList",
+    "Window",
+] }
+
+[dev-dependencies]
+approx = { workspace = true }

@@ -88,6 +88,20 @@ cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-defau
 cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
 ```
 
+## Yew Examples
+
+Run the Yew examples from the workspace root. These are CSR apps and are checked
+for `wasm32-unknown-unknown`.
+
+```sh
+cargo check --manifest-path examples/yew_basic_tween/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_scroll_trigger/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_animated_list/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_drag_gesture/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_page_transition/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target wasm32-unknown-unknown
+```
+
 ## Compile Examples Without Running
 
 ```sh
