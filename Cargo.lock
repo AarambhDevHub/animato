@@ -244,6 +244,7 @@ dependencies = [
  "animato-timeline",
  "animato-tween",
  "approx",
+ "pollster",
  "serde",
  "wasm-bindgen",
  "web-sys",

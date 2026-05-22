@@ -60,3 +60,4 @@ web-sys          = { workspace = true, features = [
 
 [dev-dependencies]
 approx = { workspace = true }
+pollster = { workspace = true }

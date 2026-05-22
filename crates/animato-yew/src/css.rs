@@ -370,4 +370,40 @@ mod tests {
         assert_eq!(mid.translate_x, Some(10.0));
         assert_eq!(mid.translate_y, Some(5.0));
     }
+
+    #[test]
+    fn extended_style_fields_format_and_interpolate() {
+        let from = AnimatedStyle::new()
+            .skew(5.0, 10.0)
+            .blur(f32::NAN)
+            .width(-10.0)
+            .height(25.5)
+            .border_radius(4.0)
+            .clip_path("inset(0%)")
+            .transform("translateZ(0)")
+            .custom("--phase", "start");
+        let to = AnimatedStyle::new()
+            .opacity(1.0)
+            .rotate(90.0)
+            .background_color([2.0, -1.0, 0.5, 0.25])
+            .clip_path("inset(100%)")
+            .custom("--phase", "end");
+
+        let start = from.interpolate(&to, 0.0);
+        let end = from.interpolate(&to, 1.0);
+        let css = start.to_css();
+
+        assert!(css.contains("skewX(5deg)"));
+        assert!(css.contains("skewY(10deg)"));
+        assert!(css.contains("filter:blur(0px);"));
+        assert!(css.contains("width:0px;"));
+        assert!(css.contains("height:25.5px;"));
+        assert!(css.contains("border-radius:4px;"));
+        assert!(css.contains("clip-path:inset(0%);"));
+        assert!(css.contains("--phase:start;"));
+        assert_eq!(end.clip_path.as_deref(), Some("inset(100%)"));
+        assert_eq!(end.custom, vec![("--phase".to_owned(), "end".to_owned())]);
+        assert_eq!(rgba_to_css([2.0, -1.0, 0.5, 0.25]), "rgba(255,0,128,0.25)");
+        assert_eq!(format_px(f32::INFINITY), "0px");
+    }
 }

@@ -405,4 +405,43 @@ mod tests {
         assert_eq!(runtime.handle(AgentInput::Reset), vec![AgentOutput::Reset]);
         assert!(!runtime.is_active());
     }
+
+    #[test]
+    fn runtime_handles_spring_stop_and_builder_options() {
+        let tween = AgentTweenSpec::new("t", 1.0, 2.0)
+            .duration(f32::NAN)
+            .easing(Easing::Linear);
+        assert_eq!(tween.duration, 0.3);
+        assert_eq!(tween.easing, Easing::Linear);
+
+        let spring_config = SpringConfig::gentle();
+        let spring = AgentSpringSpec::new("s", 2.0, 4.0).config(spring_config.clone());
+        assert_eq!(
+            spring,
+            AgentSpringSpec::new("s", 2.0, 4.0).config(spring_config)
+        );
+
+        let mut runtime = AgentRuntime::default();
+        assert_eq!(
+            runtime.handle(AgentInput::Spring(spring)),
+            vec![AgentOutput::Started {
+                id: "s".to_owned(),
+                value: 2.0,
+            }]
+        );
+        assert!(runtime.is_active());
+
+        let outputs = runtime.tick(1.0 / 60.0);
+        assert!(outputs.iter().any(|output| matches!(
+            output,
+            AgentOutput::Tick { id, progress, .. } if id == "s" && *progress <= 1.0
+        )));
+        assert!(format!("{:?}", runtime).contains("channel_count"));
+
+        assert_eq!(
+            runtime.handle(AgentInput::Stop { id: "s".to_owned() }),
+            vec![AgentOutput::Stopped { id: "s".to_owned() }]
+        );
+        assert!(!runtime.is_active());
+    }
 }

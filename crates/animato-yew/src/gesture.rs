@@ -321,4 +321,21 @@ mod tests {
         assert_eq!(swipe.min_distance, 40.0);
         assert_eq!(swipe.min_velocity, 100.0);
     }
+
+    #[test]
+    fn snap_distance_handles_empty_and_non_finite_comparisons() {
+        assert_eq!(nearest_snap([0.0, 0.0], &[]), None);
+        assert_eq!(
+            nearest_snap([f32::NAN, 0.0], &[[1.0, 0.0], [2.0, 0.0]]),
+            Some([1.0, 0.0])
+        );
+        assert_eq!(distance_sq([1.0, 2.0], [4.0, 6.0]), 25.0);
+
+        let event = SwipeEvent {
+            direction: SwipeDirection::Right,
+            velocity: 120.0,
+            distance: 80.0,
+        };
+        assert!(format!("{event:?}").contains("Right"));
+    }
 }

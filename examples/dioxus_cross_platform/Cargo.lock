@@ -28,7 +28,7 @@ dependencies = [
 
 [[package]]
 name = "animato"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -44,7 +44,7 @@ dependencies = [
 
 [[package]]
 name = "animato-color"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
  "palette",
@@ -52,14 +52,14 @@ dependencies = [
 
 [[package]]
 name = "animato-core"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "libm",
 ]
 
 [[package]]
 name = "animato-dioxus"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
  "animato-driver",
@@ -75,14 +75,14 @@ dependencies = [
 
 [[package]]
 name = "animato-driver"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
 ]
 
 [[package]]
 name = "animato-path"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -91,7 +91,7 @@ dependencies = [
 
 [[package]]
 name = "animato-physics"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
  "libm",
@@ -99,14 +99,14 @@ dependencies = [
 
 [[package]]
 name = "animato-spring"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
 ]
 
 [[package]]
 name = "animato-timeline"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -114,14 +114,14 @@ dependencies = [
 
 [[package]]
 name = "animato-tween"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
 ]
 
 [[package]]
 name = "animato-wasm"
-version = "1.2.0"
+version = "1.3.0"
 dependencies = [
  "animato-core",
  "animato-driver",

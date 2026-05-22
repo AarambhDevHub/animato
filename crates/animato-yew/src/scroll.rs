@@ -508,4 +508,37 @@ mod tests {
         assert!(!ScrollProgressCalculator::triggered(0.49, &config));
         assert!(ScrollProgressCalculator::triggered(0.5, &config));
     }
+
+    #[test]
+    fn calculator_respects_offsets_axis_and_smoothing_bounds() {
+        let horizontal = ScrollConfig {
+            axis: ScrollAxis::Horizontal,
+            offset_start: 0.25,
+            offset_end: 0.75,
+            smooth: false,
+            smooth_factor: 2.0,
+        };
+        let both = ScrollConfig {
+            axis: ScrollAxis::Both,
+            smooth: true,
+            smooth_factor: -1.0,
+            ..ScrollConfig::default()
+        };
+        let trigger = ScrollTriggerConfig {
+            threshold: 2.0,
+            once: true,
+            start: "center bottom".to_owned(),
+            end: "center top".to_owned(),
+            scrub: true,
+            pin: true,
+        };
+
+        let progress = scroll_progress_target(&horizontal, 200.0, 100.0, 400.0, 0.0);
+        assert!((progress - (1.0 / 3.0)).abs() < 0.001);
+        assert!(!ScrollProgressCalculator::triggered(0.99, &trigger));
+        assert!(ScrollProgressCalculator::triggered(1.0, &trigger));
+
+        let mut calc = ScrollProgressCalculator::new(both);
+        assert_eq!(calc.calculate(100.0, 100.0, 100.0, 50.0), 0.0);
+    }
 }
