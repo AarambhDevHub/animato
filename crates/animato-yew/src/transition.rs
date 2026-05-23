@@ -92,5 +92,17 @@ mod tests {
             container_css(TransitionMode::Sequential),
             "display:block; position:relative;"
         );
+        assert_eq!(
+            container_css(TransitionMode::Parallel),
+            "display:block; position:relative;"
+        );
+        assert_eq!(
+            container_css(TransitionMode::CrossFade),
+            "display:block; position:relative;"
+        );
+        assert_eq!(
+            container_css(TransitionMode::MorphHero),
+            "display:block; position:relative;"
+        );
     }
 }

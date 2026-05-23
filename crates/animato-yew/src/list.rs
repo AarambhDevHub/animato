@@ -131,4 +131,27 @@ mod tests {
         assert_eq!(stable_key(&"row-1"), stable_key(&"row-1"));
         assert_ne!(stable_key(&"row-1"), stable_key(&"row-2"));
     }
+
+    #[test]
+    fn props_equality_and_debug_cover_animation_metadata() {
+        let props = AnimatedForProps {
+            items: vec![1, 2],
+            key_fn: Callback::from(|value| stable_key(&value)),
+            render: Callback::from(|value| html! { <span>{ value }</span> }),
+            enter: Some(PresenceAnimation::fade()),
+            exit: Some(PresenceAnimation::slide_down()),
+            move_duration: 0.4,
+            move_easing: Easing::Linear,
+            stagger_delay: 0.05,
+        };
+        let mut same = props.clone();
+        same.key_fn = Callback::from(|value| format!("key-{value}"));
+        same.render = Callback::from(|value| html! { <strong>{ value }</strong> });
+
+        assert_eq!(props, same);
+        assert!(format!("{props:?}").contains("move_duration"));
+
+        same.items.push(3);
+        assert_ne!(props, same);
+    }
 }

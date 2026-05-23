@@ -541,4 +541,20 @@ mod tests {
         let mut calc = ScrollProgressCalculator::new(both);
         assert_eq!(calc.calculate(100.0, 100.0, 100.0, 50.0), 0.0);
     }
+
+    #[test]
+    fn default_configs_are_stable_and_debuggable() {
+        let scroll = ScrollConfig::default();
+        let trigger = ScrollTriggerConfig::default();
+        let calc = ScrollProgressCalculator::new(scroll.clone());
+
+        assert_eq!(scroll.axis, ScrollAxis::Vertical);
+        assert_eq!(trigger.start, "top bottom");
+        assert_eq!(trigger.end, "bottom top");
+        assert!(!trigger.once);
+        assert!(!trigger.scrub);
+        assert!(!trigger.pin);
+        assert!(format!("{calc:?}").contains("ScrollProgressCalculator"));
+        assert_eq!(format!("{:?}", ScrollAxis::Both), "Both");
+    }
 }

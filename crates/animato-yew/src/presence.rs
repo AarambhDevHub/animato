@@ -242,4 +242,18 @@ mod tests {
     fn transition_clamps_negative_duration() {
         assert!(transition_css(-1.0).contains("opacity 0.000s"));
     }
+
+    #[test]
+    fn spring_presence_and_partial_eq_cover_optional_config() {
+        let config = SpringConfig::gentle();
+        let spring = PresenceAnimation::spring(config.clone());
+        let same = PresenceAnimation::spring(config);
+        let fade = PresenceAnimation::fade();
+
+        assert_eq!(spring, same);
+        assert_ne!(spring, fade);
+        assert!(spring.spring.is_some());
+        assert_eq!(spring.reversed().from, spring.to);
+        assert!(transition_css(f32::NAN).contains("transform 0.000s"));
+    }
 }

@@ -107,6 +107,23 @@ fn ui_showcase() -> Html {
     }
 }
 
+#[function_component(AlternateUiShowcase)]
+fn alternate_ui_showcase() -> Html {
+    html! {
+        <>
+            <AnimatePresence show={false} wait_exit={false} exit={PresenceAnimation::blur_in()}>
+                <span>{ "hidden" }</span>
+            </AnimatePresence>
+            <PageTransition mode={TransitionMode::MorphHero}>
+                <span>{ "hero" }</span>
+            </PageTransition>
+            <PageTransition mode={TransitionMode::CrossFade}>
+                <span>{ "fade" }</span>
+            </PageTransition>
+        </>
+    }
+}
+
 #[test]
 fn ssr_renders_hooks_without_browser_runtime() {
     let rendered = pollster::block_on(
@@ -132,4 +149,18 @@ fn ssr_renders_ui_components_with_animation_metadata() {
     assert!(rendered.contains("data-animato-presence=\"true\""));
     assert!(rendered.contains("data-animato-page-transition=\"SlideOver\""));
     assert!(rendered.contains("data-animato-list-item=\"true\""));
+}
+
+#[test]
+fn ssr_renders_hidden_presence_and_alternate_page_modes() {
+    let rendered = pollster::block_on(
+        yew::LocalServerRenderer::<AlternateUiShowcase>::new()
+            .hydratable(false)
+            .render(),
+    );
+
+    assert!(rendered.contains("display:none;"));
+    assert!(rendered.contains("data-animato-page-transition=\"MorphHero\""));
+    assert!(rendered.contains("data-animato-page-transition=\"CrossFade\""));
+    assert!(rendered.contains("scale(1)"));
 }

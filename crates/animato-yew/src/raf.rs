@@ -95,3 +95,38 @@ impl RafLoop {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn loop_state_debug_kick_and_stop_are_deterministic_on_host() {
+        let calls = Rc::new(Cell::new(0));
+        let loop_handle = RafLoop::new({
+            let calls = Rc::clone(&calls);
+            move |_| {
+                calls.set(calls.get() + 1);
+                true
+            }
+        });
+
+        assert!(format!("{loop_handle:?}").contains("active: false"));
+        assert!(!loop_handle.inner.active.get());
+        assert!(!loop_handle.inner.scheduled.get());
+        assert_eq!(loop_handle.inner.last_timestamp.get(), None);
+
+        loop_handle.kick();
+        assert!(loop_handle.inner.active.get());
+        assert!(!loop_handle.inner.scheduled.get());
+        assert!(format!("{loop_handle:?}").contains("active: true"));
+
+        assert!((loop_handle.inner.tick.borrow_mut())(0.016));
+        assert_eq!(calls.get(), 1);
+
+        loop_handle.inner.last_timestamp.set(Some(120.0));
+        loop_handle.stop();
+        assert!(!loop_handle.inner.active.get());
+        assert_eq!(loop_handle.inner.last_timestamp.get(), None);
+    }
+}
