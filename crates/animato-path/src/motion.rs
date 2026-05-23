@@ -289,6 +289,17 @@ impl MotionPathTween {
         self.auto_rotate
     }
 
+    /// Enable or disable auto-rotation.
+    pub fn set_auto_rotate(&mut self, yes: bool) {
+        self.auto_rotate = yes;
+    }
+
+    /// Set normalized start and end offsets along the path.
+    pub fn set_offsets(&mut self, start: f32, end: f32) {
+        self.start_offset = math::clamp01(start);
+        self.end_offset = math::clamp01(end);
+    }
+
     /// `true` when the internal tween is complete.
     pub fn is_complete(&self) -> bool {
         self.tween.is_complete()

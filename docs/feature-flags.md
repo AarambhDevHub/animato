@@ -5,7 +5,7 @@ dependencies.
 
 ```toml
 [dependencies]
-animato = { version = "1.3", features = ["path", "physics"] }
+animato = { version = "1.4", features = ["path", "physics"] }
 ```
 
 ## Facade Features
@@ -39,6 +39,7 @@ animato = { version = "1.3", features = ["path", "physics"] }
 | `yew-hydration` | `yew` plus Yew hydration mode |
 | `yew-ssr` | `yew` plus Yew SSR mode |
 | `yew-agent` | `yew` plus serializable `f32` animation agent coordination |
+| `js` | `animato-js` and the `animato::js::*` WASM/NPM namespace |
 | `serde` | Serde derives and re-exports on supported types |
 | `tokio` | `Timeline::wait()` |
 
@@ -47,8 +48,8 @@ animato = { version = "1.3", features = ["path", "physics"] }
 Prefer focused crates for no_std:
 
 ```toml
-animato-core = { version = "1.3", default-features = false }
-animato-tween = { version = "1.3", default-features = false }
+animato-core = { version = "1.4", default-features = false }
+animato-tween = { version = "1.4", default-features = false }
 ```
 
 See [no-std.md](./no-std.md).
@@ -69,6 +70,8 @@ See [no-std.md](./no-std.md).
   `animato::dioxus::*` to avoid intentionally duplicated hook/component names.
 - When multiple UI integrations are enabled, use the integration namespaces,
   such as `animato::yew::*`, to avoid duplicated hook/component names.
+- JavaScript apps should install `@animato/core`; the Rust `js` feature is for
+  facade re-export builds and crate-level docs.
 
 ## Related Docs
 

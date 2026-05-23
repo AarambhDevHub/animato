@@ -1,0 +1,50 @@
+[package]
+name        = "animato-js"
+description = "WASM bindings for Animato, published to NPM as @animato/core."
+readme      = "README.md"
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "wasm", "javascript", "npm", "web"]
+categories  = ["wasm", "web-programming", "gui"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = ["dom", "panic-hook"]
+dom = ["animato-wasm/wasm-dom"]
+panic-hook = ["dep:console_error_panic_hook"]
+
+[dependencies]
+animato-core     = { workspace = true, features = ["std"] }
+animato-tween    = { workspace = true, features = ["std"] }
+animato-timeline = { workspace = true, features = ["std"] }
+animato-spring   = { workspace = true, features = ["std"] }
+animato-path     = { workspace = true, features = ["std"] }
+animato-physics  = { workspace = true, features = ["std"] }
+animato-driver   = { workspace = true }
+animato-wasm     = { workspace = true }
+js-sys           = { workspace = true }
+wasm-bindgen     = { workspace = true }
+web-sys          = { workspace = true, features = [
+    "CssStyleDeclaration",
+    "Document",
+    "DomRect",
+    "Element",
+    "EventTarget",
+    "HtmlElement",
+    "Node",
+    "Performance",
+    "PointerEvent",
+    "Text",
+    "WheelEvent",
+    "Window",
+] }
+console_error_panic_hook = { workspace = true, optional = true }
+
+[dev-dependencies]
+wasm-bindgen-test = { workspace = true }

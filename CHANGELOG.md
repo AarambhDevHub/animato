@@ -5,6 +5,30 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-05-23 — JavaScript
+
+### Added
+- `animato-js`: new Rust/WASM crate built with `wasm-bindgen` and published to NPM as `@animato/core`.
+- JavaScript exports for tweens, vector tweens, keyframes, timelines, springs, rAF/scroll drivers, motion paths, morphing, draw values, inertia, drag, gestures, color interpolation, DOM helpers, and batch tween evaluation.
+- JavaScript utility exports: `version`, `initAnimato`, `availableEasings`, `ease`, `parseEasing`, `snapTo`, `roundTo`, and `interpolateColor`.
+- `animato` facade feature `js`, re-exported as `animato::js::*`.
+- JavaScript examples for vanilla timeline, React tween, Svelte spring, Vue motion path, and Angular color usage.
+- NPM publish workflow, package preparation script, package size check, and local CI mirror script.
+- `docs/javascript.md` and `crates/animato-js/README.md`.
+
+### Changed
+- Bumped the workspace version and internal dependency pins from `1.3.0`/`1.3` to `1.4.0`/`1.4`.
+- Updated README, architecture notes, feature flags, API map, examples, testing, release docs, roadmap, and CI for the JavaScript release.
+- Aligned the Yew scroll trigger example with the richer Leptos visual system and kept Yew on the current `0.23` release line.
+- Enabled release LTO, single codegen unit, panic abort, and stripping for optimized WASM package output.
+
+### Verification
+- `cargo check -p animato-js`
+- `cargo test -p animato-js`
+- `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
+- `bash scripts/build-js-package.sh`
+- `npm run typecheck` and `npm run build` for all JavaScript examples
+
 ## [1.3.0] — 2026-05-21 — Yew
 
 ### Added

@@ -15,10 +15,10 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.3.0 API is stable. The current public crates cover easing, tweens,
+The v1.4.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
-first-class Leptos, Dioxus, and Yew integration.
+first-class Leptos, Dioxus, Yew, and JavaScript/WASM integration.
 
 ## Install
 
@@ -26,21 +26,21 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.3"
+animato = "1.4"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.3", features = ["path", "physics", "color"] }
+animato = { version = "1.4", features = ["path", "physics", "color"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.3", features = ["leptos-csr"] }
+animato = { version = "1.4", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -48,7 +48,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.3", features = ["dioxus-web"] }
+animato = { version = "1.4", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -56,20 +56,34 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.3", features = ["yew-csr"] }
+animato = { version = "1.4", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
+```
+
+JavaScript applications install the NPM package built from `animato-js`:
+
+```sh
+npm install @animato/core
+```
+
+```js
+import init, { Tween } from "@animato/core";
+
+await init();
+const tween = new Tween(0, 320, 0.9);
+tween.setEasing("easeOutCubic");
 ```
 
 For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.3", default-features = false }
-animato-tween   = { version = "1.3", default-features = false }
-animato-spring  = { version = "1.3", default-features = false }
-animato-path    = { version = "1.3", default-features = false }
-animato-physics = { version = "1.3", default-features = false }
-animato-color   = { version = "1.3", default-features = false }
+animato-core    = { version = "1.4", default-features = false }
+animato-tween   = { version = "1.4", default-features = false }
+animato-spring  = { version = "1.4", default-features = false }
+animato-path    = { version = "1.4", default-features = false }
+animato-physics = { version = "1.4", default-features = false }
+animato-color   = { version = "1.4", default-features = false }
 ```
 
 ## Quick Start
@@ -130,6 +144,7 @@ other target.
 | [`animato-leptos`](./crates/animato-leptos) | Leptos signal hooks, scroll, presence, lists, gestures, CSS, SSR | wasm/std |
 | [`animato-dioxus`](./crates/animato-dioxus) | Dioxus signals, motion hooks, scroll, presence, lists, gestures, native helpers | wasm/std |
 | [`animato-yew`](./crates/animato-yew) | Yew hooks, CSS, scroll, presence, lists, gestures, transitions, agents | wasm/std |
+| [`animato-js`](./crates/animato-js) | WASM-to-NPM bindings for JavaScript and framework examples | wasm |
 | [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
 
 ## Feature Flags
@@ -163,6 +178,7 @@ other target.
 | `yew-hydration` | `yew` plus Yew hydration mode |
 | `yew-ssr` | `yew` plus Yew SSR mode |
 | `yew-agent` | `yew` plus serializable `f32` animation agent coordination |
+| `js` | JavaScript/WASM bindings namespace for package builds |
 | `serde` | Serialization for supported public types |
 | `tokio` | `Timeline::wait()` async completion helper |
 
@@ -222,9 +238,25 @@ cargo check --manifest-path examples/yew_page_transition/Cargo.toml --target was
 cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target wasm32-unknown-unknown
 ```
 
+JavaScript package and examples:
+
+```sh
+bash scripts/build-js-package.sh
+npm ci --prefix examples/js_vanilla_timeline
+npm run build --prefix examples/js_vanilla_timeline
+npm ci --prefix examples/js_react_tween
+npm run build --prefix examples/js_react_tween
+npm ci --prefix examples/js_svelte_spring
+npm run build --prefix examples/js_svelte_spring
+npm ci --prefix examples/js_vue_motion
+npm run build --prefix examples/js_vue_motion
+npm ci --prefix examples/js_angular_color
+npm run build --prefix examples/js_angular_color
+```
+
 ## Documentation
 
-The v1.3 documentation lives in [`docs/`](./docs/):
+The v1.4 documentation lives in [`docs/`](./docs/):
 
 | Start here | Details |
 |------------|---------|
@@ -236,15 +268,16 @@ The v1.3 documentation lives in [`docs/`](./docs/):
 | [Leptos](./docs/leptos.md) | Signal-backed hooks and Leptos integration examples. |
 | [Dioxus](./docs/dioxus.md) | Cross-platform Dioxus hooks and native helpers. |
 | [Yew](./docs/yew.md) | Yew hooks, components, gestures, and agent coordination. |
+| [JavaScript](./docs/javascript.md) | NPM package API and JavaScript framework examples. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
-| [Release](./docs/release.md) | v1.3 publishing checklist. |
+| [Release](./docs/release.md) | v1.4 publishing checklist. |
 
 The generated Rust API docs are available on
 [docs.rs/animato](https://docs.rs/animato).
 
 ## Testing
 
-The v1.3 release gate is:
+The v1.4 release gate is:
 
 ```sh
 cargo fmt --check
@@ -258,7 +291,15 @@ cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 cargo check -p animato-dioxus
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
+cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+bash scripts/build-js-package.sh
 cargo bench --workspace --no-run
+```
+
+The local CI mirror is:
+
+```sh
+bash scripts/ci-local.sh
 ```
 
 Coverage and fuzzing are part of the stable release workflow when the tools are

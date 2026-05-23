@@ -102,6 +102,29 @@ cargo check --manifest-path examples/yew_page_transition/Cargo.toml --target was
 cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target wasm32-unknown-unknown
 ```
 
+## JavaScript Examples
+
+Build the local WASM package once, then run the JavaScript example checks:
+
+```sh
+bash scripts/build-js-package.sh
+
+npm ci --prefix examples/js_vanilla_timeline
+npm run build --prefix examples/js_vanilla_timeline
+
+npm ci --prefix examples/js_react_tween
+npm run build --prefix examples/js_react_tween
+
+npm ci --prefix examples/js_svelte_spring
+npm run build --prefix examples/js_svelte_spring
+
+npm ci --prefix examples/js_vue_motion
+npm run build --prefix examples/js_vue_motion
+
+npm ci --prefix examples/js_angular_color
+npm run build --prefix examples/js_angular_color
+```
+
 ## Compile Examples Without Running
 
 ```sh
@@ -111,5 +134,6 @@ cargo test -p animato --all-features --examples
 ## Related Docs
 
 - [Getting Started](./getting-started.md)
+- [JavaScript](./javascript.md)
 - [Recipes](./recipes.md)
 - [Testing](./testing.md)

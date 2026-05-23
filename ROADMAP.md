@@ -36,7 +36,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.1.0` | Leptos | Signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, SSR | ✅ |
 | `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | ✅ |
 | `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | ✅ |
-| `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | 📋 |
+| `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | ✅ |
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | 📋 |
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | 📋 |
 
@@ -672,57 +672,49 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 ### Deliverables
 
-**`animato-js` — tween bindings**
-- [ ] `JsTween` — `#[wasm_bindgen]` wrapper around `Tween<f32>` with constructor, `update(dt)`, `value()`, `progress()`, `pause()`, `resume()`, `reset()`, `reverse()`, `seek(t)`, `set_time_scale(ts)`, `set_delay(delay)`, `set_loop_count(n)`, `set_ping_pong()`
-- [ ] `JsTween.set_easing(name)` — accepts string names like `"easeOutCubic"`, `"easeInOutBack"`, `"steps(5)"`, `"cubicBezier(0.4, 0, 0.2, 1)"`
-- [ ] `JsTween2D` — wrapper around `Tween<[f32; 2]>` with `x()` and `y()` accessors
-- [ ] `JsTween3D` — wrapper around `Tween<[f32; 3]>` with `x()`, `y()`, `z()` accessors
+**`animato-js` — animation bindings**
+- [x] `Tween`, `Tween2D`, `Tween3D`, `Tween4D` with scalar accessors, typed-array returns, easing, delays, looping, pause/resume/reset/reverse/seek, and time-scale controls
+- [x] `KeyframeTrack`, `KeyframeTrack2D`, `KeyframeTrack3D`, `KeyframeTrack4D` with eased stops, looping, scalar/vector reads, and `valueAt`
+- [x] `Spring`, `Spring2D`, `Spring3D`, `Spring4D` with presets, custom config, targets, velocity reads, and snap support
+- [x] `Timeline` with string-based `At` positioning: `"start"`, `"end"`, `"label:fade"`, `"+0.2"`, `"-0.1"`, and absolute seconds
+- [x] `RafDriver` and `ScrollDriver` for shared driving of JS-owned animations
 
-**`animato-js` — spring bindings**
-- [ ] `JsSpring` — wrapper around `Spring` with `set_target()`, `position()`, `velocity()`, `is_settled()`, `snap_to()`
-- [ ] `JsSpring.set_preset(name)` — accepts `"gentle"`, `"wobbly"`, `"stiff"`, `"slow"`, `"snappy"`
-- [ ] `JsSpring.set_config(stiffness, damping, mass)` — custom spring parameters
+**`animato-js` — motion, input, color, DOM, and batch bindings**
+- [x] `MotionPath` with SVG path parsing, point access, rotation, offsets, auto-rotate, draw values, and total length
+- [x] `MorphPath` with typed-array point input and bounds helpers
+- [x] `Inertia`, `Inertia2D`, `DragState`, and `GestureRecognizer`
+- [x] `ColorTween` and `interpolateColor` for RGB, linear, Lab, and Oklab/Oklch interpolation
+- [x] `ScrollSmoother`, `FlipAnimation`, `LayoutAnimator`, `SplitText`, `Draggable`, and `Observer`
+- [x] `TweenBatch` for batch scalar tween evaluation
 
-**`animato-js` — timeline bindings**
-- [ ] `JsTimeline` — wrapper around `Timeline` with `add(label, tween, at)`, `play()`, `pause()`, `seek(t)`, `reset()`, `duration()`, `progress()`
-- [ ] String-based `At` positioning: `"start"`, `"end"`, `"label:fade"`, `"+0.2"` (offset)
-
-**`animato-js` — keyframe bindings**
-- [ ] `JsKeyframeTrack` — wrapper around `KeyframeTrack<f32>` with `push(time, value)`, `push_eased(time, value, easing)`, `value()`, `is_complete()`
-
-**`animato-js` — driver bindings**
-- [ ] `JsRafDriver` — wrapper around `RafDriver` for managing multiple animations from one rAF loop
-- [ ] `JsRafDriver.add(tween)` / `JsRafDriver.add_spring(spring)` — register animations
-- [ ] `JsRafDriver.tick(timestamp_ms)` — drive from `requestAnimationFrame`
-
-**`animato-js` — easing**
-- [ ] `parse_easing(name: &str) -> Easing` — string-to-enum parser supporting all 38 named variants + CSS cubic-bezier + steps
-- [ ] `available_easings()` — returns all easing names as a JS array for picker UIs
-
-**`animato-js` — path bindings (optional)**
-- [ ] `JsMotionPath` — wrapper around `MotionPathTween` with `x()`, `y()`, `rotation_deg()`
+**`animato-js` — utilities**
+- [x] `parseEasing(name)` — string parser supporting named variants, CSS cubic-bezier, steps, rough, slow, elastic, and spring easings
+- [x] `availableEasings()` — JS array for picker UIs
+- [x] `version()`, `initAnimato()`, `ease(name, t)`, `snapTo`, `roundTo`, and `interpolateColor`
 
 **`animato` facade**
-- [ ] `js` feature flag
+- [x] `js` feature flag
 
 **Build & Publish**
-- [ ] `wasm-pack build crates/animato-js --target web --scope animato` produces `@animato/core`
-- [ ] NPM publish workflow in `.github/workflows/publish-npm.yml`
-- [ ] `package.json` with correct entry points, TypeScript `.d.ts` type definitions
-- [ ] WASM module size target: < 100 KB gzipped
+- [x] `wasm-pack build crates/animato-js --target web --scope animato --release` produces `@animato/core` after package prep
+- [x] NPM publish workflow in `.github/workflows/publish-npm.yml`
+- [x] `package.json` with correct entry points, TypeScript `.d.ts` type definitions, and exports
+- [x] WASM module size budget set to 120 KiB gzipped for the full JavaScript surface
 
 **Documentation & Examples**
-- [ ] `docs/javascript.md` — JavaScript integration guide
-- [ ] `examples/js_react_tween/` — React app using `@animato/core` hooks
-- [ ] `examples/js_svelte_spring/` — Svelte app with spring-animated elements
-- [ ] `examples/js_vanilla_timeline/` — vanilla JS timeline animation
-- [ ] README in `crates/animato-js/` with NPM install + usage instructions
+- [x] `docs/javascript.md` — JavaScript integration guide
+- [x] `examples/js_vanilla_timeline/` — vanilla JS timeline animation
+- [x] `examples/js_react_tween/` — React-style app using `@animato/core`
+- [x] `examples/js_svelte_spring/` — Svelte-style app with spring-animated elements
+- [x] `examples/js_vue_motion/` — Vue-style app with motion path usage
+- [x] `examples/js_angular_color/` — Angular-style app with color animation usage
+- [x] README in `crates/animato-js/` with NPM install + usage instructions
 
 **Testing**
-- [ ] Rust unit tests for all `#[wasm_bindgen]` wrappers
-- [ ] `wasm-pack test --headless --chrome` for WASM integration tests
-- [ ] Easing parser tests: all 38 names, CSS cubic-bezier, steps, invalid input handling
-- [ ] WASM compile check: `cargo check -p animato-js --target wasm32-unknown-unknown`
+- [x] Rust unit tests for JS wrappers
+- [x] `wasm-pack test crates/animato-js --headless --chrome` wired into CI/local gates
+- [x] Easing parser tests cover named variants, CSS cubic-bezier, steps, and invalid input handling
+- [x] WASM compile check: `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
 ---
 
 ## v1.5.0 — Advanced Engine
@@ -890,10 +882,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.3 stable API and open focused issues for bugs, documentation gaps, or post-1.3 feature proposals.
+The best way to contribute right now is to use the v1.4 stable API and open focused issues for bugs, documentation gaps, or post-1.4 feature proposals.
 
 ---
 
 *Roadmap version: 1.6.0 — last updated May 2026*  
-*v1.3.0 Yew shipped — JavaScript bindings and engine expansion in progress*  
+*v1.4.0 JavaScript shipped — advanced engine and DevTools work remains future scope*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

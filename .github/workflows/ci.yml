@@ -250,6 +250,64 @@ jobs:
           cd examples/wasm_counter
           wasm-pack test --headless --chrome
 
+  javascript-wasm:
+    name: JavaScript/WASM package
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-js-wasm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-js-wasm-
+            ${{ runner.os }}-cargo-
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
+
+      - name: Check animato-js for wasm32
+        run: cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+
+      - name: Build @animato/core
+        run: bash scripts/build-js-package.sh
+
+      - name: Run animato-js browser tests
+        run: bash scripts/wasm-pack-test-js.sh
+
+      - name: Check JavaScript examples
+        run: |
+          for example in \
+            examples/js_vanilla_timeline \
+            examples/js_react_tween \
+            examples/js_svelte_spring \
+            examples/js_vue_motion \
+            examples/js_angular_color
+          do
+            npm ci --prefix "$example"
+            npm run typecheck --prefix "$example"
+            npm run build --prefix "$example"
+          done
+
+      - name: Check package size
+        run: node scripts/check-js-size.mjs
+
   dioxus:
     name: Dioxus integration compile
     runs-on: ubuntu-latest

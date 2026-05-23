@@ -34,11 +34,12 @@ members = [
     "crates/animato-leptos",
     "crates/animato-dioxus",
     "crates/animato-yew",
+    "crates/animato-js",
     "crates/animato",
 ]
 
 [workspace.package]
-version      = "1.3.0"
+version      = "1.4.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 readme       = "README.md"
@@ -48,20 +49,21 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # Internal crates — path + version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.3" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.3" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.3" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.3" }
-animato-path     = { path = "crates/animato-path",     version = "1.3" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.3" }
-animato-color    = { path = "crates/animato-color",    version = "1.3" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.3" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.3" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.3" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.3" }
-animato-leptos   = { path = "crates/animato-leptos",   version = "1.3" }
-animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.3" }
-animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
+animato-core     = { path = "crates/animato-core",     version = "1.4" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.4" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.4" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.4" }
+animato-path     = { path = "crates/animato-path",     version = "1.4" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.4" }
+animato-color    = { path = "crates/animato-color",    version = "1.4" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.4" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.4" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.4" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.4" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.4" }
+animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.4" }
+animato-yew      = { path = "crates/animato-yew",      version = "1.4" }
+animato-js       = { path = "crates/animato-js",       version = "1.4" }
 
 # External crates — shared version pins
 serde        = { version = "1",   features = ["derive"] }
@@ -78,6 +80,8 @@ bevy_math    = { version = "0.18.1", default-features = false, features = ["libm
 bevy_time    = { version = "0.18.1", default-features = false }
 bevy_transform = { version = "0.18.1", default-features = false, features = ["bevy-support", "libm"] }
 wasm-bindgen = { version = "0.2" }
+wasm-bindgen-test = { version = "0.3" }
+console_error_panic_hook = { version = "0.1" }
 js-sys       = { version = "0.3" }
 web-sys      = { version = "0.3" }
 leptos       = { version = "0.8.19" }
@@ -89,3 +93,12 @@ yew-router   = { version = "0.20", default-features = false }
 yew-agent    = { version = "0.5" }
 ratatui      = { version = "0.30.0" }
 crossterm    = { version = "0.29.0" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package.animato-js]
+opt-level = "z"
