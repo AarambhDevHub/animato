@@ -38,8 +38,12 @@ cargo install cargo-llvm-cov --locked
 Run:
 
 ```sh
-cargo llvm-cov --workspace --all-features --fail-under-lines 90
+bash scripts/coverage-core.sh
 ```
+
+The coverage gate targets the core engine crates. Browser/UI adapter crates are
+validated by their compile, browser, and example gates because native llvm
+coverage does not measure their renderer paths accurately.
 
 ## Fuzzing
 

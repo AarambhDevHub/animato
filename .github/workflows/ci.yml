@@ -377,7 +377,7 @@ jobs:
         run: cargo install cargo-llvm-cov --locked
 
       - name: Run coverage gate
-        run: cargo llvm-cov --workspace --all-features --fail-under-lines 90
+        run: bash scripts/coverage-core.sh
 
   fuzz:
     name: Fuzz SVG parser

@@ -2695,7 +2695,7 @@ Jobs:
     - cargo bench --workspace --no-run
 
   coverage:
-    - cargo llvm-cov --workspace --all-features --fail-under-lines 90
+    - bash scripts/coverage-core.sh
 
   fuzz:
     - cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
@@ -2731,7 +2731,7 @@ Before `cargo publish` for any crate:
 - [ ] `cargo clippy --workspace --all-features -- -D warnings` is clean
 - [ ] `cargo doc --workspace --all-features --open` renders correctly
 - [ ] `cargo bench --workspace --no-run` compiles without errors
-- [ ] `cargo llvm-cov --workspace --all-features --fail-under-lines 90` passes
+- [ ] `bash scripts/coverage-core.sh` passes
 - [ ] `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60` passes
 - [ ] `cargo test -p animato --all-features --examples` compiles every registered example
 - [ ] Version in `Cargo.toml` matches git tag and `CHANGELOG.md` entry

@@ -712,7 +712,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 **Testing**
 - [x] Rust unit tests for JS wrappers
-- [x] `wasm-pack test crates/animato-js --headless --chrome` wired into CI/local gates
+- [x] `bash scripts/wasm-pack-test-js.sh` wired into CI/local gates
 - [x] Easing parser tests cover named variants, CSS cubic-bezier, steps, and invalid input handling
 - [x] WASM compile check: `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
 ---

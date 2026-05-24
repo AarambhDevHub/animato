@@ -152,7 +152,7 @@ jobs:
         run: cargo bench --workspace --no-run
 
       - name: Coverage gate
-        run: cargo llvm-cov --workspace --all-features --fail-under-lines 90
+        run: bash scripts/coverage-core.sh
 
       - name: Fuzz SVG path parser
         run: cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
@@ -322,7 +322,7 @@ jobs:
             - `bash scripts/wasm-pack-test-js.sh`
             - `node scripts/check-js-size.mjs`
             - `cargo bench --workspace --no-run`
-            - `cargo llvm-cov --workspace --all-features --fail-under-lines 90`
+            - `bash scripts/coverage-core.sh`
             - `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60`
             - `cargo publish --dry-run` for every crate immediately before publish
 

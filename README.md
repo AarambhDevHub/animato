@@ -306,7 +306,7 @@ Coverage and fuzzing are part of the stable release workflow when the tools are
 installed:
 
 ```sh
-cargo llvm-cov --workspace --all-features --fail-under-lines 90
+bash scripts/coverage-core.sh
 cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
 ```
 
