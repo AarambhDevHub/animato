@@ -29,18 +29,23 @@ animato-bevy
 animato-leptos
 animato-dioxus
 animato-yew
+animato-js
 animato
 ```
 
 ## Tag
 
 ```sh
-git tag v1.3.0
-git push origin v1.3.0
+git tag v1.4.0
+git push origin v1.4.0
 ```
 
-The publish workflow validates that `v1.3.0` matches the workspace package
-version `1.3.0`.
+The publish workflow validates that `v1.4.0` matches the workspace package
+version `1.4.0`.
+
+The NPM publish workflow also validates the tag, builds `@animato/core`, checks
+the package size budget, skips already-published versions, and publishes with
+`NPM_TOKEN`.
 
 ## GitHub Release
 
@@ -51,6 +56,7 @@ The release notes must include:
 - docs links,
 - benchmark summary,
 - coverage and fuzz gate status,
+- JavaScript/WASM package gate status,
 - notable compatibility notes.
 
 ## Related Docs

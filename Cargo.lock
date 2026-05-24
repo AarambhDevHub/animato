@@ -58,7 +58,7 @@ checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
 name = "animato"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-bevy",
  "animato-color",
@@ -66,6 +66,7 @@ dependencies = [
  "animato-dioxus",
  "animato-driver",
  "animato-gpu",
+ "animato-js",
  "animato-leptos",
  "animato-path",
  "animato-physics",
@@ -87,7 +88,7 @@ dependencies = [
 
 [[package]]
 name = "animato-bevy"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "animato-spring",
@@ -101,7 +102,7 @@ dependencies = [
 
 [[package]]
 name = "animato-color"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "palette",
@@ -110,7 +111,7 @@ dependencies = [
 
 [[package]]
 name = "animato-core"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "libm",
  "serde",
@@ -118,7 +119,7 @@ dependencies = [
 
 [[package]]
 name = "animato-dioxus"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -138,7 +139,7 @@ dependencies = [
 
 [[package]]
 name = "animato-driver"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -146,7 +147,7 @@ dependencies = [
 
 [[package]]
 name = "animato-gpu"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -156,8 +157,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "animato-js"
+version = "1.4.0"
+dependencies = [
+ "animato-core",
+ "animato-driver",
+ "animato-path",
+ "animato-physics",
+ "animato-spring",
+ "animato-timeline",
+ "animato-tween",
+ "animato-wasm",
+ "console_error_panic_hook",
+ "js-sys",
+ "wasm-bindgen",
+ "wasm-bindgen-test",
+ "web-sys",
+]
+
+[[package]]
 name = "animato-leptos"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -177,7 +197,7 @@ dependencies = [
 
 [[package]]
 name = "animato-path"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -187,7 +207,7 @@ dependencies = [
 
 [[package]]
 name = "animato-physics"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "libm",
@@ -196,7 +216,7 @@ dependencies = [
 
 [[package]]
 name = "animato-spring"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -204,7 +224,7 @@ dependencies = [
 
 [[package]]
 name = "animato-timeline"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -214,7 +234,7 @@ dependencies = [
 
 [[package]]
 name = "animato-tween"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -222,7 +242,7 @@ dependencies = [
 
 [[package]]
 name = "animato-wasm"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-core",
  "animato-driver",
@@ -234,7 +254,7 @@ dependencies = [
 
 [[package]]
 name = "animato-yew"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -4652,6 +4672,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "minicov"
+version = "0.3.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4869b6a491569605d66d3952bcdf03df789e5b536e5f0cf7758a7f08a55ae24d"
+dependencies = [
+ "cc",
+ "walkdir",
+]
+
+[[package]]
 name = "minimal-lexical"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4870,6 +4900,15 @@ name = "noop_proc_macro"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0676bb32a98c1a483ce53e500a81ad9c3d5b3f7c920c28c24e9cb0980d0b5bc8"
+
+[[package]]
+name = "nu-ansi-term"
+version = "0.50.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
+dependencies = [
+ "windows-sys 0.61.2",
+]
 
 [[package]]
 name = "num-bigint"
@@ -8115,6 +8154,45 @@ checksum = "c4e0100b01e9f0d03189a92b96772a1fb998639d981193d7dbab487302513441"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "wasm-bindgen-test"
+version = "0.3.71"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "af5ec93229ad9ccd0a545a516dec76dc276613f278f6a91aa6b463d5b33d42d0"
+dependencies = [
+ "async-trait",
+ "cast",
+ "js-sys",
+ "libm",
+ "minicov",
+ "nu-ansi-term",
+ "num-traits",
+ "oorandom",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "wasm-bindgen-test-macro",
+ "wasm-bindgen-test-shared",
+]
+
+[[package]]
+name = "wasm-bindgen-test-macro"
+version = "0.3.71"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3c81b9fef827e575e0e54431736d1baa0d700315d8c62cfef1f61fa3aad0cbeb"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "wasm-bindgen-test-shared"
+version = "0.2.121"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f4d8ae7ad5440360e9799dfd42857d126454a88441ddf72d288ef83fa47f527"
 
 [[package]]
 name = "wasm-encoder"

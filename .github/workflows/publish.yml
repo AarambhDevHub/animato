@@ -23,6 +23,11 @@ jobs:
           components: clippy, rustfmt, llvm-tools-preview
           targets: wasm32-unknown-unknown, thumbv7m-none-eabi
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Cache cargo registry
         uses: actions/cache@v4
         with:
@@ -83,6 +88,7 @@ jobs:
           cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
           cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
           cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
+          cargo check -p animato-js --target wasm32-unknown-unknown --all-features
 
       - name: Check Leptos examples
         run: |
@@ -113,6 +119,26 @@ jobs:
           cd examples/wasm_counter
           wasm-pack test --headless --chrome
 
+      - name: Build JavaScript package
+        run: bash scripts/build-js-package.sh
+
+      - name: Run animato-js browser tests
+        run: bash scripts/wasm-pack-test-js.sh
+
+      - name: Check JavaScript examples
+        run: |
+          for example in \
+            examples/js_vanilla_timeline \
+            examples/js_react_tween \
+            examples/js_svelte_spring \
+            examples/js_vue_motion \
+            examples/js_angular_color
+          do
+            npm ci --prefix "$example"
+            npm run typecheck --prefix "$example"
+            npm run build --prefix "$example"
+          done
+
       - name: Build no_std crates for bare metal
         run: |
           cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
@@ -126,7 +152,7 @@ jobs:
         run: cargo bench --workspace --no-run
 
       - name: Coverage gate
-        run: cargo llvm-cov --workspace --all-features --fail-under-lines 90
+        run: bash scripts/coverage-core.sh
 
       - name: Fuzz SVG path parser
         run: cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
@@ -199,6 +225,7 @@ jobs:
             animato-leptos \
             animato-dioxus \
             animato-yew \
+            animato-js \
             animato
           do
             publish_crate "$crate"
@@ -227,21 +254,26 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Yew"
+          name: "Animato ${{ steps.version.outputs.TAG }} — JavaScript"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Yew
+            ## Animato ${{ steps.version.outputs.TAG }} — JavaScript
 
-            Animato v1.3.0 adds first-class Yew integration with
-            `UseStateHandle`-backed hooks, CSS helpers, scroll helpers,
-            presence and page transitions, keyed list helpers, gesture state,
-            and serializable `f32` agent coordination while preserving the
-            stable v1 API.
+            Animato v1.4.0 adds `animato-js`, a Rust/WASM crate published to
+            NPM as `@animato/core`. The JavaScript package exposes tweens,
+            vector tweens, keyframes, timelines, springs, path/motion helpers,
+            morphing, draw values, physics, color interpolation, rAF/scroll
+            drivers, DOM helpers, and batch tween evaluation while preserving
+            the stable v1 Rust API.
 
             ### Install
 
             ```toml
             [dependencies]
             animato = "${{ steps.version.outputs.VERSION }}"
+            ```
+
+            ```sh
+            npm install @animato/core
             ```
 
             ### Crates published to crates.io
@@ -262,7 +294,14 @@ jobs:
             | [`animato-leptos`](https://crates.io/crates/animato-leptos) | `${{ steps.version.outputs.VERSION }}` | Leptos signal hooks and components |
             | [`animato-dioxus`](https://crates.io/crates/animato-dioxus) | `${{ steps.version.outputs.VERSION }}` | Dioxus signal hooks and native helpers |
             | [`animato-yew`](https://crates.io/crates/animato-yew) | `${{ steps.version.outputs.VERSION }}` | Yew hooks, components, gestures, and agents |
+            | [`animato-js`](https://crates.io/crates/animato-js) | `${{ steps.version.outputs.VERSION }}` | WASM bindings published to NPM as `@animato/core` |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Stable facade crate |
+
+            ### NPM package
+
+            | Package | Version | Description |
+            |---------|---------|-------------|
+            | [`@animato/core`](https://www.npmjs.com/package/@animato/core) | `${{ steps.version.outputs.VERSION }}` | JavaScript/WASM animation engine |
 
             ### Verification
 
@@ -275,10 +314,15 @@ jobs:
             - `cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom`
             - `cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr`
             - `cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web`
-            - Leptos and Dioxus example compile checks for all v1.2.0 examples
+            - `cargo check -p animato-yew --target wasm32-unknown-unknown --features csr`
+            - `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
+            - Leptos, Dioxus, Yew, and JavaScript example compile/build checks
             - `wasm-pack test --headless --chrome`
+            - `bash scripts/build-js-package.sh`
+            - `bash scripts/wasm-pack-test-js.sh`
+            - `node scripts/check-js-size.mjs`
             - `cargo bench --workspace --no-run`
-            - `cargo llvm-cov --workspace --all-features --fail-under-lines 90`
+            - `bash scripts/coverage-core.sh`
             - `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60`
             - `cargo publish --dry-run` for every crate immediately before publish
 
@@ -290,14 +334,11 @@ jobs:
             - [Feature flags](./docs/feature-flags.md)
             - [Leptos integration](./docs/leptos.md)
             - [Dioxus integration](./docs/dioxus.md)
+            - [Yew integration](./docs/yew.md)
+            - [JavaScript integration](./docs/javascript.md)
             - [Testing](./docs/testing.md)
             - [Release process](./docs/release.md)
             - [Changelog](./CHANGELOG.md)
-
-            ### WASM Example
-
-            The prebuilt WASM counter example is deployed through GitHub Pages:
-            ${{ needs.pages.outputs.page_url }}
 
             ### Notes
 

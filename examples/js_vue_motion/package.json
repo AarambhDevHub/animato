@@ -1,0 +1,13 @@
+{
+  "name": "animato-js-vue-motion",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "node ../../scripts/verify-js-example.mjs .",
+    "build": "node ../../scripts/verify-js-example.mjs ."
+  },
+  "dependencies": {
+    "@animato/core": "file:../../crates/animato-js/pkg"
+  }
+}

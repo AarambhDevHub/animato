@@ -224,7 +224,7 @@ animato/
 │   │       ├── platform.rs            ← platform-adaptive animation (web/desktop/mobile/TUI)
 │   │       └── native.rs              ← native window animation helpers (desktop/mobile)
 │   │
-│   ├── animato-yew/                      ← Yew component-based animation hooks (v1.3.0)
+│   ├── animato-yew/                      ← Yew component-based animation hooks
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -241,13 +241,17 @@ animato/
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
-│   │       ├── tween.rs               ← JsTween — wasm_bindgen wrapper
-│   │       ├── spring.rs              ← JsSpring — wasm_bindgen wrapper
-│   │       ├── timeline.rs            ← JsTimeline — wasm_bindgen wrapper
-│   │       ├── keyframe.rs            ← JsKeyframeTrack — wasm_bindgen wrapper
-│   │       ├── driver.rs              ← JsRafDriver — rAF-based animation loop
+│   │       ├── tween.rs               ← Tween and vector tween wrappers
+│   │       ├── spring.rs              ← Spring and vector spring wrappers
+│   │       ├── timeline.rs            ← Timeline wrapper
+│   │       ├── keyframe.rs            ← KeyframeTrack wrappers
+│   │       ├── driver.rs              ← RafDriver and ScrollDriver wrappers
 │   │       ├── easing.rs              ← easing name parser (string → Easing enum)
-│   │       └── path.rs                ← JsMotionPath — wasm_bindgen wrapper
+│   │       ├── path.rs                ← MotionPath and MorphPath wrappers
+│   │       ├── physics.rs             ← Inertia, drag, and gesture wrappers
+│   │       ├── color.rs               ← ColorTween and color interpolation
+│   │       ├── wasm_dom.rs            ← DOM helper wrappers
+│   │       └── batch.rs               ← TweenBatch wrapper
 │   │
 │   ├── animato-devtools/                     ← animation inspector & DevTools (v1.6.0)
 │   │   ├── Cargo.toml
@@ -322,7 +326,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "1.3.0"
+version      = "1.4.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -331,20 +335,20 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.3" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.3" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.3" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.3" }
-animato-path     = { path = "crates/animato-path",     version = "1.3" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.3" }
-animato-color    = { path = "crates/animato-color",    version = "1.3" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.3" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.3" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.3" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.3" }
-animato-leptos   = { path = "crates/animato-leptos",   version = "1.3" }
-animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.3" }
-animato-yew      = { path = "crates/animato-yew",      version = "1.3" }
+animato-core     = { path = "crates/animato-core",     version = "1.4" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.4" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.4" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.4" }
+animato-path     = { path = "crates/animato-path",     version = "1.4" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.4" }
+animato-color    = { path = "crates/animato-color",    version = "1.4" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.4" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.4" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.4" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.4" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.4" }
+animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.4" }
+animato-yew      = { path = "crates/animato-yew",      version = "1.4" }
 animato-js       = { path = "crates/animato-js",       version = "1.4" }
 animato-devtools = { path = "crates/animato-devtools", version = "1.6" }
 
@@ -1673,7 +1677,7 @@ web-sys          = { workspace = true, features = ["Window", "Document", "Elemen
 
 **Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `yew`, `yew-router`
 
-**Version:** Starts at `1.3.0`.
+**Version:** Started at `1.3.0`; current workspace release is `1.4.0`.
 
 #### Module breakdown
 
@@ -1750,7 +1754,7 @@ The `scroll.rs`, `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `c
 ```toml
 [package]
 name        = "animato-yew"
-version     = "1.3.0"
+version     = "1.4.0"
 description = "Yew integration for the Animato animation library — hooks, agents, scroll, presence, transitions, FLIP lists, gestures, and CSS animation helpers."
 
 [features]
@@ -1788,36 +1792,43 @@ web-sys          = { workspace = true }
 
 ### 4.15 `animato-js`
 
-**Responsibility:** WASM-compiled NPM package exposing Animato's animation engine to JavaScript frameworks (React, Svelte, Vue, Angular, vanilla JS). Provides `#[wasm_bindgen]` wrappers around core types, a string-based easing parser for JS ergonomics, and a ready-to-use rAF driver. Published to NPM as `@animato/core` via `wasm-pack`.
+**Responsibility:** WASM-compiled NPM package exposing Animato's renderer-agnostic animation engines to JavaScript frameworks (React, Svelte, Vue, Angular, vanilla JS). Provides `#[wasm_bindgen]` wrappers around core types, a string-based easing parser for JS ergonomics, driver helpers, DOM helpers, color interpolation, path/morph helpers, input physics, and batch tween evaluation. Published to NPM as `@animato/core` via `wasm-pack`.
 
-**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-wasm`, `wasm-bindgen`, `js-sys`, `web-sys`
+**Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `wasm-bindgen`, `js-sys`, `web-sys`
 
 **Version:** Starts at `1.4.0`.
 
-**Build command:** `wasm-pack build crates/animato-js --target web --scope animato`
+**Build command:** `bash scripts/build-js-package.sh`
 
 #### Module breakdown
 
 | File | Contents |
 |------|----------|
-| `tween.rs` | `JsTween` — `#[wasm_bindgen]` wrapper around `Tween<f32>` and `Tween<[f32; N]>` |
-| `spring.rs` | `JsSpring` — wrapper around `Spring` and `SpringN<T>` |
-| `timeline.rs` | `JsTimeline` — wrapper around `Timeline` with string-label API |
-| `keyframe.rs` | `JsKeyframeTrack` — wrapper around `KeyframeTrack<f32>` |
-| `driver.rs` | `JsRafDriver` — wrapper around `RafDriver` for JS rAF callbacks |
+| `lib.rs` | Package initialization, facade exports, `version`, `snapTo`, `roundTo` |
+| `error.rs` | JS-friendly errors and argument validation |
+| `types.rs` | Shared typed-array and string parsing helpers |
+| `tween.rs` | `Tween`, `Tween2D`, `Tween3D`, `Tween4D` |
+| `spring.rs` | `Spring`, `Spring2D`, `Spring3D`, `Spring4D` |
+| `timeline.rs` | `Timeline` with string-label API |
+| `keyframe.rs` | `KeyframeTrack`, `KeyframeTrack2D`, `KeyframeTrack3D`, `KeyframeTrack4D` |
+| `driver.rs` | `RafDriver` and `ScrollDriver` |
 | `easing.rs` | `parse_easing(name: &str) -> Easing` — string-to-enum parser for JS ergonomics |
-| `path.rs` | `JsMotionPath` — wrapper around `MotionPathTween` |
+| `path.rs` | `MotionPath`, `MorphPath`, draw values, typed-array path helpers |
+| `physics.rs` | `Inertia`, `Inertia2D`, `DragState`, `GestureRecognizer` |
+| `color.rs` | `ColorTween` and `interpolateColor` |
+| `wasm_dom.rs` | `ScrollSmoother`, FLIP, layout, split text, drag, observer helpers |
+| `batch.rs` | `TweenBatch` |
 
 #### `src/tween.rs`
 
 ```rust
 #[wasm_bindgen]
-pub struct JsTween {
+pub struct Tween {
     inner: Tween<f32>,
 }
 
 #[wasm_bindgen]
-impl JsTween {
+impl Tween {
     #[wasm_bindgen(constructor)]
     pub fn new(from: f32, to: f32, duration: f32) -> Self;
 
@@ -1845,12 +1856,12 @@ impl JsTween {
 
 /// Multi-dimensional tween for [x, y] animations.
 #[wasm_bindgen]
-pub struct JsTween2D {
+pub struct Tween2D {
     inner: Tween<[f32; 2]>,
 }
 
 #[wasm_bindgen]
-impl JsTween2D {
+impl Tween2D {
     #[wasm_bindgen(constructor)]
     pub fn new(from_x: f32, from_y: f32, to_x: f32, to_y: f32, duration: f32) -> Self;
     pub fn update(&mut self, dt: f32) -> bool;
@@ -1863,12 +1874,12 @@ impl JsTween2D {
 
 ```rust
 #[wasm_bindgen]
-pub struct JsSpring {
+pub struct Spring {
     inner: Spring,
 }
 
 #[wasm_bindgen]
-impl JsSpring {
+impl Spring {
     #[wasm_bindgen(constructor)]
     pub fn new(initial: f32, target: f32) -> Self;
 
@@ -1896,34 +1907,33 @@ pub fn parse_easing(name: &str) -> Easing;
 
 /// Returns all available easing names as a JS array.
 #[wasm_bindgen]
-pub fn available_easings() -> Vec<JsValue>;
+pub fn available_easings() -> js_sys::Array;
 ```
 
 #### JavaScript usage (after `wasm-pack build`):
 
 ```js
 // Install: npm install @animato/core
-import init, { JsTween, JsSpring, available_easings } from '@animato/core';
+import init, { Tween, Spring, RafDriver, availableEasings } from "@animato/core";
 
-await init(); // initialize WASM module
+await init();
 
-// Tween
-const tween = new JsTween(0, 300, 1.0);
-tween.set_easing('easeOutCubic');
+const tween = new Tween(0, 300, 1.0);
+tween.setEasing("easeOutCubic");
 
-let last = performance.now();
+const driver = new RafDriver();
+driver.addTween(tween);
+
 function tick(now) {
-  if (tween.update((now - last) / 1000)) {
-    last = now;
-    element.style.transform = `translateX(${tween.value()}px)`;
-    requestAnimationFrame(tick);
-  }
+  driver.tick(now);
+  element.style.transform = `translateX(${tween.value()}px)`;
+  if (driver.activeCount() > 0) requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
 
-// Spring
-const spring = new JsSpring(0, 100);
-spring.set_preset('wobbly');
+const spring = new Spring(0, 100);
+spring.setPreset("wobbly");
+console.log(availableEasings());
 ```
 
 #### `Cargo.toml`
@@ -2647,12 +2657,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "1.3", default-features = false }
-animato-tween = { version = "1.3", default-features = false }
-animato-spring = { version = "1.3", default-features = false }
-animato-path = { version = "1.3", default-features = false }
-animato-physics = { version = "1.3", default-features = false }
-animato-color = { version = "1.3", default-features = false }
+animato-core  = { version = "1.4", default-features = false }
+animato-tween = { version = "1.4", default-features = false }
+animato-spring = { version = "1.4", default-features = false }
+animato-path = { version = "1.4", default-features = false }
+animato-physics = { version = "1.4", default-features = false }
+animato-color = { version = "1.4", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -2685,7 +2695,7 @@ Jobs:
     - cargo bench --workspace --no-run
 
   coverage:
-    - cargo llvm-cov --workspace --all-features --fail-under-lines 90
+    - bash scripts/coverage-core.sh
 
   fuzz:
     - cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
@@ -2721,7 +2731,7 @@ Before `cargo publish` for any crate:
 - [ ] `cargo clippy --workspace --all-features -- -D warnings` is clean
 - [ ] `cargo doc --workspace --all-features --open` renders correctly
 - [ ] `cargo bench --workspace --no-run` compiles without errors
-- [ ] `cargo llvm-cov --workspace --all-features --fail-under-lines 90` passes
+- [ ] `bash scripts/coverage-core.sh` passes
 - [ ] `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60` passes
 - [ ] `cargo test -p animato --all-features --examples` compiles every registered example
 - [ ] Version in `Cargo.toml` matches git tag and `CHANGELOG.md` entry
@@ -2775,5 +2785,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.6.0 — covers architecture through Animato 1.3.0 core + Leptos 1.3.0 + Dioxus 1.3.0 + Yew 1.3.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
+*Document version: 1.6.0 — covers architecture through Animato 1.4.0 core + Leptos 1.4.0 + Dioxus 1.4.0 + Yew 1.4.0 + JS 1.4.0 + Advanced Engine 1.5.0 + DevTools 1.6.0*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

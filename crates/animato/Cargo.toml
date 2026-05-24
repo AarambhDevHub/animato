@@ -40,6 +40,7 @@ yew-csr  = ["yew", "animato-yew/csr"]
 yew-hydration = ["yew", "animato-yew/hydration"]
 yew-ssr  = ["yew", "animato-yew/ssr"]
 yew-agent = ["yew", "animato-yew/agent"]
+js       = ["dep:animato-js"]
 tokio    = ["timeline", "animato-timeline/tokio"]
 serde    = [
     "dep:serde",
@@ -67,6 +68,7 @@ animato-wasm     = { workspace = true, optional = true }
 animato-leptos   = { workspace = true, optional = true }
 animato-dioxus   = { workspace = true, optional = true }
 animato-yew      = { workspace = true, optional = true }
+animato-js       = { workspace = true, optional = true }
 palette          = { workspace = true, optional = true }
 serde            = { workspace = true, optional = true }
 
@@ -86,6 +88,7 @@ animato-wasm   = { workspace = true }
 animato-leptos = { workspace = true }
 animato-dioxus = { workspace = true }
 animato-yew    = { workspace = true }
+animato-js     = { workspace = true }
 bevy_app       = { workspace = true }
 bevy_ecs       = { workspace = true }
 bevy_time      = { workspace = true }

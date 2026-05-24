@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.3.0 API surface by crate. For signatures,
+This file lists the stable v1.4.0 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.3"
+animato = "1.4"
 ```
 
 ## animato-core
@@ -345,6 +345,38 @@ Stable public items include `use_tween`, `use_spring`, `use_timeline`,
 `AgentOutput`, and `use_animation_agent`.
 
 Use [yew.md](./yew.md) for app setup and examples.
+
+## animato-js
+
+Feature: `js` on the Rust facade; JavaScript apps install `@animato/core`.
+
+Stable JavaScript exports include `Tween`, `Tween2D`, `Tween3D`, `Tween4D`,
+`KeyframeTrack`, `KeyframeTrack2D`, `KeyframeTrack3D`, `KeyframeTrack4D`,
+`Spring`, `Spring2D`, `Spring3D`, `Spring4D`, `Timeline`, `RafDriver`,
+`ScrollDriver`, `MotionPath`, `MorphPath`, `Inertia`, `Inertia2D`,
+`DragState`, `GestureRecognizer`, `ColorTween`, `ScrollSmoother`,
+`FlipAnimation`, `LayoutAnimator`, `SplitText`, `Draggable`, `Observer`, and
+`TweenBatch`.
+
+Utility exports include `version`, `initAnimato`, `availableEasings`, `ease`,
+`parseEasing`, `snapTo`, `roundTo`, and `interpolateColor`.
+
+Example:
+
+```js
+import init, { Tween, RafDriver } from "@animato/core";
+
+await init();
+
+const tween = new Tween(0, 100, 0.5);
+tween.setEasing("easeOutCubic");
+
+const driver = new RafDriver();
+driver.addTween(tween);
+driver.tick(16.67);
+```
+
+Use [javascript.md](./javascript.md) for package setup and examples.
 
 ## Related Docs
 

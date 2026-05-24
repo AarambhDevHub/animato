@@ -1,0 +1,92 @@
+name: Publish NPM
+
+on:
+  push:
+    tags:
+      - "v*"
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  publish-npm:
+    name: Publish @animato/core
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-publish-npm-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-publish-npm-
+            ${{ runner.os }}-cargo-
+
+      - name: Install wasm-pack
+        run: cargo install wasm-pack --locked
+
+      - name: Validate tag matches workspace version
+        run: |
+          set -euo pipefail
+          workspace_version="$(sed -n 's/^version[[:space:]]*=[[:space:]]*"\([^"]*\)"/\1/p' Cargo.toml | head -n1)"
+          tag_version="${GITHUB_REF_NAME#v}"
+          if [ "$workspace_version" != "$tag_version" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match workspace version ${workspace_version}" >&2
+            exit 1
+          fi
+
+      - name: Check animato-js for wasm32
+        run: cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+
+      - name: Run native animato-js tests
+        run: cargo test -p animato-js
+
+      - name: Build @animato/core
+        run: bash scripts/build-js-package.sh
+
+      - name: Run browser tests
+        run: bash scripts/wasm-pack-test-js.sh
+
+      - name: Check package size
+        run: node scripts/check-js-size.mjs
+
+      - name: Check if package version already exists
+        id: npm-version
+        run: |
+          set +e
+          npm view "@animato/core@${GITHUB_REF_NAME#v}" version > npm-version.txt 2>/dev/null
+          status="$?"
+          set -e
+          if [ "$status" -eq 0 ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "@animato/core ${GITHUB_REF_NAME#v} is already published"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish @animato/core
+        if: steps.npm-version.outputs.exists != 'true'
+        working-directory: crates/animato-js/pkg
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
