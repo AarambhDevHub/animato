@@ -1,13 +1,13 @@
 # animato-js
 
-Rust/WASM bindings for Animato, published to NPM as `@animato/core`.
+Rust/WASM bindings for Animato, published to NPM as `@aarambhdevhub/animato-core`.
 
 ```sh
-npm install @animato/core
+npm install @aarambhdevhub/animato-core
 ```
 
 ```js
-import init, { Tween, RafDriver, ColorTween } from "@animato/core";
+import init, { Tween, RafDriver, ColorTween } from "@aarambhdevhub/animato-core";
 
 await init();
 

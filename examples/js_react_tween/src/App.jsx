@@ -1,4 +1,4 @@
-import init, { Tween, RafDriver, initAnimato } from "@animato/core";
+import init, { Tween, RafDriver, initAnimato } from "@aarambhdevhub/animato-core";
 import { useEffect, useRef, useState } from "react";
 
 export function App() {

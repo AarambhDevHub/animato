@@ -70,7 +70,7 @@ See [no-std.md](./no-std.md).
   `animato::dioxus::*` to avoid intentionally duplicated hook/component names.
 - When multiple UI integrations are enabled, use the integration namespaces,
   such as `animato::yew::*`, to avoid duplicated hook/component names.
-- JavaScript apps should install `@animato/core`; the Rust `js` feature is for
+- JavaScript apps should install `@aarambhdevhub/animato-core`; the Rust `js` feature is for
   facade re-export builds and crate-level docs.
 
 ## Related Docs

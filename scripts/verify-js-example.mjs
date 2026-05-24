@@ -14,7 +14,7 @@ const root = resolve(new URL("..", import.meta.url).pathname);
 const pkg = resolve(root, "crates/animato-js/pkg/package.json");
 
 if (!existsSync(pkg)) {
-  throw new Error("Build @animato/core first with scripts/build-js-package.sh");
+  throw new Error("Build @aarambhdevhub/animato-core first with scripts/build-js-package.sh");
 }
 
 const src = join(example, "src");
@@ -23,8 +23,8 @@ if (!existsSync(src)) {
 }
 
 const files = collect(src);
-if (!files.some((file) => /@animato\/core/.test(read(file)))) {
-  throw new Error(`Example ${example} does not import @animato/core`);
+if (!files.some((file) => /@aarambhdevhub\/animato-core/.test(read(file)))) {
+  throw new Error(`Example ${example} does not import @aarambhdevhub/animato-core`);
 }
 
 const dist = join(example, "dist");

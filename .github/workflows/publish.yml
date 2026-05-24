@@ -259,7 +259,7 @@ jobs:
             ## Animato ${{ steps.version.outputs.TAG }} — JavaScript
 
             Animato v1.4.0 adds `animato-js`, a Rust/WASM crate published to
-            NPM as `@animato/core`. The JavaScript package exposes tweens,
+            NPM as `@aarambhdevhub/animato-core`. The JavaScript package exposes tweens,
             vector tweens, keyframes, timelines, springs, path/motion helpers,
             morphing, draw values, physics, color interpolation, rAF/scroll
             drivers, DOM helpers, and batch tween evaluation while preserving
@@ -273,7 +273,7 @@ jobs:
             ```
 
             ```sh
-            npm install @animato/core
+            npm install @aarambhdevhub/animato-core
             ```
 
             ### Crates published to crates.io
@@ -294,14 +294,14 @@ jobs:
             | [`animato-leptos`](https://crates.io/crates/animato-leptos) | `${{ steps.version.outputs.VERSION }}` | Leptos signal hooks and components |
             | [`animato-dioxus`](https://crates.io/crates/animato-dioxus) | `${{ steps.version.outputs.VERSION }}` | Dioxus signal hooks and native helpers |
             | [`animato-yew`](https://crates.io/crates/animato-yew) | `${{ steps.version.outputs.VERSION }}` | Yew hooks, components, gestures, and agents |
-            | [`animato-js`](https://crates.io/crates/animato-js) | `${{ steps.version.outputs.VERSION }}` | WASM bindings published to NPM as `@animato/core` |
+            | [`animato-js`](https://crates.io/crates/animato-js) | `${{ steps.version.outputs.VERSION }}` | WASM bindings published to NPM as `@aarambhdevhub/animato-core` |
             | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Stable facade crate |
 
             ### NPM package
 
             | Package | Version | Description |
             |---------|---------|-------------|
-            | [`@animato/core`](https://www.npmjs.com/package/@animato/core) | `${{ steps.version.outputs.VERSION }}` | JavaScript/WASM animation engine |
+            | [`@aarambhdevhub/animato-core`](https://www.npmjs.com/package/@aarambhdevhub/animato-core) | `${{ steps.version.outputs.VERSION }}` | JavaScript/WASM animation engine |
 
             ### Verification
 

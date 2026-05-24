@@ -660,7 +660,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 ## v1.4.0 — JavaScript
 
-**Goal:** Expose Animato’s animation engine to the JavaScript ecosystem via WASM. A JS developer can `npm install @animato/core`, import tween/spring/timeline classes, and use them in React, Svelte, Vue, Angular, or vanilla JS — powered by Animato’s optimized Rust math under the hood.
+**Goal:** Expose Animato’s animation engine to the JavaScript ecosystem via WASM. A JS developer can `npm install @aarambhdevhub/animato-core`, import tween/spring/timeline classes, and use them in React, Svelte, Vue, Angular, or vanilla JS — powered by Animato’s optimized Rust math under the hood.
 
 ### Crates shipped
 
@@ -668,7 +668,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 
 ### NPM packages published
 
-- `@animato/core` — WASM module built via `wasm-pack`
+- `@aarambhdevhub/animato-core` — WASM module built via `wasm-pack`
 
 ### Deliverables
 
@@ -696,7 +696,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 - [x] `js` feature flag
 
 **Build & Publish**
-- [x] `wasm-pack build crates/animato-js --target web --scope animato --release` produces `@animato/core` after package prep
+- [x] `wasm-pack build crates/animato-js --target web --scope aarambhdevhub --release` produces `@aarambhdevhub/animato-core` after package prep
 - [x] NPM publish workflow in `.github/workflows/publish-npm.yml`
 - [x] `package.json` with correct entry points, TypeScript `.d.ts` type definitions, and exports
 - [x] WASM module size budget set to 120 KiB gzipped for the full JavaScript surface
@@ -704,7 +704,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 **Documentation & Examples**
 - [x] `docs/javascript.md` — JavaScript integration guide
 - [x] `examples/js_vanilla_timeline/` — vanilla JS timeline animation
-- [x] `examples/js_react_tween/` — React-style app using `@animato/core`
+- [x] `examples/js_react_tween/` — React-style app using `@aarambhdevhub/animato-core`
 - [x] `examples/js_svelte_spring/` — Svelte-style app with spring-animated elements
 - [x] `examples/js_vue_motion/` — Vue-style app with motion path usage
 - [x] `examples/js_angular_color/` — Angular-style app with color animation usage
@@ -871,9 +871,9 @@ These are not committed — they are ideas to revisit after DevTools ships.
 | `animato-slint` | Slint property binding animations for embedded/automotive |
 | `animato-tauri` | Tauri IPC bridge for driving Animato from the Rust backend |
 | `animato-macro` | `animato!{ }` proc macro for declarative GSAP-style chaining |
-| `@animato/react` | Dedicated React hooks NPM package wrapping `@animato/core` |
-| `@animato/svelte` | Dedicated Svelte stores/actions NPM package wrapping `@animato/core` |
-| `@animato/vue` | Dedicated Vue composables NPM package wrapping `@animato/core` |
+| `@aarambhdevhub/animato-react` | Dedicated React hooks NPM package wrapping `@aarambhdevhub/animato-core` |
+| `@aarambhdevhub/animato-svelte` | Dedicated Svelte stores/actions NPM package wrapping `@aarambhdevhub/animato-core` |
+| `@aarambhdevhub/animato-vue` | Dedicated Vue composables NPM package wrapping `@aarambhdevhub/animato-core` |
 | `f64` time precision | Optional `dt: f64` for high-precision simulation targets |
 
 ---

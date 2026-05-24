@@ -8,7 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## [1.4.0] — 2026-05-23 — JavaScript
 
 ### Added
-- `animato-js`: new Rust/WASM crate built with `wasm-bindgen` and published to NPM as `@animato/core`.
+- `animato-js`: new Rust/WASM crate built with `wasm-bindgen` and published to NPM as `@aarambhdevhub/animato-core`.
 - JavaScript exports for tweens, vector tweens, keyframes, timelines, springs, rAF/scroll drivers, motion paths, morphing, draw values, inertia, drag, gestures, color interpolation, DOM helpers, and batch tween evaluation.
 - JavaScript utility exports: `version`, `initAnimato`, `availableEasings`, `ease`, `parseEasing`, `snapTo`, `roundTo`, and `interpolateColor`.
 - `animato` facade feature `js`, re-exported as `animato::js::*`.

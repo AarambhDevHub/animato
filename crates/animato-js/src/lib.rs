@@ -1,6 +1,6 @@
 //! JavaScript and TypeScript bindings for Animato.
 //!
-//! This crate is compiled with `wasm-pack` and published as `@animato/core`.
+//! This crate is compiled with `wasm-pack` and published as `@aarambhdevhub/animato-core`.
 //! It exposes the renderer-agnostic Animato engines to JavaScript while keeping
 //! framework adapters in examples and application code.
 

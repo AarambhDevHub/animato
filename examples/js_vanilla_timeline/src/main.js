@@ -1,4 +1,4 @@
-import init, { Timeline, Tween, MotionPath, ColorTween, initAnimato } from "@animato/core";
+import init, { Timeline, Tween, MotionPath, ColorTween, initAnimato } from "@aarambhdevhub/animato-core";
 
 await init();
 initAnimato();

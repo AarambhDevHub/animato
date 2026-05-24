@@ -11,7 +11,7 @@ env:
 
 jobs:
   publish-npm:
-    name: Publish @animato/core
+    name: Publish @aarambhdevhub/animato-core
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -61,7 +61,7 @@ jobs:
       - name: Run native animato-js tests
         run: cargo test -p animato-js
 
-      - name: Build @animato/core
+      - name: Build @aarambhdevhub/animato-core
         run: bash scripts/build-js-package.sh
 
       - name: Run browser tests
@@ -74,17 +74,17 @@ jobs:
         id: npm-version
         run: |
           set +e
-          npm view "@animato/core@${GITHUB_REF_NAME#v}" version > npm-version.txt 2>/dev/null
+          npm view "@aarambhdevhub/animato-core@${GITHUB_REF_NAME#v}" version > npm-version.txt 2>/dev/null
           status="$?"
           set -e
           if [ "$status" -eq 0 ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "@animato/core ${GITHUB_REF_NAME#v} is already published"
+            echo "@aarambhdevhub/animato-core ${GITHUB_REF_NAME#v} is already published"
           else
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Publish @animato/core
+      - name: Publish @aarambhdevhub/animato-core
         if: steps.npm-version.outputs.exists != 'true'
         working-directory: crates/animato-js/pkg
         env:

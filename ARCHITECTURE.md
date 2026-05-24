@@ -1792,7 +1792,7 @@ web-sys          = { workspace = true }
 
 ### 4.15 `animato-js`
 
-**Responsibility:** WASM-compiled NPM package exposing Animato's renderer-agnostic animation engines to JavaScript frameworks (React, Svelte, Vue, Angular, vanilla JS). Provides `#[wasm_bindgen]` wrappers around core types, a string-based easing parser for JS ergonomics, driver helpers, DOM helpers, color interpolation, path/morph helpers, input physics, and batch tween evaluation. Published to NPM as `@animato/core` via `wasm-pack`.
+**Responsibility:** WASM-compiled NPM package exposing Animato's renderer-agnostic animation engines to JavaScript frameworks (React, Svelte, Vue, Angular, vanilla JS). Provides `#[wasm_bindgen]` wrappers around core types, a string-based easing parser for JS ergonomics, driver helpers, DOM helpers, color interpolation, path/morph helpers, input physics, and batch tween evaluation. Published to NPM as `@aarambhdevhub/animato-core` via `wasm-pack`.
 
 **Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `wasm-bindgen`, `js-sys`, `web-sys`
 
@@ -1913,8 +1913,8 @@ pub fn available_easings() -> js_sys::Array;
 #### JavaScript usage (after `wasm-pack build`):
 
 ```js
-// Install: npm install @animato/core
-import init, { Tween, Spring, RafDriver, availableEasings } from "@animato/core";
+// Install: npm install @aarambhdevhub/animato-core
+import init, { Tween, Spring, RafDriver, availableEasings } from "@aarambhdevhub/animato-core";
 
 await init();
 

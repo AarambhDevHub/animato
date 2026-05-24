@@ -285,7 +285,7 @@ jobs:
       - name: Check animato-js for wasm32
         run: cargo check -p animato-js --target wasm32-unknown-unknown --all-features
 
-      - name: Build @animato/core
+      - name: Build @aarambhdevhub/animato-core
         run: bash scripts/build-js-package.sh
 
       - name: Run animato-js browser tests

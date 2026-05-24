@@ -43,7 +43,7 @@ git push origin v1.4.0
 The publish workflow validates that `v1.4.0` matches the workspace package
 version `1.4.0`.
 
-The NPM publish workflow also validates the tag, builds `@animato/core`, checks
+The NPM publish workflow also validates the tag, builds `@aarambhdevhub/animato-core`, checks
 the package size budget, skips already-published versions, and publishes with
 `NPM_TOKEN`.
 

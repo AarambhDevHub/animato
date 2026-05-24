@@ -31,7 +31,7 @@ Common combinations:
 | Dioxus desktop app | `animato = { version = "1.4", features = ["dioxus-desktop"] }` |
 | Yew CSR app | `animato = { version = "1.4", features = ["yew-csr"] }` |
 | Yew agent coordination | `animato = { version = "1.4", features = ["yew-csr", "yew-agent"] }` |
-| JavaScript or TypeScript app | `npm install @animato/core` |
+| JavaScript or TypeScript app | `npm install @aarambhdevhub/animato-core` |
 | SVG paths and morphing | `animato = { version = "1.4", features = ["path"] }` |
 | Drag and gestures | `animato = { version = "1.4", features = ["physics"] }` |
 | GPU batches | `animato = { version = "1.4", features = ["gpu"] }` |
@@ -73,11 +73,11 @@ See [wasm.md](./wasm.md).
 Use the NPM package for browser and framework apps:
 
 ```sh
-npm install @animato/core
+npm install @aarambhdevhub/animato-core
 ```
 
 ```js
-import init, { Tween, RafDriver } from "@animato/core";
+import init, { Tween, RafDriver } from "@aarambhdevhub/animato-core";
 
 await init();
 const tween = new Tween(0, 100, 0.5);

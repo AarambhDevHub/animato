@@ -1,5 +1,5 @@
 <script>
-  import init, { Spring2D, initAnimato } from "@animato/core";
+  import init, { Spring2D, initAnimato } from "@aarambhdevhub/animato-core";
 
   let x = 0;
   let y = 0;

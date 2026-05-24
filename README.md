@@ -63,11 +63,11 @@ yew = { version = "0.23", features = ["csr"] }
 JavaScript applications install the NPM package built from `animato-js`:
 
 ```sh
-npm install @animato/core
+npm install @aarambhdevhub/animato-core
 ```
 
 ```js
-import init, { Tween } from "@animato/core";
+import init, { Tween } from "@aarambhdevhub/animato-core";
 
 await init();
 const tween = new Tween(0, 320, 0.9);

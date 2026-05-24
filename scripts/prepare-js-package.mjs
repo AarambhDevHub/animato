@@ -13,7 +13,7 @@ const pkgPath = resolve(root, "crates/animato-js/pkg/package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
 
 Object.assign(pkg, {
-  name: "@animato/core",
+  name: "@aarambhdevhub/animato-core",
   version,
   description: "WASM-powered animation engine for JavaScript, React, Svelte, Vue, Angular, and vanilla apps.",
   license: "MIT OR Apache-2.0",

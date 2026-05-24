@@ -8,7 +8,7 @@ const bytes = readFileSync(wasmPath);
 const gzipBytes = gzipSync(bytes, { level: 9 });
 const limit = Number.parseInt(process.env.ANIMATO_JS_GZIP_LIMIT ?? "122880", 10);
 
-console.log(`@animato/core wasm: ${bytes.length} bytes raw, ${gzipBytes.length} bytes gzip`);
+console.log(`@aarambhdevhub/animato-core wasm: ${bytes.length} bytes raw, ${gzipBytes.length} bytes gzip`);
 
 if (gzipBytes.length > limit) {
   throw new Error(`gzipped WASM size ${gzipBytes.length} exceeds budget ${limit}`);

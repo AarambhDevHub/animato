@@ -1,5 +1,5 @@
 <script setup>
-import init, { MotionPath, TweenBatch, initAnimato } from "@animato/core";
+import init, { MotionPath, TweenBatch, initAnimato } from "@aarambhdevhub/animato-core";
 import { ref, onMounted } from "vue";
 
 const transform = ref("translate(0px, 0px)");

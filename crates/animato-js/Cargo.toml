@@ -1,6 +1,6 @@
 [package]
 name        = "animato-js"
-description = "WASM bindings for Animato, published to NPM as @animato/core."
+description = "WASM bindings for Animato, published to NPM as @aarambhdevhub/animato-core."
 readme      = "README.md"
 version.workspace     = true
 edition.workspace     = true

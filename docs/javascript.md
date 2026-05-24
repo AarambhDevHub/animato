@@ -1,13 +1,13 @@
 # JavaScript
 
-Animato v1.4.0 publishes the WASM package as `@animato/core`. It exposes the
+Animato v1.4.0 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
 renderer-agnostic animation engines to JavaScript and TypeScript while keeping
 framework adapters in app code.
 
 ## Install
 
 ```sh
-npm install @animato/core
+npm install @aarambhdevhub/animato-core
 ```
 
 For local development inside this repository, build the package first:
@@ -21,7 +21,7 @@ Then use the generated package from `crates/animato-js/pkg`.
 ## Quick Start
 
 ```js
-import init, { Tween, RafDriver, ease, availableEasings } from "@animato/core";
+import init, { Tween, RafDriver, ease, availableEasings } from "@aarambhdevhub/animato-core";
 
 await init();
 
@@ -105,8 +105,8 @@ npm ci --prefix examples/js_angular_color
 npm run build --prefix examples/js_angular_color
 ```
 
-Each example imports `@animato/core` directly. Dedicated framework adapter
-packages such as `@animato/react` remain future scope.
+Each example imports `@aarambhdevhub/animato-core` directly. Dedicated framework adapter
+packages such as `@aarambhdevhub/animato-react` remain future scope.
 
 ## Package Checks
 
@@ -117,7 +117,7 @@ bash scripts/build-js-package.sh
 ```
 
 The package build rewrites the generated `wasm-pack` metadata to publish as
-`@animato/core` and checks the gzipped WASM size budget.
+`@aarambhdevhub/animato-core` and checks the gzipped WASM size budget.
 
 ## Related Docs
 

@@ -348,7 +348,7 @@ Use [yew.md](./yew.md) for app setup and examples.
 
 ## animato-js
 
-Feature: `js` on the Rust facade; JavaScript apps install `@animato/core`.
+Feature: `js` on the Rust facade; JavaScript apps install `@aarambhdevhub/animato-core`.
 
 Stable JavaScript exports include `Tween`, `Tween2D`, `Tween3D`, `Tween4D`,
 `KeyframeTrack`, `KeyframeTrack2D`, `KeyframeTrack3D`, `KeyframeTrack4D`,
@@ -364,7 +364,7 @@ Utility exports include `version`, `initAnimato`, `availableEasings`, `ease`,
 Example:
 
 ```js
-import init, { Tween, RafDriver } from "@animato/core";
+import init, { Tween, RafDriver } from "@aarambhdevhub/animato-core";
 
 await init();
 

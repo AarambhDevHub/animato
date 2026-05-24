@@ -8,6 +8,6 @@
     "build": "node ../../scripts/verify-js-example.mjs ."
   },
   "dependencies": {
-    "@animato/core": "file:../../crates/animato-js/pkg"
+    "@aarambhdevhub/animato-core": "file:../../crates/animato-js/pkg"
   }
 }

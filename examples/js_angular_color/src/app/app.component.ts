@@ -1,4 +1,4 @@
-import init, { ColorTween, ScrollSmoother, initAnimato } from "@animato/core";
+import init, { ColorTween, ScrollSmoother, initAnimato } from "@aarambhdevhub/animato-core";
 import { Component, ElementRef, OnDestroy, OnInit } from "@angular/core";
 
 @Component({
