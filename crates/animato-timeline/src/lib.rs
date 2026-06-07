@@ -43,10 +43,12 @@
 
 extern crate alloc;
 
+pub mod group;
 pub mod sequence;
 pub mod stagger;
 pub mod timeline;
 
+pub use group::AnimationGroup;
 pub use sequence::Sequence;
 pub use stagger::stagger;
 pub use timeline::{At, Timeline, TimelineState};

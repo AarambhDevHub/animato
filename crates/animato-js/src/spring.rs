@@ -93,6 +93,19 @@ impl Spring {
         }
     }
 
+    /// Create a spring with an initial velocity.
+    #[wasm_bindgen(js_name = fromVelocity)]
+    pub fn from_velocity(initial: f32, velocity: f32, target: f32) -> Self {
+        Self {
+            inner: Arc::new(Mutex::new(CoreSpring::from_velocity(
+                initial,
+                velocity,
+                target,
+                SpringConfig::default(),
+            ))),
+        }
+    }
+
     /// Advance by `dt` seconds.
     pub fn update(&self, dt: f32) -> bool {
         lock(&self.inner).update(dt)
@@ -106,6 +119,17 @@ impl Spring {
     /// Current velocity.
     pub fn velocity(&self) -> f32 {
         lock(&self.inner).velocity()
+    }
+
+    /// Current kinetic plus potential energy.
+    pub fn energy(&self) -> f32 {
+        lock(&self.inner).energy()
+    }
+
+    /// Number of target crossings.
+    #[wasm_bindgen(js_name = overshootCount)]
+    pub fn overshoot_count(&self) -> u32 {
+        lock(&self.inner).overshoot_count()
     }
 
     /// Whether the spring has settled.
@@ -139,6 +163,24 @@ impl Spring {
         lock(&self.inner).config = config(stiffness, damping, mass, epsilon);
     }
 
+    /// Use critically damped configuration.
+    #[wasm_bindgen(js_name = setCriticalDamping)]
+    pub fn set_critical_damping(&self, stiffness: f32) {
+        lock(&self.inner).config = SpringConfig::critically_damped(stiffness);
+    }
+
+    /// Use overdamped configuration.
+    #[wasm_bindgen(js_name = setOverdamped)]
+    pub fn set_overdamped(&self, stiffness: f32, ratio: f32) {
+        lock(&self.inner).config = SpringConfig::overdamped(stiffness, ratio);
+    }
+
+    /// Use underdamped configuration.
+    #[wasm_bindgen(js_name = setUnderdamped)]
+    pub fn set_underdamped(&self, stiffness: f32, ratio: f32) {
+        lock(&self.inner).config = SpringConfig::underdamped(stiffness, ratio);
+    }
+
     pub(crate) fn shared(&self) -> SharedSpring {
         SharedSpring::new(Arc::clone(&self.inner))
     }
@@ -151,6 +193,7 @@ macro_rules! vector_spring {
         $shared:ident,
         $value_ty:ty,
         [$($initial:ident),+],
+        [$($velocity:ident),+],
         [$($target:ident),+],
         $array_fn:ident
     ) => {
@@ -174,6 +217,20 @@ macro_rules! vector_spring {
                 }
             }
 
+            /// Create a vector spring with initial velocity.
+            #[wasm_bindgen(js_name = fromVelocity)]
+            #[allow(clippy::too_many_arguments)]
+            pub fn from_velocity($($initial: f32,)+ $($velocity: f32,)+ $($target: f32),+) -> Self {
+                Self {
+                    inner: Arc::new(Mutex::new(SpringN::from_velocity(
+                        [$($initial),+],
+                        [$($velocity),+],
+                        [$($target),+],
+                        SpringConfig::default(),
+                    ))),
+                }
+            }
+
             /// Advance by `dt` seconds.
             pub fn update(&self, dt: f32) -> bool {
                 lock(&self.inner).update(dt)
@@ -184,6 +241,24 @@ macro_rules! vector_spring {
             pub fn to_array(&self) -> Float32Array {
                 let value = lock(&self.inner).position();
                 f32_array(&value)
+            }
+
+            /// Current velocity as a typed array.
+            #[wasm_bindgen(js_name = velocityArray)]
+            pub fn velocity_array(&self) -> Float32Array {
+                let value = lock(&self.inner).velocity();
+                f32_array(&value)
+            }
+
+            /// Current kinetic plus potential energy.
+            pub fn energy(&self) -> f32 {
+                lock(&self.inner).energy()
+            }
+
+            /// Total component target crossings.
+            #[wasm_bindgen(js_name = overshootCount)]
+            pub fn overshoot_count(&self) -> u32 {
+                lock(&self.inner).overshoot_count()
             }
 
             /// Whether the spring has settled.
@@ -204,6 +279,30 @@ macro_rules! vector_spring {
                 lock(&self.inner).set_target([$($target),+]);
             }
 
+            /// Set custom spring parameters.
+            #[wasm_bindgen(js_name = setConfig)]
+            pub fn set_config(&self, stiffness: f32, damping: f32, mass: f32, epsilon: f32) {
+                lock(&self.inner).set_config(config(stiffness, damping, mass, epsilon));
+            }
+
+            /// Use critically damped configuration.
+            #[wasm_bindgen(js_name = setCriticalDamping)]
+            pub fn set_critical_damping(&self, stiffness: f32) {
+                lock(&self.inner).set_config(SpringConfig::critically_damped(stiffness));
+            }
+
+            /// Use overdamped configuration.
+            #[wasm_bindgen(js_name = setOverdamped)]
+            pub fn set_overdamped(&self, stiffness: f32, ratio: f32) {
+                lock(&self.inner).set_config(SpringConfig::overdamped(stiffness, ratio));
+            }
+
+            /// Use underdamped configuration.
+            #[wasm_bindgen(js_name = setUnderdamped)]
+            pub fn set_underdamped(&self, stiffness: f32, ratio: f32) {
+                lock(&self.inner).set_config(SpringConfig::underdamped(stiffness, ratio));
+            }
+
             pub(crate) fn shared(&self) -> $shared {
                 $shared::new(Arc::clone(&self.inner))
             }
@@ -217,6 +316,7 @@ vector_spring!(
     SharedSpring2D,
     [f32; 2],
     [x, y],
+    [velocity_x, velocity_y],
     [target_x, target_y],
     vec2
 );
@@ -226,6 +326,7 @@ vector_spring!(
     SharedSpring3D,
     [f32; 3],
     [x, y, z],
+    [velocity_x, velocity_y, velocity_z],
     [target_x, target_y, target_z],
     vec3
 );
@@ -235,6 +336,7 @@ vector_spring!(
     SharedSpring4D,
     [f32; 4],
     [x, y, z, w],
+    [velocity_x, velocity_y, velocity_z, velocity_w],
     [target_x, target_y, target_z, target_w],
     vec4
 );

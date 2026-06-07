@@ -7,6 +7,9 @@ Animato keeps the common update path small and predictable.
 - `Tween<T>::update(dt)` only advances scalar timing state.
 - `Tween<T>::value()` performs easing plus one `Interpolate::lerp`.
 - `Spring::update(dt)` integrates one scalar spring.
+- `Waveform::sample(time)` is allocation-free; `to_keyframe_track` allocates once.
+- `Quaternion::slerp` normalizes endpoints and uses nlerp only for near-identical rotations.
+- `StaggerPattern::delay(index, total)` is deterministic and allocation-free for built-in patterns.
 - `MorphPath::evaluate_into(t, output)` reuses caller-provided allocation.
 - `GpuAnimationBatch` batches scalar tweens and falls back to CPU correctly.
 
@@ -37,6 +40,7 @@ allocate.
 | 100 to 10,000 | `Vec<Tween<f32>>` for scalar values. |
 | 10,000+ scalar tweens | `GpuAnimationBatch`. |
 | Complex values | Monomorphized `Vec<Tween<T>>`. |
+| Procedural loops | `Waveform::sample` directly, or bake to `KeyframeTrack` once. |
 
 ## Benchmarks
 

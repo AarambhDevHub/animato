@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.4", default-features = false }
-//! animato-tween  = { version = "1.4", default-features = false }
-//! animato-spring = { version = "1.4", default-features = false }
-//! animato-physics = { version = "1.4", default-features = false }
-//! animato-color = { version = "1.4", default-features = false }
+//! animato-core   = { version = "1.5", default-features = false }
+//! animato-tween  = { version = "1.5", default-features = false }
+//! animato-spring = { version = "1.5", default-features = false }
+//! animato-physics = { version = "1.5", default-features = false }
+//! animato-color = { version = "1.5", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -97,7 +97,9 @@
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
 // ── Core — always present ────────────────────────────────────────────────────
-pub use animato_core::{Animatable, Easing, Interpolate, Playable, Update};
+pub use animato_core::{
+    Angle, Animatable, Color, Easing, Interpolate, Mat4, Playable, Quaternion, Update,
+};
 
 // ── Serde convenience re-export ─────────────────────────────────────────────
 #[cfg(feature = "serde")]
@@ -114,13 +116,13 @@ pub mod easing {
 // ── Tween ────────────────────────────────────────────────────────────────────
 #[cfg(feature = "tween")]
 pub use animato_tween::{
-    Keyframe, KeyframeTrack, Loop, Tween, TweenBuilder, TweenSnapshot, TweenState, round_to,
-    snap_to,
+    GridOrigin, Keyframe, KeyframeTrack, Loop, StaggerPattern, Tween, TweenBuilder, TweenSnapshot,
+    TweenState, Waveform, round_to, snap_to,
 };
 
 // ── Timeline ────────────────────────────────────────────────────────────────
 #[cfg(feature = "timeline")]
-pub use animato_timeline::{At, Sequence, Timeline, TimelineState, stagger};
+pub use animato_timeline::{AnimationGroup, At, Sequence, Timeline, TimelineState, stagger};
 
 // ── Spring ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "spring")]
@@ -156,6 +158,9 @@ pub use animato_driver::{
     AnimationDriver, AnimationId, Clock, ManualClock, MockClock, ScrollClock, ScrollDriver,
     WallClock,
 };
+
+#[cfg(all(feature = "driver", feature = "std"))]
+pub use animato_driver::{AnimationRecorder, RecordedSample, RecordedTrack, RecorderError};
 
 // ── GPU ──────────────────────────────────────────────────────────────────────
 #[cfg(feature = "gpu")]

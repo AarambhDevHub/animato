@@ -190,6 +190,11 @@ name = "gpu_batch"
 path = "../../tests/gpu_batch.rs"
 required-features = ["gpu"]
 
+[[test]]
+name = "advanced_engine"
+path = "../../tests/advanced_engine.rs"
+required-features = ["tween", "timeline", "spring", "driver"]
+
 # ── Benchmarks ────────────────────────────────────────────────────────────────
 [[bench]]
 name    = "easing_bench"
@@ -238,13 +243,38 @@ path = "../../examples/spring_demo.rs"
 required-features = ["spring", "driver"]
 
 [[example]]
+name = "spring_fling"
+path = "../../examples/spring_fling.rs"
+required-features = ["spring"]
+
+[[example]]
 name = "keyframe_track"
 path = "../../examples/keyframe_track.rs"
 required-features = ["tween"]
 
 [[example]]
+name = "waveform_demo"
+path = "../../examples/waveform_demo.rs"
+required-features = ["tween"]
+
+[[example]]
 name = "timeline_sequence"
 path = "../../examples/timeline_sequence.rs"
+required-features = ["tween", "timeline"]
+
+[[example]]
+name = "quaternion_rotation"
+path = "../../examples/quaternion_rotation.rs"
+required-features = ["tween"]
+
+[[example]]
+name = "stagger_grid"
+path = "../../examples/stagger_grid.rs"
+required-features = ["tween"]
+
+[[example]]
+name = "animation_groups"
+path = "../../examples/animation_groups.rs"
 required-features = ["tween", "timeline"]
 
 [[example]]

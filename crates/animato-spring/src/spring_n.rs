@@ -60,6 +60,31 @@ impl<T: Decompose> SpringN<T> {
         }
     }
 
+    /// Create a multi-dimensional spring with initial component velocities.
+    pub fn from_velocity(initial: T, velocity: T, target: T, config: SpringConfig) -> Self {
+        let n = T::component_count();
+        let mut initial_components = alloc::vec![0.0_f32; n];
+        let mut velocity_components = alloc::vec![0.0_f32; n];
+        let mut target_components = alloc::vec![0.0_f32; n];
+        initial.write_components(&mut initial_components);
+        velocity.write_components(&mut velocity_components);
+        target.write_components(&mut target_components);
+
+        let components = initial_components
+            .iter()
+            .zip(velocity_components.iter())
+            .zip(target_components.iter())
+            .map(|((&initial, &velocity), &target)| {
+                Spring::from_velocity(initial, velocity, target, config.clone())
+            })
+            .collect();
+
+        Self {
+            components,
+            _marker: PhantomData,
+        }
+    }
+
     /// Set the target for all component springs simultaneously.
     pub fn set_target(&mut self, target: T) {
         let n = T::component_count();
@@ -70,10 +95,35 @@ impl<T: Decompose> SpringN<T> {
         }
     }
 
+    /// Set the spring configuration for all components.
+    pub fn set_config(&mut self, config: SpringConfig) {
+        for spring in self.components.iter_mut() {
+            spring.config = config.clone();
+        }
+    }
+
     /// Current position, reconstructed from component springs.
     pub fn position(&self) -> T {
         let values: Vec<f32> = self.components.iter().map(|s| s.position()).collect();
         T::from_components(&values)
+    }
+
+    /// Current velocity, reconstructed from component springs.
+    pub fn velocity(&self) -> T {
+        let values: Vec<f32> = self.components.iter().map(|s| s.velocity()).collect();
+        T::from_components(&values)
+    }
+
+    /// Sum of component spring energies.
+    pub fn energy(&self) -> f32 {
+        self.components.iter().map(|s| s.energy()).sum()
+    }
+
+    /// Total target crossings across all component springs.
+    pub fn overshoot_count(&self) -> u32 {
+        self.components.iter().fold(0_u32, |total, spring| {
+            total.saturating_add(spring.overshoot_count())
+        })
     }
 
     /// `true` when all component springs have settled.
@@ -161,5 +211,21 @@ mod tests {
         assert_eq!(pos[0], 10.0);
         assert_eq!(pos[1], 20.0);
         assert!(s.is_settled());
+    }
+
+    #[test]
+    fn spring_n_from_velocity_exposes_velocity_and_energy() {
+        let mut s: SpringN<[f32; 2]> = SpringN::from_velocity(
+            [0.0, 0.0],
+            [100.0, -50.0],
+            [10.0, -10.0],
+            SpringConfig::stiff(),
+        );
+        assert_eq!(s.velocity(), [100.0, -50.0]);
+        assert!(s.energy() > 0.0);
+        settle(&mut s);
+        let pos = s.position();
+        assert!((pos[0] - 10.0).abs() < 0.01);
+        assert!((pos[1] - (-10.0)).abs() < 0.01);
     }
 }

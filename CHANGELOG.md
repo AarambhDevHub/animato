@@ -5,6 +5,35 @@ All notable changes to Animato will be documented in this file.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] — 2026-06-07 — Advanced Engine
+
+### Added
+- `animato-core`: `Angle`, `Quaternion`, `Mat4`, and `Color` value wrappers for shortest-path angle interpolation, quaternion slerp, affine matrix interpolation, and lightweight linear RGBA animation.
+- `animato-spring`: `Spring::from_velocity`, damping mode constructors, energy diagnostics, and overshoot counting, plus velocity support for `SpringN<T>`.
+- `animato-tween`: `Waveform`, `StaggerPattern`, and `GridOrigin` for procedural values and deterministic stagger delays.
+- `animato-timeline`: `AnimationGroup` and `Timeline::add_timeline` for parallel, sequence, staggered, and nested orchestration.
+- `animato-driver`: `AnimationRecorder` with deterministic JSON/binary export, import, replay, and driver-integrated sampled recording.
+- `animato-js`: JavaScript bindings for advanced values, advanced tweens, waveforms, stagger patterns, animation groups, velocity springs, and recorder export/import.
+- Examples: `spring_fling`, `waveform_demo`, `quaternion_rotation`, `stagger_grid`, `animation_groups`, and `examples/js_advanced_engine`.
+- `docs/advanced-engine.md`.
+
+### Changed
+- Bumped the workspace version and internal dependency pins from `1.4.0`/`1.4` to `1.5.0`/`1.5`.
+- Updated README, API docs, JavaScript docs, examples docs, testing docs, release docs, roadmap, architecture notes, and CI for `v1.5.0`.
+
+### Verification
+- `cargo check -p animato-core -p animato-spring -p animato-tween -p animato-timeline -p animato-driver --all-features`
+- `cargo check -p animato-js`
+- `cargo fmt --check`
+- `cargo clippy --workspace --all-features -- -D warnings`
+- `cargo test -p animato --features tween,timeline,spring,driver --test advanced_engine`
+- `cargo test -p animato-core -p animato-tween -p animato-spring --no-default-features`
+- `cargo test -p animato-js`
+- `cargo test -p animato --all-features --examples`
+- `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
+- `bash scripts/build-js-package.sh`
+- `npm ci`, `npm run typecheck`, and `npm run build` for every JavaScript example, including `examples/js_advanced_engine`
+
 ## [1.4.0] — 2026-05-23 — JavaScript
 
 ### Added

@@ -7,6 +7,7 @@
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+mod advanced;
 mod batch;
 mod color;
 mod driver;
@@ -15,12 +16,17 @@ mod error;
 mod keyframe;
 mod path;
 mod physics;
+mod recorder;
 mod spring;
 mod timeline;
 mod tween;
 mod types;
 mod wasm_dom;
 
+pub use advanced::{
+    Angle, AngleTween, AnimationGroup, Mat4, Mat4Tween, Quaternion, QuaternionTween,
+    StaggerPattern, Waveform,
+};
 pub use batch::TweenBatch;
 pub use color::{ColorTween, interpolate_color};
 pub use driver::{RafDriver, ScrollDriver};
@@ -28,6 +34,7 @@ pub use easing::{available_easings, ease, parse_easing_for_js};
 pub use keyframe::{KeyframeTrack, KeyframeTrack2D, KeyframeTrack3D, KeyframeTrack4D};
 pub use path::{MorphPath, MotionPath};
 pub use physics::{DragState, GestureRecognizer, Inertia, Inertia2D};
+pub use recorder::AnimationRecorder;
 pub use spring::{Spring, Spring2D, Spring3D, Spring4D};
 pub use tween::{Tween, Tween2D, Tween3D, Tween4D};
 pub use wasm_dom::{Draggable, FlipAnimation, LayoutAnimator, Observer, ScrollSmoother, SplitText};

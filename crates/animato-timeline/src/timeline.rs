@@ -205,6 +205,11 @@ impl Timeline {
         self
     }
 
+    /// Add another timeline as a nested child entry.
+    pub fn add_timeline(self, label: impl Into<String>, timeline: Timeline, at: At<'_>) -> Self {
+        self.add(label, timeline, at)
+    }
+
     pub(crate) fn add_boxed_with_duration(
         mut self,
         label: impl Into<String>,

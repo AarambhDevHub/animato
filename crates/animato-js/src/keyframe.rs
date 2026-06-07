@@ -81,6 +81,12 @@ impl KeyframeTrack {
         }
     }
 
+    pub(crate) fn from_core(track: CoreKeyframeTrack<f32>) -> Self {
+        Self {
+            inner: Arc::new(Mutex::new(track)),
+        }
+    }
+
     /// Add a linear keyframe.
     pub fn push(&self, time: f32, value: f32) {
         let mut track = lock(&self.inner);

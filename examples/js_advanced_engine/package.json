@@ -1,0 +1,13 @@
+{
+  "name": "animato-js-advanced-engine",
+  "version": "1.5.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "node ../../scripts/verify-js-example.mjs .",
+    "build": "node ../../scripts/verify-js-example.mjs ."
+  },
+  "dependencies": {
+    "@aarambhdevhub/animato-core": "file:../../crates/animato-js/pkg"
+  }
+}

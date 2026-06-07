@@ -40,6 +40,8 @@ pub struct Spring {
     velocity: f32,
     target: f32,
     integrator: Integrator,
+    previous_displacement: f32,
+    overshoot_count: u32,
 }
 
 impl Spring {
@@ -51,12 +53,29 @@ impl Spring {
             velocity: 0.0,
             target: 0.0,
             integrator: Integrator::SemiImplicitEuler,
+            previous_displacement: 0.0,
+            overshoot_count: 0,
         }
+    }
+
+    /// Create a spring at `initial`, moving with `velocity`, toward `target`.
+    ///
+    /// This is useful for fling-to-snap gestures where the release velocity
+    /// should carry into the settling animation.
+    pub fn from_velocity(initial: f32, velocity: f32, target: f32, config: SpringConfig) -> Self {
+        let mut spring = Self::new(config);
+        spring.position = initial;
+        spring.velocity = if velocity.is_finite() { velocity } else { 0.0 };
+        spring.target = target;
+        spring.previous_displacement = initial - target;
+        spring
     }
 
     /// Set the target position the spring moves toward.
     pub fn set_target(&mut self, target: f32) {
         self.target = target;
+        self.previous_displacement = self.position - self.target;
+        self.overshoot_count = 0;
     }
 
     /// Current position of the spring.
@@ -75,10 +94,28 @@ impl Spring {
         (self.position - self.target).abs() < eps && self.velocity.abs() < eps
     }
 
+    /// Current kinetic plus potential energy.
+    ///
+    /// This is useful for diagnostics and settle visualization. The units are
+    /// simulation-relative rather than renderer-specific.
+    pub fn energy(&self) -> f32 {
+        let displacement = self.position - self.target;
+        0.5 * self.config.mass * self.velocity * self.velocity
+            + 0.5 * self.config.stiffness * displacement * displacement
+    }
+
+    /// Number of times the spring has crossed its target since the last target change.
+    pub fn overshoot_count(&self) -> u32 {
+        self.overshoot_count
+    }
+
     /// Teleport to `pos` instantly — no animation, velocity zeroed.
     pub fn snap_to(&mut self, pos: f32) {
         self.position = pos;
         self.velocity = 0.0;
+        self.target = pos;
+        self.previous_displacement = 0.0;
+        self.overshoot_count = 0;
     }
 
     /// Switch to RK4 integration (more accurate for high-stiffness springs).
@@ -129,6 +166,18 @@ impl Spring {
         self.position += (dt / 6.0) * (k1p + 2.0 * k2p + 2.0 * k3p + k4p);
         self.velocity += (dt / 6.0) * (k1v + 2.0 * k2v + 2.0 * k3v + k4v);
     }
+
+    fn track_overshoot(&mut self) {
+        let displacement = self.position - self.target;
+        let eps = self.config.epsilon.max(0.0);
+        if self.previous_displacement.abs() > eps
+            && displacement.abs() > eps
+            && self.previous_displacement.signum() != displacement.signum()
+        {
+            self.overshoot_count = self.overshoot_count.saturating_add(1);
+        }
+        self.previous_displacement = displacement;
+    }
 }
 
 impl Update for Spring {
@@ -151,6 +200,7 @@ impl Update for Spring {
             Integrator::SemiImplicitEuler => self.step_euler(dt),
             Integrator::RungeKutta4 => self.step_rk4(dt),
         }
+        self.track_overshoot();
         !self.is_settled()
     }
 }
@@ -293,5 +343,32 @@ mod tests {
         let pos_before = s.position();
         s.update(-1.0);
         assert_eq!(s.position(), pos_before);
+    }
+
+    #[test]
+    fn from_velocity_reaches_target_and_loses_energy() {
+        let mut s = Spring::from_velocity(0.0, 300.0, 100.0, SpringConfig::stiff());
+        let start_energy = s.energy();
+        run_to_settle(&mut s);
+        assert!((s.position() - 100.0).abs() < 0.01);
+        assert!(s.energy() < start_energy);
+    }
+
+    #[test]
+    fn damping_modes_order_damping() {
+        let critical = SpringConfig::critically_damped(100.0);
+        let over = SpringConfig::overdamped(100.0, 1.5);
+        let under = SpringConfig::underdamped(100.0, 0.5);
+        assert!(under.damping < critical.damping);
+        assert!(over.damping > critical.damping);
+    }
+
+    #[test]
+    fn overshoot_count_tracks_target_crossings() {
+        let mut s = Spring::from_velocity(0.0, 0.0, 1.0, SpringConfig::underdamped(120.0, 0.2));
+        for _ in 0..240 {
+            s.update(DT);
+        }
+        assert!(s.overshoot_count() > 0);
     }
 }

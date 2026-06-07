@@ -44,11 +44,15 @@ pub mod builder;
 pub mod keyframe;
 pub mod loop_mode;
 pub mod modifiers;
+pub mod stagger_pattern;
 pub mod tween;
+pub mod waveform;
 
 pub use builder::TweenBuilder;
 #[cfg(any(feature = "std", feature = "alloc"))]
 pub use keyframe::{Keyframe, KeyframeTrack};
 pub use loop_mode::Loop;
 pub use modifiers::{round_to, snap_to};
+pub use stagger_pattern::{GridOrigin, StaggerPattern};
 pub use tween::{Tween, TweenSnapshot, TweenState};
+pub use waveform::Waveform;

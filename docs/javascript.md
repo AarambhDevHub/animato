@@ -1,6 +1,6 @@
 # JavaScript
 
-Animato v1.4.0 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
+Animato v1.5.0 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
 renderer-agnostic animation engines to JavaScript and TypeScript while keeping
 framework adapters in app code.
 
@@ -55,6 +55,9 @@ Core animation:
 | `Timeline` | Compose tweens, keyframes, and motion paths. |
 | `RafDriver`, `ScrollDriver` | Drive many animations from rAF timestamps or scroll progress. |
 | `TweenBatch` | Batch scalar tween evaluation. |
+| `Angle`, `Quaternion`, `Mat4` | Math-correct angle, rotation, and matrix value wrappers. |
+| `AngleTween`, `QuaternionTween`, `Mat4Tween` | Advanced value tweens with shortest-path/slerp/decompose interpolation. |
+| `Waveform`, `StaggerPattern`, `AnimationGroup`, `AnimationRecorder` | v1.5 advanced engine helpers. |
 
 Motion, input, color, and DOM helpers:
 
@@ -86,7 +89,7 @@ JavaScript error with a short message.
 
 ## Examples
 
-The v1.4.0 repository includes source examples for the common JS entry points:
+The v1.5.0 repository includes source examples for the common JS entry points:
 
 ```sh
 npm ci --prefix examples/js_vanilla_timeline
@@ -103,6 +106,9 @@ npm run build --prefix examples/js_vue_motion
 
 npm ci --prefix examples/js_angular_color
 npm run build --prefix examples/js_angular_color
+
+npm ci --prefix examples/js_advanced_engine
+npm run build --prefix examples/js_advanced_engine
 ```
 
 Each example imports `@aarambhdevhub/animato-core` directly. Dedicated framework adapter
@@ -122,6 +128,7 @@ The package build rewrites the generated `wasm-pack` metadata to publish as
 ## Related Docs
 
 - [Installation](./installation.md)
+- [Advanced Engine](./advanced-engine.md)
 - [Examples](./examples.md)
 - [Testing](./testing.md)
 - [Release](./release.md)

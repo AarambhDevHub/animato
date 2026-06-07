@@ -1,5 +1,6 @@
 //! rAF and scroll driver bindings.
 
+use crate::advanced::{AngleTween, AnimationGroup, Mat4Tween, QuaternionTween};
 use crate::error::non_negative;
 use crate::keyframe::{KeyframeTrack, KeyframeTrack2D, KeyframeTrack3D, KeyframeTrack4D};
 use crate::path::MotionPath;
@@ -75,6 +76,24 @@ impl RafDriver {
         self.add_boxed(Box::new(tween.shared()))
     }
 
+    /// Register an angle tween.
+    #[wasm_bindgen(js_name = addAngleTween)]
+    pub fn add_angle_tween(&mut self, tween: &AngleTween) -> u32 {
+        self.add_boxed(Box::new(tween.shared()))
+    }
+
+    /// Register a quaternion tween.
+    #[wasm_bindgen(js_name = addQuaternionTween)]
+    pub fn add_quaternion_tween(&mut self, tween: &QuaternionTween) -> u32 {
+        self.add_boxed(Box::new(tween.shared()))
+    }
+
+    /// Register a matrix tween.
+    #[wasm_bindgen(js_name = addMat4Tween)]
+    pub fn add_mat4_tween(&mut self, tween: &Mat4Tween) -> u32 {
+        self.add_boxed(Box::new(tween.shared()))
+    }
+
     /// Register a scalar spring.
     #[wasm_bindgen(js_name = addSpring)]
     pub fn add_spring(&mut self, spring: &Spring) -> u32 {
@@ -127,6 +146,12 @@ impl RafDriver {
     #[wasm_bindgen(js_name = addTimeline)]
     pub fn add_timeline(&mut self, timeline: &Timeline) -> u32 {
         self.add_boxed(Box::new(timeline.shared()))
+    }
+
+    /// Register an animation group.
+    #[wasm_bindgen(js_name = addAnimationGroup)]
+    pub fn add_animation_group(&mut self, group: &AnimationGroup) -> u32 {
+        self.add_boxed(Box::new(group.shared()))
     }
 
     /// Register a motion path.

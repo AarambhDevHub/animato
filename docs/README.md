@@ -1,6 +1,6 @@
 # Animato Documentation
 
-This directory contains the stable v1.4.0 documentation for Animato. Use it with
+This directory contains the stable v1.5.0 documentation for Animato. Use it with
 the generated API docs on [docs.rs](https://docs.rs/animato).
 
 ## Start Here
@@ -31,6 +31,7 @@ the generated API docs on [docs.rs](https://docs.rs/animato).
 | Dioxus | [dioxus.md](./dioxus.md) |
 | Yew | [yew.md](./yew.md) |
 | JavaScript | [javascript.md](./javascript.md) |
+| Advanced engine | [advanced-engine.md](./advanced-engine.md) |
 
 ## Operations
 
@@ -50,7 +51,7 @@ the generated API docs on [docs.rs](https://docs.rs/animato).
 
 ```toml
 [dependencies]
-animato = "1.4"
+animato = "1.5"
 ```
 
 ## First Animation
@@ -70,5 +71,5 @@ assert!(opacity > 0.0 && opacity < 1.0);
 
 ## Stable Contract
 
-Animato v1.4.0 keeps the v1 public API stable. Public items are documented and
+Animato v1.5.0 keeps the v1 public API stable. Public items are documented and
 covered by tests, and breaking changes require a future major release.

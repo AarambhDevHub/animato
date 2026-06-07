@@ -23,6 +23,11 @@ pub fn cos(x: f32) -> f32 {
 }
 #[cfg(feature = "std")]
 #[inline]
+pub fn acos(x: f32) -> f32 {
+    x.acos()
+}
+#[cfg(feature = "std")]
+#[inline]
 pub fn powf(x: f32, n: f32) -> f32 {
     x.powf(n)
 }
@@ -66,6 +71,11 @@ pub fn sin(x: f32) -> f32 {
 #[inline]
 pub fn cos(x: f32) -> f32 {
     libm::cosf(x)
+}
+#[cfg(not(feature = "std"))]
+#[inline]
+pub fn acos(x: f32) -> f32 {
+    libm::acosf(x)
 }
 #[cfg(not(feature = "std"))]
 #[inline]

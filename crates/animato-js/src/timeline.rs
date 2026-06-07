@@ -1,5 +1,6 @@
 //! Timeline bindings.
 
+use crate::advanced::{AngleTween, AnimationGroup, Mat4Tween, QuaternionTween};
 use crate::error::{JsResult, js_error, non_negative};
 use crate::keyframe::{KeyframeTrack, KeyframeTrack2D, KeyframeTrack3D, KeyframeTrack4D};
 use crate::path::MotionPath;
@@ -19,7 +20,7 @@ fn state_name(state: TimelineState) -> &'static str {
     }
 }
 
-fn parse_at(input: &str) -> JsResult<At<'_>> {
+pub(crate) fn parse_at(input: &str) -> JsResult<At<'_>> {
     let at = input.trim();
     if at.eq_ignore_ascii_case("start") {
         return Ok(At::Start);
@@ -94,6 +95,34 @@ impl Timeline {
         self.add_playable(label, tween.shared(), at)
     }
 
+    /// Add an angle tween.
+    #[wasm_bindgen(js_name = addAngleTween)]
+    pub fn add_angle_tween(
+        &self,
+        label: &str,
+        tween: &AngleTween,
+        at: &str,
+    ) -> Result<(), JsValue> {
+        self.add_playable(label, tween.shared(), at)
+    }
+
+    /// Add a quaternion tween.
+    #[wasm_bindgen(js_name = addQuaternionTween)]
+    pub fn add_quaternion_tween(
+        &self,
+        label: &str,
+        tween: &QuaternionTween,
+        at: &str,
+    ) -> Result<(), JsValue> {
+        self.add_playable(label, tween.shared(), at)
+    }
+
+    /// Add a matrix tween.
+    #[wasm_bindgen(js_name = addMat4Tween)]
+    pub fn add_mat4_tween(&self, label: &str, tween: &Mat4Tween, at: &str) -> Result<(), JsValue> {
+        self.add_playable(label, tween.shared(), at)
+    }
+
     /// Add a scalar keyframe track.
     #[wasm_bindgen(js_name = addKeyframes)]
     pub fn add_keyframes(
@@ -147,6 +176,17 @@ impl Timeline {
         at: &str,
     ) -> Result<(), JsValue> {
         self.add_playable(label, motion.shared(), at)
+    }
+
+    /// Add an animation group.
+    #[wasm_bindgen(js_name = addAnimationGroup)]
+    pub fn add_animation_group(
+        &self,
+        label: &str,
+        group: &AnimationGroup,
+        at: &str,
+    ) -> Result<(), JsValue> {
+        self.add_playable(label, group.shared(), at)
     }
 
     /// Begin playback.
@@ -257,6 +297,32 @@ impl SharedTimeline {
 impl Update for SharedTimeline {
     fn update(&mut self, dt: f32) -> bool {
         lock(&self.inner).update(dt)
+    }
+}
+
+impl Playable for SharedTimeline {
+    fn duration(&self) -> f32 {
+        lock(&self.inner).duration()
+    }
+
+    fn reset(&mut self) {
+        lock(&self.inner).reset();
+    }
+
+    fn seek_to(&mut self, progress: f32) {
+        lock(&self.inner).seek(progress);
+    }
+
+    fn is_complete(&self) -> bool {
+        lock(&self.inner).is_complete()
+    }
+
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
     }
 }
 
