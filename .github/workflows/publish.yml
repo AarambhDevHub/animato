@@ -254,16 +254,15 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — JavaScript"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Advanced Engine"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — JavaScript
+            ## Animato ${{ steps.version.outputs.TAG }} — Advanced Engine
 
-            Animato v1.4.0 adds `animato-js`, a Rust/WASM crate published to
-            NPM as `@aarambhdevhub/animato-core`. The JavaScript package exposes tweens,
-            vector tweens, keyframes, timelines, springs, path/motion helpers,
-            morphing, draw values, physics, color interpolation, rAF/scroll
-            drivers, DOM helpers, and batch tween evaluation while preserving
-            the stable v1 Rust API.
+            Animato v1.5.0 adds advanced engine primitives across Rust and
+            JavaScript: velocity springs, damping modes, waveforms, quaternion
+            slerp, affine matrix interpolation, stagger patterns, animation
+            groups, nested timelines, and recorder export/replay while
+            preserving the stable v1 Rust API.
 
             ### Install
 

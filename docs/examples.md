@@ -7,8 +7,13 @@ Examples are registered on the facade crate.
 ```sh
 cargo run --example basic_tween
 cargo run --example spring_demo
+cargo run --example spring_fling --features spring
 cargo run --example keyframe_track
+cargo run --example waveform_demo
 cargo run --example timeline_sequence
+cargo run --example quaternion_rotation
+cargo run --example stagger_grid
+cargo run --example animation_groups
 cargo run --example scroll_linked --features driver
 cargo run --example tui_progress
 cargo run --example tui_spinner
@@ -123,6 +128,9 @@ npm run build --prefix examples/js_vue_motion
 
 npm ci --prefix examples/js_angular_color
 npm run build --prefix examples/js_angular_color
+
+npm ci --prefix examples/js_advanced_engine
+npm run build --prefix examples/js_advanced_engine
 ```
 
 ## Compile Examples Without Running

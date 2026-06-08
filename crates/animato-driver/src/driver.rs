@@ -2,6 +2,9 @@
 
 use animato_core::Update;
 
+#[cfg(feature = "std")]
+use crate::recorder::AnimationRecorder;
+
 /// An opaque handle to an animation registered with [`AnimationDriver`].
 ///
 /// Returned by [`AnimationDriver::add`]. Use it to cancel or query animations.
@@ -12,6 +15,23 @@ struct Slot {
     id: AnimationId,
     animation: Box<dyn Update + Send>,
     remove: bool,
+    #[cfg(feature = "std")]
+    recorder: Option<RecordedSampler>,
+}
+
+#[cfg(feature = "std")]
+struct RecordedSampler {
+    label: String,
+    sample: Box<dyn Fn() -> f64 + Send + 'static>,
+}
+
+#[cfg(feature = "std")]
+impl std::fmt::Debug for RecordedSampler {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("RecordedSampler")
+            .field("label", &self.label)
+            .finish()
+    }
 }
 
 impl std::fmt::Debug for Slot {
@@ -72,6 +92,34 @@ impl AnimationDriver {
             id,
             animation: Box::new(anim),
             remove: false,
+            #[cfg(feature = "std")]
+            recorder: None,
+        });
+        id
+    }
+
+    /// Register an animation with a scalar sampler for [`tick_recorded`](Self::tick_recorded).
+    #[cfg(feature = "std")]
+    pub fn add_recorded<A, F>(
+        &mut self,
+        label: impl Into<String>,
+        anim: A,
+        sampler: F,
+    ) -> AnimationId
+    where
+        A: Update + Send + 'static,
+        F: Fn() -> f64 + Send + 'static,
+    {
+        let id = AnimationId(self.next_id);
+        self.next_id += 1;
+        self.slots.push(Slot {
+            id,
+            animation: Box::new(anim),
+            remove: false,
+            recorder: Some(RecordedSampler {
+                label: label.into(),
+                sample: Box::new(sampler),
+            }),
         });
         id
     }
@@ -91,6 +139,24 @@ impl AnimationDriver {
             }
         }
         // Drain completed slots in one pass — O(n), no realloc.
+        self.slots.retain(|s| !s.remove);
+    }
+
+    /// Advance all active animations and record sampled values after the tick.
+    #[cfg(feature = "std")]
+    pub fn tick_recorded(&mut self, dt: f32, time: f32, recorder: &mut AnimationRecorder) {
+        for slot in self.slots.iter_mut() {
+            if slot.remove {
+                continue;
+            }
+            let still_running = slot.animation.update(dt);
+            if let Some(recorded) = &slot.recorder {
+                recorder.record(&recorded.label, time, (recorded.sample)());
+            }
+            if !still_running {
+                slot.remove = true;
+            }
+        }
         self.slots.retain(|s| !s.remove);
     }
 

@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.4.0 API surface by crate. For signatures,
+This file lists the stable v1.5.0 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.4"
+animato = "1.5"
 ```
 
 ## animato-core
@@ -27,6 +27,10 @@ Stable public items:
 | `Playable` | Object-safe animation abstraction for composition. |
 | `Easing` | 38 named and parameterized easing variants plus `Custom`. |
 | `easing::*` | Free easing functions such as `ease_out_cubic`. |
+| `Angle` | Shortest-path angle interpolation. |
+| `Quaternion` | Unit quaternion slerp for 3D rotations. |
+| `Mat4` | Affine transform interpolation by translation, rotation, and scale. |
+| `Color` | Lightweight linear RGBA interpolation wrapper. |
 
 Example:
 
@@ -62,6 +66,8 @@ Stable public items:
 | `Loop` | `Once`, `Times`, `Forever`, `PingPong`. |
 | `Keyframe<T>` | A timed value with easing to the next frame. |
 | `KeyframeTrack<T>` | Multi-stop animation track. |
+| `Waveform` | Procedural sine, sawtooth, square, triangle, and noise values. |
+| `StaggerPattern`, `GridOrigin` | Deterministic stagger delay calculations. |
 | `snap_to` | Snap a numeric value to a grid. |
 | `round_to` | Round a numeric value to decimal places. |
 
@@ -92,6 +98,7 @@ Stable public items:
 | `TimelineState` | Playback state. |
 | `At` | Entry placement: start, end, label, offset, absolute. |
 | `Sequence` | Sequential timeline builder. |
+| `AnimationGroup` | Parallel, sequence, and stagger groups as one `Playable`. |
 | `stagger` | Build offset starts for a collection of animations. |
 
 Example:
@@ -124,6 +131,8 @@ Stable public items:
 | `SpringConfig` | Stiffness, damping, mass, epsilon presets. |
 | `Integrator` | Semi-implicit Euler or RK4. |
 | `Decompose` | Sealed component decomposition trait. |
+| `Spring::from_velocity` | Start from release velocity for fling-to-snap motion. |
+| `Spring::energy`, `Spring::overshoot_count` | Diagnostics for advanced spring motion. |
 
 Example:
 
@@ -231,6 +240,8 @@ Stable public items:
 | `Clock` | Abstract source of frame delta. |
 | `WallClock`, `ManualClock`, `MockClock` | Hosted, manual, and test clocks. |
 | `ScrollDriver`, `ScrollClock` | Drive animations from scroll position. |
+| `AnimationRecorder`, `RecordedTrack`, `RecordedSample` | Capture and replay scalar frame values. |
+| `RecorderError` | JSON/binary import errors. |
 
 Example:
 
@@ -356,7 +367,9 @@ Stable JavaScript exports include `Tween`, `Tween2D`, `Tween3D`, `Tween4D`,
 `ScrollDriver`, `MotionPath`, `MorphPath`, `Inertia`, `Inertia2D`,
 `DragState`, `GestureRecognizer`, `ColorTween`, `ScrollSmoother`,
 `FlipAnimation`, `LayoutAnimator`, `SplitText`, `Draggable`, `Observer`, and
-`TweenBatch`.
+`TweenBatch`, `Angle`, `Quaternion`, `Mat4`, `AngleTween`, `QuaternionTween`,
+`Mat4Tween`, `Waveform`, `StaggerPattern`, `AnimationGroup`, and
+`AnimationRecorder`.
 
 Utility exports include `version`, `initAnimato`, `availableEasings`, `ease`,
 `parseEasing`, `snapTo`, `roundTo`, and `interpolateColor`.

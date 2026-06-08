@@ -15,10 +15,12 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.4.0 API is stable. The current public crates cover easing, tweens,
+The v1.5.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
-first-class Leptos, Dioxus, Yew, and JavaScript/WASM integration.
+first-class Leptos, Dioxus, Yew, JavaScript/WASM integration, and advanced
+engine primitives such as velocity springs, waveforms, quaternion slerp,
+animation groups, stagger patterns, and recording.
 
 ## Install
 
@@ -26,21 +28,21 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.4"
+animato = "1.5"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.4", features = ["path", "physics", "color"] }
+animato = { version = "1.5", features = ["path", "physics", "color"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.4", features = ["leptos-csr"] }
+animato = { version = "1.5", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -48,7 +50,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.4", features = ["dioxus-web"] }
+animato = { version = "1.5", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -56,7 +58,7 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.4", features = ["yew-csr"] }
+animato = { version = "1.5", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -78,12 +80,12 @@ For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.4", default-features = false }
-animato-tween   = { version = "1.4", default-features = false }
-animato-spring  = { version = "1.4", default-features = false }
-animato-path    = { version = "1.4", default-features = false }
-animato-physics = { version = "1.4", default-features = false }
-animato-color   = { version = "1.4", default-features = false }
+animato-core    = { version = "1.5", default-features = false }
+animato-tween   = { version = "1.5", default-features = false }
+animato-spring  = { version = "1.5", default-features = false }
+animato-path    = { version = "1.5", default-features = false }
+animato-physics = { version = "1.5", default-features = false }
+animato-color   = { version = "1.5", default-features = false }
 ```
 
 ## Quick Start
@@ -187,8 +189,13 @@ other target.
 ```sh
 cargo run --example basic_tween
 cargo run --example spring_demo
+cargo run --example spring_fling --features spring
 cargo run --example keyframe_track
+cargo run --example waveform_demo
 cargo run --example timeline_sequence
+cargo run --example quaternion_rotation
+cargo run --example stagger_grid
+cargo run --example animation_groups
 cargo run --example motion_path --features path
 cargo run --example morph_path --features path
 cargo run --example scroll_linked --features driver
@@ -252,11 +259,13 @@ npm ci --prefix examples/js_vue_motion
 npm run build --prefix examples/js_vue_motion
 npm ci --prefix examples/js_angular_color
 npm run build --prefix examples/js_angular_color
+npm ci --prefix examples/js_advanced_engine
+npm run build --prefix examples/js_advanced_engine
 ```
 
 ## Documentation
 
-The v1.4 documentation lives in [`docs/`](./docs/):
+The v1.5 documentation lives in [`docs/`](./docs/):
 
 | Start here | Details |
 |------------|---------|
@@ -269,15 +278,16 @@ The v1.4 documentation lives in [`docs/`](./docs/):
 | [Dioxus](./docs/dioxus.md) | Cross-platform Dioxus hooks and native helpers. |
 | [Yew](./docs/yew.md) | Yew hooks, components, gestures, and agent coordination. |
 | [JavaScript](./docs/javascript.md) | NPM package API and JavaScript framework examples. |
+| [Advanced Engine](./docs/advanced-engine.md) | Velocity springs, waveforms, slerp, groups, staggers, recorder. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
-| [Release](./docs/release.md) | v1.4 publishing checklist. |
+| [Release](./docs/release.md) | v1.5 publishing checklist. |
 
 The generated Rust API docs are available on
 [docs.rs/animato](https://docs.rs/animato).
 
 ## Testing
 
-The v1.4 release gate is:
+The v1.5 release gate is:
 
 ```sh
 cargo fmt --check

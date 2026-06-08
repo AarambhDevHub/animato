@@ -24,7 +24,8 @@ for example in \
   examples/js_react_tween \
   examples/js_svelte_spring \
   examples/js_vue_motion \
-  examples/js_angular_color
+  examples/js_angular_color \
+  examples/js_advanced_engine
 do
   npm ci --prefix "$example"
   npm run typecheck --prefix "$example"

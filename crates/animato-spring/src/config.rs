@@ -48,6 +48,39 @@ impl Default for SpringConfig {
 }
 
 impl SpringConfig {
+    /// Create a critically damped spring for the given stiffness.
+    ///
+    /// Critical damping uses `damping = 2 * sqrt(stiffness * mass)` with
+    /// `mass = 1.0`, producing fast movement without intentional overshoot.
+    pub fn critically_damped(stiffness: f32) -> Self {
+        let stiffness = stiffness.max(0.0);
+        let mass = 1.0;
+        Self {
+            stiffness,
+            damping: 2.0 * animato_core::math::sqrt(stiffness * mass),
+            mass,
+            epsilon: 0.001,
+        }
+    }
+
+    /// Create an overdamped spring with damping ratio above `1.0`.
+    ///
+    /// Ratios at or below `1.0` are clamped to a small overdamped margin.
+    pub fn overdamped(stiffness: f32, ratio: f32) -> Self {
+        let mut config = Self::critically_damped(stiffness);
+        config.damping *= ratio.max(1.0001);
+        config
+    }
+
+    /// Create an underdamped spring with damping ratio below `1.0`.
+    ///
+    /// Ratios are clamped to `[0.0, 1.0]`; lower values produce more bounce.
+    pub fn underdamped(stiffness: f32, ratio: f32) -> Self {
+        let mut config = Self::critically_damped(stiffness);
+        config.damping *= ratio.clamp(0.0, 1.0);
+        config
+    }
+
     /// Slow, soft spring — good for subtle UI elements.
     pub fn gentle() -> Self {
         Self {

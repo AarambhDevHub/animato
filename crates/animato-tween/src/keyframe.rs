@@ -78,6 +78,20 @@ impl<T: Animatable> KeyframeTrack<T> {
         }
     }
 
+    pub(crate) fn from_sorted_frames(frames: Vec<Keyframe<T>>) -> Self {
+        debug_assert!(
+            frames.windows(2).all(|pair| pair[0].time <= pair[1].time),
+            "frames must be sorted by time"
+        );
+        Self {
+            frames,
+            elapsed: 0.0,
+            looping: Loop::Once,
+            loop_count: 0,
+            complete: false,
+        }
+    }
+
     /// Insert a linear keyframe and keep the track sorted by time.
     ///
     /// If another frame already exists at the same time, it is replaced.

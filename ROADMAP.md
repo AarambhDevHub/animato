@@ -37,7 +37,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.2.0` | Dioxus | Cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, native | ✅ |
 | `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | ✅ |
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | ✅ |
-| `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | 📋 |
+| `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | ✅ |
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | 📋 |
 
 ---
@@ -699,7 +699,7 @@ Advanced GSAP-style easing variants remain assigned to `v0.8.0 — Advanced`.
 - [x] `wasm-pack build crates/animato-js --target web --scope aarambhdevhub --release` produces `@aarambhdevhub/animato-core` after package prep
 - [x] NPM publish workflow in `.github/workflows/publish-npm.yml`
 - [x] `package.json` with correct entry points, TypeScript `.d.ts` type definitions, and exports
-- [x] WASM module size budget set to 120 KiB gzipped for the full JavaScript surface
+- [x] WASM module size budget set to 140 KiB gzipped for the full JavaScript surface
 
 **Documentation & Examples**
 - [x] `docs/javascript.md` — JavaScript integration guide
@@ -728,66 +728,66 @@ All enhancements go into existing crates as backward-compatible additions.
 ### Deliverables
 
 **`animato-spring` — velocity & damping modes**
-- [ ] `Spring::from_velocity(initial, velocity, target, config)` — start a spring with initial velocity (fling-to-snap)
-- [ ] `SpringConfig::critically_damped(stiffness)` — auto-calculate damping for zero overshoot
-- [ ] `SpringConfig::overdamped(stiffness, ratio)` — overdamped preset with configurable ratio
-- [ ] `SpringConfig::underdamped(stiffness, ratio)` — underdamped preset with configurable bounce
-- [ ] `Spring::energy(&self) -> f32` — current kinetic + potential energy for settle detection
-- [ ] `Spring::overshoot_count(&self) -> u32` — number of times the spring crossed the target
+- [x] `Spring::from_velocity(initial, velocity, target, config)` — start a spring with initial velocity (fling-to-snap)
+- [x] `SpringConfig::critically_damped(stiffness)` — auto-calculate damping for zero overshoot
+- [x] `SpringConfig::overdamped(stiffness, ratio)` — overdamped preset with configurable ratio
+- [x] `SpringConfig::underdamped(stiffness, ratio)` — underdamped preset with configurable bounce
+- [x] `Spring::energy(&self) -> f32` — current kinetic + potential energy for settle detection
+- [x] `Spring::overshoot_count(&self) -> u32` — number of times the spring crossed the target
 
 **`animato-tween` — waveform generators**
-- [ ] `Waveform::Sine { frequency, amplitude, phase }` — continuous sine wave as KeyframeTrack
-- [ ] `Waveform::Sawtooth { frequency, amplitude }` — sawtooth wave
-- [ ] `Waveform::Square { frequency, amplitude, duty_cycle }` — square wave with duty cycle
-- [ ] `Waveform::Triangle { frequency, amplitude }` — triangle wave
-- [ ] `Waveform::Noise { seed, smoothness }` — smoothed random noise for organic motion
-- [ ] `waveform.sample(time) -> f32` — evaluate waveform at any time
-- [ ] `waveform.to_keyframe_track(duration, sample_rate) -> KeyframeTrack<f32>` — convert to keyframes
+- [x] `Waveform::Sine { frequency, amplitude, phase }` — continuous sine wave as KeyframeTrack
+- [x] `Waveform::Sawtooth { frequency, amplitude }` — sawtooth wave
+- [x] `Waveform::Square { frequency, amplitude, duty_cycle }` — square wave with duty cycle
+- [x] `Waveform::Triangle { frequency, amplitude }` — triangle wave
+- [x] `Waveform::Noise { seed, smoothness }` — smoothed random noise for organic motion
+- [x] `waveform.sample(time) -> f32` — evaluate waveform at any time
+- [x] `waveform.to_keyframe_track(duration, sample_rate) -> KeyframeTrack<f32>` — convert to keyframes
 
 **`animato-tween` — advanced stagger patterns**
-- [ ] `StaggerPattern::Grid { cols, rows, origin }` — 2D grid stagger from center/corner/edge
-- [ ] `StaggerPattern::Random { seed, min_delay, max_delay }` — randomized stagger with bounds
-- [ ] `StaggerPattern::CenterOut { count }` — stagger from center element outward
-- [ ] `StaggerPattern::EdgesIn { count }` — stagger from edges toward center
-- [ ] `StaggerPattern::Custom(Box<dyn Fn(usize, usize) -> f32>)` — user-defined delay function
+- [x] `StaggerPattern::Grid { cols, rows, origin }` — 2D grid stagger from center/corner/edge
+- [x] `StaggerPattern::Random { seed, min_delay, max_delay }` — randomized stagger with bounds
+- [x] `StaggerPattern::CenterOut { count }` — stagger from center element outward
+- [x] `StaggerPattern::EdgesIn { count }` — stagger from edges toward center
+- [x] `StaggerPattern::Custom(Box<dyn Fn(usize, usize) -> f32>)` — user-defined delay function
 
 **`animato-core` — interpolation extensions**
-- [ ] `Quaternion` newtype with `Interpolate` impl using slerp (spherical linear interpolation)
-- [ ] `Mat4` newtype with `Interpolate` impl using decompose-lerp-recompose
-- [ ] `Angle` newtype with shortest-path interpolation (handles 359° → 1° correctly)
-- [ ] `Color` newtype aliases for common color representations with perceptual interpolation
+- [x] `Quaternion` newtype with `Interpolate` impl using slerp (spherical linear interpolation)
+- [x] `Mat4` newtype with `Interpolate` impl using decompose-lerp-recompose
+- [x] `Angle` newtype with shortest-path interpolation (handles 359° → 1° correctly)
+- [x] `Color` newtype aliases for common color representations with perceptual interpolation
 
 **`animato-timeline` — animation groups**
-- [ ] `AnimationGroup::parallel(animations)` — all animations play simultaneously, group completes when all finish
-- [ ] `AnimationGroup::sequence(animations)` — animations play one after another
-- [ ] `AnimationGroup::stagger(animations, pattern)` — staggered start using StaggerPattern
-- [ ] Nested timelines: `Timeline::add_timeline(label, sub_timeline, at)` — timeline inside a timeline
-- [ ] `AnimationGroup::on_complete(callback)` — fires when all group members finish
-- [ ] Group-level `pause()`, `resume()`, `seek()`, `reverse()`, `set_time_scale()`
+- [x] `AnimationGroup::parallel(animations)` — all animations play simultaneously, group completes when all finish
+- [x] `AnimationGroup::sequence(animations)` — animations play one after another
+- [x] `AnimationGroup::stagger(animations, pattern)` — staggered start using StaggerPattern
+- [x] Nested timelines: `Timeline::add_timeline(label, sub_timeline, at)` — timeline inside a timeline
+- [x] `AnimationGroup::on_complete(callback)` — fires when all group members finish
+- [x] Group-level `pause()`, `resume()`, `seek()`, `reverse()`, `set_time_scale()`
 
 **`animato-driver` — animation recording**
-- [ ] `AnimationRecorder` — hooks into `AnimationDriver` to capture values per frame
-- [ ] `recorder.start()` / `recorder.stop()` / `recorder.record(label, time, value)`
-- [ ] `recorder.export_json()` → `String` — JSON export for DevTools consumption
-- [ ] `recorder.export_binary()` → `Vec<u8>` — compact binary format
-- [ ] `recorder.import_json(json)` — load recorded sequence
-- [ ] `recorder.replay(label, time)` → `Option<f64>` — replay a recorded value at any time
+- [x] `AnimationRecorder` — hooks into `AnimationDriver` to capture values per frame
+- [x] `recorder.start()` / `recorder.stop()` / `recorder.record(label, time, value)`
+- [x] `recorder.export_json()` → `String` — JSON export for DevTools consumption
+- [x] `recorder.export_binary()` → `Vec<u8>` — compact binary format
+- [x] `recorder.import_json(json)` — load recorded sequence
+- [x] `recorder.replay(label, time)` → `Option<f64>` — replay a recorded value at any time
 
 **Documentation & Examples**
-- [ ] `docs/advanced-engine.md` — advanced engine features guide
-- [ ] `examples/spring_fling.rs` — fling-to-snap with initial velocity
-- [ ] `examples/waveform_demo.rs` — procedural sine/sawtooth/square wave animations
-- [ ] `examples/quaternion_rotation.rs` — smooth 3D rotation interpolation
-- [ ] `examples/stagger_grid.rs` — 2D grid stagger pattern demo
-- [ ] `examples/animation_groups.rs` — parallel + sequence + nested timeline
+- [x] `docs/advanced-engine.md` — advanced engine features guide
+- [x] `examples/spring_fling.rs` — fling-to-snap with initial velocity
+- [x] `examples/waveform_demo.rs` — procedural sine/sawtooth/square wave animations
+- [x] `examples/quaternion_rotation.rs` — smooth 3D rotation interpolation
+- [x] `examples/stagger_grid.rs` — 2D grid stagger pattern demo
+- [x] `examples/animation_groups.rs` — parallel + sequence + nested timeline
 
 **Testing**
-- [ ] Spring from velocity: reaches target, energy dissipates, overshoot count correct
-- [ ] Waveform generators: frequency/amplitude accuracy, phase offset, sample consistency
-- [ ] Quaternion slerp: endpoint identity, shortest path, midpoint accuracy
-- [ ] Animation groups: parallel completes when last finishes, sequence ordering, nested seek
-- [ ] Stagger patterns: grid delay calculation, random bounds, center-out symmetry
-- [ ] Recorder: round-trip JSON export/import, replay accuracy
+- [x] Spring from velocity: reaches target, energy dissipates, overshoot count correct
+- [x] Waveform generators: frequency/amplitude accuracy, phase offset, sample consistency
+- [x] Quaternion slerp: endpoint identity, shortest path, midpoint accuracy
+- [x] Animation groups: parallel completes when last finishes, sequence ordering, nested seek
+- [x] Stagger patterns: grid delay calculation, random bounds, center-out symmetry
+- [x] Recorder: round-trip JSON export/import, replay accuracy
 
 ---
 
@@ -882,10 +882,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.4 stable API and open focused issues for bugs, documentation gaps, or post-1.4 feature proposals.
+The best way to contribute right now is to use the v1.5 stable API and open focused issues for bugs, documentation gaps, or post-1.5 feature proposals.
 
 ---
 
 *Roadmap version: 1.6.0 — last updated May 2026*  
-*v1.4.0 JavaScript shipped — advanced engine and DevTools work remains future scope*  
+*v1.5.0 Advanced Engine shipped — DevTools work remains future scope*  
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

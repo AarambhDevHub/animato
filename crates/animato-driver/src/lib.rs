@@ -37,8 +37,12 @@
 
 pub mod clock;
 pub mod driver;
+#[cfg(feature = "std")]
+pub mod recorder;
 pub mod scroll;
 
 pub use clock::{Clock, ManualClock, MockClock, WallClock};
 pub use driver::{AnimationDriver, AnimationId};
+#[cfg(feature = "std")]
+pub use recorder::{AnimationRecorder, RecordedSample, RecordedTrack, RecorderError};
 pub use scroll::{ScrollClock, ScrollDriver};
