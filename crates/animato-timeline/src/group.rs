@@ -1,4 +1,4 @@
-//! Animation groups built on top of [`Timeline`](crate::Timeline).
+//! Animation groups built on top of [`Timeline`].
 
 use crate::{At, Sequence, Timeline};
 use alloc::format;
