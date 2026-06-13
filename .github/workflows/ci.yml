@@ -291,6 +291,16 @@ jobs:
       - name: Build @aarambhdevhub/animato-core
         run: bash scripts/build-js-package.sh
 
+      - name: Validate generated NPM package version
+        run: |
+          set -euo pipefail
+          workspace_version="$(sed -n 's/^version[[:space:]]*=[[:space:]]*"\([^"]*\)"/\1/p' Cargo.toml | head -n1)"
+          package_version="$(node -p "require('./crates/animato-js/pkg/package.json').version")"
+          if [ "$workspace_version" != "$package_version" ]; then
+            echo "Generated NPM package version ${package_version} does not match workspace version ${workspace_version}" >&2
+            exit 1
+          fi
+
       - name: Run animato-js browser tests
         run: bash scripts/wasm-pack-test-js.sh
 

@@ -1,6 +1,6 @@
 # JavaScript
 
-Animato v1.5.0 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
+Animato v1.5.1 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
 renderer-agnostic animation engines to JavaScript and TypeScript while keeping
 framework adapters in app code.
 
@@ -89,7 +89,7 @@ JavaScript error with a short message.
 
 ## Examples
 
-The v1.5.0 repository includes source examples for the common JS entry points:
+The v1.5.1 repository includes source examples for the common JS entry points:
 
 ```sh
 npm ci --prefix examples/js_vanilla_timeline

@@ -15,6 +15,14 @@ pub(crate) fn loop_from_count(count: u32) -> Loop {
 
 pub(crate) fn parse_loop_mode(mode: &str) -> JsResult<Loop> {
     let normalized = normalize_name(mode);
+    if let Some(n) = parse_count_suffix(
+        &normalized,
+        &["pingpongtimes", "alternatetimes", "yoyotimes"],
+        mode,
+    )? {
+        return Ok(Loop::PingPongTimes(n.max(1)));
+    }
+
     match normalized.as_str() {
         "once" => Ok(Loop::Once),
         "forever" | "infinite" | "loop" => Ok(Loop::Forever),
@@ -28,6 +36,18 @@ pub(crate) fn parse_loop_mode(mode: &str) -> JsResult<Loop> {
         }
         _ => Err(js_error(format!("unknown loop mode `{mode}`"))),
     }
+}
+
+fn parse_count_suffix(normalized: &str, prefixes: &[&str], mode: &str) -> JsResult<Option<u32>> {
+    for prefix in prefixes {
+        if let Some(raw_count) = normalized.strip_prefix(prefix) {
+            let n = raw_count
+                .parse::<u32>()
+                .map_err(|_| js_error(format!("invalid loop mode `{mode}`")))?;
+            return Ok(Some(n));
+        }
+    }
+    Ok(None)
 }
 
 pub(crate) fn normalize_name(name: &str) -> String {
@@ -73,4 +93,25 @@ pub(crate) fn string_array(values: &[&str]) -> Array {
         array.push(&JsValue::from_str(value));
     }
     array
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_ping_pong_times_aliases() {
+        assert_eq!(
+            parse_loop_mode("pingPongTimes2").unwrap(),
+            Loop::PingPongTimes(2)
+        );
+        assert_eq!(
+            parse_loop_mode("alternate-times-3").unwrap(),
+            Loop::PingPongTimes(3)
+        );
+        assert_eq!(
+            parse_loop_mode("yoyo_times_0").unwrap(),
+            Loop::PingPongTimes(1)
+        );
+    }
 }

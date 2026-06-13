@@ -6,7 +6,7 @@ wasm_bindgen_test_configure!(run_in_browser);
 #[wasm_bindgen_test]
 fn wasm_exports_core_animation_api() {
     init_animato();
-    assert_eq!(version(), "1.5.0");
+    assert_eq!(version(), "1.5.1");
     assert!(available_easings().length() > 30);
 
     let tween = Tween::new(0.0, 100.0, 1.0);

@@ -55,24 +55,22 @@ fn main() {
     render_bar(100.0, 40);
     println!("\n\n  ✓ Complete!\n");
 
-    // ── Demonstrate Loop::PingPong ───────────────────────────────────────────
-    println!("  PingPong demo — 3 cycles (0 → 100 → 0 × 3)");
+    // ── Demonstrate finite ping-pong looping ─────────────────────────────────
+    println!("  PingPongTimes demo — 6 passes (0 → 100 → 0 × 3)");
     let mut ping = Tween::new(0.0_f32, 100.0)
         .duration(0.8)
         .easing(Easing::EaseInOutSine)
-        .looping(Loop::PingPong)
+        .looping(Loop::PingPongTimes(6))
         .build();
 
     let mut clock2 = WallClock::new();
-    let mut elapsed_ping = 0.0_f32;
-    let ping_duration = 3.0 * 2.0 * 0.8; // 3 cycles × 2 passes per cycle × 0.8s per pass
-    while elapsed_ping < ping_duration {
+    while {
         let dt = clock2.delta();
-        ping.update(dt);
-        elapsed_ping += dt;
+        ping.update(dt)
+    } {
         render_bar(ping.value(), 40);
         std::thread::sleep(std::time::Duration::from_millis(16));
     }
-    ping.reset();
+    render_bar(ping.value(), 40);
     println!("\n\n  ✓ PingPong complete!\n");
 }

@@ -5,7 +5,7 @@ dependencies.
 
 ```toml
 [dependencies]
-animato = { version = "1.5", features = ["path", "physics"] }
+animato = { version = "1.5.1", features = ["path", "physics"] }
 ```
 
 ## Facade Features
@@ -48,8 +48,8 @@ animato = { version = "1.5", features = ["path", "physics"] }
 Prefer focused crates for no_std:
 
 ```toml
-animato-core = { version = "1.5", default-features = false }
-animato-tween = { version = "1.5", default-features = false }
+animato-core = { version = "1.5.1", default-features = false }
+animato-tween = { version = "1.5.1", default-features = false }
 ```
 
 See [no-std.md](./no-std.md).

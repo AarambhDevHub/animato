@@ -547,6 +547,7 @@ pub enum Loop {
     Times(u32),
     Forever,
     PingPong,    // plays forward then backward, repeatedly
+    PingPongTimes(u32), // plays n single-direction ping-pong passes
 }
 ```
 
@@ -664,6 +665,9 @@ total   = duration()
 cycle_t = elapsed % (2.0 * total)
 t = if cycle_t <= total { cycle_t } else { 2.0 * total - cycle_t }
 ```
+
+`Loop::PingPongTimes(n)` uses the same reflected time, but completes after
+`n.max(1)` single-direction passes.
 
 ---
 
@@ -2368,7 +2372,7 @@ let t = Tween::new(0.0_f32, 100.0)
     .duration(1.0)
     .easing(Easing::EaseOutBack)
     .delay(0.1)
-    .looping(Loop::PingPong)
+    .looping(Loop::PingPongTimes(2))
     .build();
 ```
 

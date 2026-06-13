@@ -98,6 +98,34 @@ fn timeline_ping_pong_reflects_time() {
 }
 
 #[test]
+fn timeline_ping_pong_times_reflects_then_completes() {
+    let mut timeline = Timeline::new()
+        .add("a", tween(100.0, 1.0), At::Start)
+        .looping(Loop::PingPongTimes(2));
+    timeline.play();
+
+    timeline.update(1.25);
+    assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 75.0);
+    assert!(!timeline.is_complete());
+
+    assert!(!timeline.update(0.75));
+    assert!(timeline.is_complete());
+    assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 0.0);
+}
+
+#[test]
+fn timeline_ping_pong_times_odd_passes_end_forward() {
+    let mut timeline = Timeline::new()
+        .add("a", tween(100.0, 1.0), At::Start)
+        .looping(Loop::PingPongTimes(3));
+    timeline.play();
+
+    assert!(!timeline.update(3.0));
+    assert!(timeline.is_complete());
+    assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 100.0);
+}
+
+#[test]
 fn stagger_offsets_start_times() {
     let animations = vec![tween(10.0, 1.0), tween(10.0, 1.0), tween(10.0, 1.0)];
     let mut timeline = stagger(animations, 0.25);

@@ -51,6 +51,10 @@ tween.update(1.5);
 assert!(!tween.is_complete());
 ```
 
+Use `Loop::PingPongTimes(n)` when the count should mean single-direction
+passes. `PingPongTimes(2)` plays forward then backward and completes;
+`PingPongTimes(3)` plays forward, backward, forward and completes.
+
 ## Keyframe Track
 
 ```rust

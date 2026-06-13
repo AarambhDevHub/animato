@@ -122,6 +122,16 @@ jobs:
       - name: Build JavaScript package
         run: bash scripts/build-js-package.sh
 
+      - name: Validate generated NPM package version
+        run: |
+          set -euo pipefail
+          tag_version="${GITHUB_REF_NAME#v}"
+          package_version="$(node -p "require('./crates/animato-js/pkg/package.json').version")"
+          if [ "$tag_version" != "$package_version" ]; then
+            echo "Generated NPM package version ${package_version} does not match tag version ${tag_version}" >&2
+            exit 1
+          fi
+
       - name: Run animato-js browser tests
         run: bash scripts/wasm-pack-test-js.sh
 
@@ -254,15 +264,25 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Advanced Engine"
+          name: "Animato ${{ steps.version.outputs.TAG }} — Finite Ping-Pong Looping"
           body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Advanced Engine
+            ## Animato ${{ steps.version.outputs.TAG }} — Finite Ping-Pong Looping
 
-            Animato v1.5.0 adds advanced engine primitives across Rust and
-            JavaScript: velocity springs, damping modes, waveforms, quaternion
-            slerp, affine matrix interpolation, stagger patterns, animation
-            groups, nested timelines, and recorder export/replay while
-            preserving the stable v1 Rust API.
+            Animato v1.5.1 adds finite ping-pong playback for Rust and
+            JavaScript APIs while preserving the existing v1.5 API behavior.
+
+            ### Highlights
+
+            - `Loop::PingPongTimes(u32)` counts single-direction passes:
+              `2` means forward -> backward, and `3` means forward ->
+              backward -> forward.
+            - Finite ping-pong support is wired through `Tween`,
+              `KeyframeTrack`, and `Timeline`.
+            - JavaScript bindings support `setPingPongCount(count)` and
+              loop-mode strings like `pingPongTimes2`, `alternateTimes2`,
+              and `yoyoTimes2`.
+            - Existing `Loop::PingPong` infinite playback and `Loop::Times`
+              forward-only playback remain unchanged.
 
             ### Install
 

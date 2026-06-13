@@ -20,4 +20,9 @@ pub enum Loop {
     Forever,
     /// Play forward, then backward, then forward — forever.
     PingPong,
+    /// Play `n` single-direction ping-pong passes, then stop.
+    ///
+    /// `PingPongTimes(2)` plays forward then backward. `PingPongTimes(3)`
+    /// plays forward, backward, then forward.
+    PingPongTimes(u32),
 }

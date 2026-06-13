@@ -489,6 +489,7 @@ impl Timeline {
         match self.looping {
             Loop::Once => base,
             Loop::Times(n) => base * n.max(1) as f32,
+            Loop::PingPongTimes(n) => base * n.max(1) as f32,
             Loop::Forever | Loop::PingPong => f32::INFINITY,
         }
     }
@@ -518,6 +519,14 @@ impl Timeline {
                     base * 2.0 - cycle
                 }
             }
+            Loop::PingPongTimes(_) => {
+                let cycle = elapsed % (base * 2.0);
+                if cycle <= base {
+                    cycle
+                } else {
+                    base * 2.0 - cycle
+                }
+            }
         }
     }
 
@@ -532,6 +541,10 @@ impl Timeline {
             Loop::Times(n) => (Some(n.max(1)), base),
             Loop::Forever => (None, base),
             Loop::PingPong => (None, base * 2.0),
+            Loop::PingPongTimes(n) => {
+                let passes = n.max(1);
+                (Some(passes / 2 + passes % 2), base * 2.0)
+            }
         };
 
         if period <= 0.0 {
@@ -667,6 +680,17 @@ impl Update for Timeline {
                 }
             }
             Loop::Times(n) => {
+                let total = base * n.max(1) as f32;
+                let completed_labels =
+                    self.entry_completion_labels_between(previous_elapsed, next_elapsed, base);
+                self.elapsed = next_elapsed.min(total);
+                self.sync_to_elapsed();
+                self.fire_entry_callbacks(&completed_labels);
+                if next_elapsed >= total {
+                    return self.complete_from_update();
+                }
+            }
+            Loop::PingPongTimes(n) => {
                 let total = base * n.max(1) as f32;
                 let completed_labels =
                     self.entry_completion_labels_between(previous_elapsed, next_elapsed, base);
@@ -821,6 +845,34 @@ mod tests {
 
         assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 75.0);
         assert!(!timeline.is_complete());
+    }
+
+    #[test]
+    fn ping_pong_times_reflects_then_completes() {
+        let mut timeline = Timeline::new()
+            .add("a", tween(100.0, 1.0), At::Start)
+            .looping(Loop::PingPongTimes(2));
+        timeline.play();
+
+        timeline.update(1.25);
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 75.0);
+        assert!(!timeline.is_complete());
+
+        assert!(!timeline.update(0.75));
+        assert!(timeline.is_complete());
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 0.0);
+    }
+
+    #[test]
+    fn ping_pong_times_odd_passes_end_forward() {
+        let mut timeline = Timeline::new()
+            .add("a", tween(100.0, 1.0), At::Start)
+            .looping(Loop::PingPongTimes(3));
+        timeline.play();
+
+        assert!(!timeline.update(3.0));
+        assert!(timeline.is_complete());
+        assert_eq!(timeline.get::<Tween<f32>>("a").unwrap().value(), 100.0);
     }
 
     #[test]

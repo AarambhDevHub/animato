@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.5.0 API surface by crate. For signatures,
+This file lists the stable v1.5.1 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.5"
+animato = "1.5.1"
 ```
 
 ## animato-core
@@ -63,7 +63,7 @@ Stable public items:
 | `TweenBuilder<T>` | Consuming builder returned by `Tween::new`. |
 | `TweenState` | `Idle`, `Running`, `Paused`, `Completed`. |
 | `TweenSnapshot` | Batch-friendly read-only state view. |
-| `Loop` | `Once`, `Times`, `Forever`, `PingPong`. |
+| `Loop` | `Once`, `Times`, `Forever`, `PingPong`, `PingPongTimes`. |
 | `Keyframe<T>` | A timed value with easing to the next frame. |
 | `KeyframeTrack<T>` | Multi-stop animation track. |
 | `Waveform` | Procedural sine, sawtooth, square, triangle, and noise values. |
@@ -79,7 +79,7 @@ use animato::{Easing, Loop, Tween, Update};
 let mut tween = Tween::new(0.0_f32, 100.0)
     .duration(1.0)
     .easing(Easing::EaseInOutSine)
-    .looping(Loop::PingPong)
+    .looping(Loop::PingPongTimes(2))
     .build();
 
 tween.update(0.5);

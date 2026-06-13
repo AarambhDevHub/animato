@@ -1,6 +1,6 @@
 //! Integration test: full tween lifecycle using MockClock.
 
-use animato_core::{Easing, Update};
+use animato_core::{Easing, Playable, Update};
 use animato_driver::{Clock, MockClock};
 use animato_tween::{Loop, Tween, TweenState};
 
@@ -127,6 +127,61 @@ fn ping_pong_value_goes_up_then_down() {
     tick_n(&mut t, 30);
     let descend = t.value();
     assert!(descend > 30.0 && descend < 70.0, "descend = {}", descend);
+}
+
+#[test]
+fn ping_pong_times_2_completes_at_start() {
+    let mut t = Tween::new(0.0_f32, 100.0)
+        .duration(1.0)
+        .easing(Easing::Linear)
+        .looping(Loop::PingPongTimes(2))
+        .build();
+
+    assert!(t.update(1.5));
+    assert!(!t.is_complete());
+    assert!((t.value() - 50.0).abs() < 0.001);
+
+    assert!(!t.update(0.5));
+    assert!(t.is_complete());
+    assert!((t.value() - 0.0).abs() < 0.001);
+}
+
+#[test]
+fn ping_pong_times_3_completes_at_end() {
+    let mut t = Tween::new(0.0_f32, 100.0)
+        .duration(1.0)
+        .easing(Easing::Linear)
+        .looping(Loop::PingPongTimes(3))
+        .build();
+
+    assert!(t.update(2.5));
+    assert!(!t.is_complete());
+    assert!((t.value() - 50.0).abs() < 0.001);
+
+    assert!(!t.update(0.5));
+    assert!(t.is_complete());
+    assert!((t.value() - 100.0).abs() < 0.001);
+}
+
+#[test]
+fn ping_pong_times_seek_to_end_lands_on_final_endpoint() {
+    let mut even = Tween::new(0.0_f32, 100.0)
+        .duration(1.0)
+        .easing(Easing::Linear)
+        .looping(Loop::PingPongTimes(2))
+        .build();
+    even.seek_to(1.0);
+    assert!(even.is_complete());
+    assert!((even.value() - 0.0).abs() < 0.001);
+
+    let mut odd = Tween::new(0.0_f32, 100.0)
+        .duration(1.0)
+        .easing(Easing::Linear)
+        .looping(Loop::PingPongTimes(3))
+        .build();
+    odd.seek_to(1.0);
+    assert!(odd.is_complete());
+    assert!((odd.value() - 100.0).abs() < 0.001);
 }
 
 // ── Seek + Reverse ────────────────────────────────────────────────────────────

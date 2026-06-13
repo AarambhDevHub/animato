@@ -213,6 +213,7 @@ impl<T: Animatable> KeyframeTrack<T> {
         match self.looping {
             Loop::Once => base,
             Loop::Times(n) => base * n.max(1) as f32,
+            Loop::PingPongTimes(n) => base * n.max(1) as f32,
             Loop::Forever | Loop::PingPong => f32::INFINITY,
         }
     }
@@ -234,6 +235,14 @@ impl<T: Animatable> KeyframeTrack<T> {
             }
             Loop::Forever => self.elapsed % base,
             Loop::PingPong => {
+                let cycle = self.elapsed % (base * 2.0);
+                if cycle <= base {
+                    cycle
+                } else {
+                    base * 2.0 - cycle
+                }
+            }
+            Loop::PingPongTimes(_) => {
                 let cycle = self.elapsed % (base * 2.0);
                 if cycle <= base {
                     cycle
@@ -273,6 +282,16 @@ impl<T: Animatable> Update for KeyframeTrack<T> {
                 if self.elapsed >= total {
                     self.elapsed = total;
                     self.loop_count = n.max(1);
+                    self.complete = true;
+                    return false;
+                }
+            }
+            Loop::PingPongTimes(n) => {
+                let passes = n.max(1);
+                let total = base * passes as f32;
+                if self.elapsed >= total {
+                    self.elapsed = total;
+                    self.loop_count = passes;
                     self.complete = true;
                     return false;
                 }
@@ -406,6 +425,27 @@ mod tests {
     }
 
     #[test]
+    fn ping_pong_times_completes_at_expected_endpoint() {
+        let mut even = KeyframeTrack::new()
+            .push(0.0, 0.0_f32)
+            .push(1.0, 100.0)
+            .looping(Loop::PingPongTimes(2));
+        assert!(even.update(1.5));
+        assert_eq!(even.value(), Some(50.0));
+        assert!(!even.update(0.5));
+        assert!(even.is_complete());
+        assert_eq!(even.value(), Some(0.0));
+
+        let mut odd = KeyframeTrack::new()
+            .push(0.0, 0.0_f32)
+            .push(1.0, 100.0)
+            .looping(Loop::PingPongTimes(3));
+        assert!(!odd.update(3.0));
+        assert!(odd.is_complete());
+        assert_eq!(odd.value(), Some(100.0));
+    }
+
+    #[test]
     fn negative_dt_does_not_move() {
         let mut track = KeyframeTrack::new().push(0.0, 0.0_f32).push(1.0, 100.0);
         track.update(-1.0);
@@ -490,6 +530,15 @@ mod tests {
             .looping(Loop::PingPong);
         Playable::seek_to(&mut ping_pong, 1.0);
         assert_eq!(ping_pong.value(), Some(10.0));
+
+        let mut ping_pong_times = KeyframeTrack::new()
+            .push(0.0, 0.0_f32)
+            .push(1.0, 10.0)
+            .looping(Loop::PingPongTimes(2));
+        Playable::seek_to(&mut ping_pong_times, 1.0);
+        assert_eq!(ping_pong_times.value(), Some(0.0));
+        assert!(Playable::is_complete(&ping_pong_times));
+
         assert!(Playable::as_any(&ping_pong).is::<KeyframeTrack<f32>>());
         assert!(Playable::as_any_mut(&mut ping_pong).is::<KeyframeTrack<f32>>());
     }

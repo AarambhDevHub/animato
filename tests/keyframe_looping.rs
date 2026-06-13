@@ -45,6 +45,30 @@ fn ping_pong_track_reverses_after_duration() {
 }
 
 #[test]
+fn ping_pong_times_track_completes_at_expected_endpoint() {
+    let mut even = KeyframeTrack::new()
+        .push(0.0, 0.0_f32)
+        .push(1.0, 100.0)
+        .looping(Loop::PingPongTimes(2));
+
+    assert!(even.update(1.5));
+    assert!(!even.is_complete());
+    assert_eq!(even.value(), Some(50.0));
+    assert!(!even.update(0.5));
+    assert!(even.is_complete());
+    assert_eq!(even.value(), Some(0.0));
+
+    let mut odd = KeyframeTrack::new()
+        .push(0.0, 0.0_f32)
+        .push(1.0, 100.0)
+        .looping(Loop::PingPongTimes(3));
+
+    assert!(!odd.update(3.0));
+    assert!(odd.is_complete());
+    assert_eq!(odd.value(), Some(100.0));
+}
+
+#[test]
 fn times_loop_completes_after_requested_cycles() {
     let mut track = KeyframeTrack::new()
         .push(0.0, 0.0_f32)
@@ -66,4 +90,25 @@ fn playable_seek_uses_full_playback_duration() {
 
     track.seek_to(0.75);
     assert_eq!(track.value(), Some(50.0));
+}
+
+#[test]
+fn ping_pong_times_seek_to_end_uses_pass_count() {
+    let mut even = KeyframeTrack::new()
+        .push(0.0, 0.0_f32)
+        .push(1.0, 100.0)
+        .looping(Loop::PingPongTimes(2));
+
+    even.seek_to(1.0);
+    assert!(even.is_complete());
+    assert_eq!(even.value(), Some(0.0));
+
+    let mut odd = KeyframeTrack::new()
+        .push(0.0, 0.0_f32)
+        .push(1.0, 100.0)
+        .looping(Loop::PingPongTimes(3));
+
+    odd.seek_to(1.0);
+    assert!(odd.is_complete());
+    assert_eq!(odd.value(), Some(100.0));
 }

@@ -1,6 +1,6 @@
 # Yew Integration
 
-Animato v1.5.0 includes `animato-yew`, a Yew 0.23 integration crate for
+Animato v1.5.1 includes `animato-yew`, a Yew 0.23 integration crate for
 function components. It uses Yew `UseStateHandle<T>` values for local
 animation state and schedules `requestAnimationFrame` only while an animation is
 active.
@@ -9,7 +9,7 @@ active.
 
 ```toml
 [dependencies]
-animato = { version = "1.5", features = ["yew-csr"] }
+animato = { version = "1.5.1", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -17,7 +17,7 @@ Router and agent examples use:
 
 ```toml
 yew-router = "0.20"
-animato = { version = "1.5", features = ["yew-csr", "yew-agent"] }
+animato = { version = "1.5.1", features = ["yew-csr", "yew-agent"] }
 ```
 
 ## Hooks

@@ -272,8 +272,18 @@ impl<T: Animatable> Tween<T> {
         match self.looping {
             Loop::Once => self.delay + self.duration,
             Loop::Times(n) => self.delay + self.duration * n.max(1) as f32,
+            Loop::PingPongTimes(n) => self.delay + self.duration * n.max(1) as f32,
             Loop::Forever | Loop::PingPong => f32::INFINITY,
         }
+    }
+
+    #[inline]
+    fn complete_ping_pong_times(&mut self, passes: u32) -> bool {
+        self.loop_count = passes;
+        self.elapsed = self.duration;
+        self.ping_pong_reverse = passes % 2 == 0;
+        self.state = TweenState::Completed;
+        false
     }
 }
 
@@ -331,6 +341,15 @@ impl<T: Animatable> Update for Tween<T> {
                     self.elapsed -= self.duration;
                 }
                 Loop::PingPong => {
+                    self.elapsed -= self.duration;
+                    self.ping_pong_reverse = !self.ping_pong_reverse;
+                }
+                Loop::PingPongTimes(n) => {
+                    let passes = (*n).max(1);
+                    self.loop_count += 1;
+                    if self.loop_count >= passes {
+                        return self.complete_ping_pong_times(passes);
+                    }
                     self.elapsed -= self.duration;
                     self.ping_pong_reverse = !self.ping_pong_reverse;
                 }
@@ -420,6 +439,18 @@ impl<T: Animatable> Playable for Tween<T> {
                     cycle
                 };
                 self.state = TweenState::Running;
+            }
+            Loop::PingPongTimes(n) => {
+                let passes = n.max(1);
+                let total_anim = self.duration * passes as f32;
+                if anim_secs >= total_anim || progress >= 1.0 {
+                    self.complete_ping_pong_times(passes);
+                } else {
+                    self.loop_count = (anim_secs / self.duration) as u32;
+                    self.ping_pong_reverse = self.loop_count % 2 == 1;
+                    self.elapsed = anim_secs - self.duration * self.loop_count as f32;
+                    self.state = TweenState::Running;
+                }
             }
         }
     }
@@ -603,6 +634,36 @@ mod tests {
     }
 
     #[test]
+    fn ping_pong_times_even_passes_complete_at_start() {
+        let mut t = Tween::new(0.0_f32, 100.0)
+            .duration(1.0)
+            .easing(Easing::Linear)
+            .looping(Loop::PingPongTimes(2))
+            .build();
+
+        assert!(t.update(1.5));
+        assert_eq!(t.value(), 50.0);
+        assert!(!t.update(0.5));
+        assert!(t.is_complete());
+        assert_eq!(t.value(), 0.0);
+    }
+
+    #[test]
+    fn ping_pong_times_odd_passes_complete_at_end() {
+        let mut t = Tween::new(0.0_f32, 100.0)
+            .duration(1.0)
+            .easing(Easing::Linear)
+            .looping(Loop::PingPongTimes(3))
+            .build();
+
+        assert!(t.update(2.5));
+        assert_eq!(t.value(), 50.0);
+        assert!(!t.update(0.5));
+        assert!(t.is_complete());
+        assert_eq!(t.value(), 100.0);
+    }
+
+    #[test]
     fn reset_returns_to_idle_with_delay() {
         let mut t = Tween::new(0.0_f32, 1.0).duration(1.0).delay(0.5).build();
         t.update(2.0); // complete
@@ -695,7 +756,16 @@ mod tests {
         assert!(ping_pong.is_ping_pong_reversed());
         assert_eq!(ping_pong.value(), 10.0);
 
+        let mut ping_pong_times = Tween::new(0.0_f32, 10.0)
+            .duration(1.0)
+            .looping(Loop::PingPongTimes(2))
+            .build();
+        Playable::seek_to(&mut ping_pong_times, 1.0);
+        assert!(Playable::is_complete(&ping_pong_times));
+        assert_eq!(ping_pong_times.value(), 0.0);
+
         assert_eq!(Playable::duration(&times), 3.0);
+        assert_eq!(Playable::duration(&ping_pong_times), 2.0);
         assert!(Playable::as_any(&times).is::<Tween<f32>>());
         assert!(Playable::as_any_mut(&mut times).is::<Tween<f32>>());
         Playable::reset(&mut times);

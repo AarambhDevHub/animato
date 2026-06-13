@@ -1,6 +1,6 @@
 # Testing
 
-This is the v1.5.0 release verification set.
+This is the v1.5.1 release verification set.
 
 ## Required Local Gates
 
@@ -98,7 +98,7 @@ npm run typecheck --prefix examples/js_advanced_engine
 npm run build --prefix examples/js_advanced_engine
 ```
 
-The v1.5.0 package budget is 140 KiB gzipped WASM for the full JavaScript
+The v1.5.1 package budget is 140 KiB gzipped WASM for the full JavaScript
 surface.
 
 ## Related Docs

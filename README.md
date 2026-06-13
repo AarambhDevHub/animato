@@ -15,7 +15,7 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.5.0 API is stable. The current public crates cover easing, tweens,
+The v1.5.1 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
 first-class Leptos, Dioxus, Yew, JavaScript/WASM integration, and advanced
@@ -28,21 +28,21 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.5"
+animato = "1.5.1"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.5", features = ["path", "physics", "color"] }
+animato = { version = "1.5.1", features = ["path", "physics", "color"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.5", features = ["leptos-csr"] }
+animato = { version = "1.5.1", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -50,7 +50,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.5", features = ["dioxus-web"] }
+animato = { version = "1.5.1", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -58,7 +58,7 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.5", features = ["yew-csr"] }
+animato = { version = "1.5.1", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -80,12 +80,12 @@ For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.5", default-features = false }
-animato-tween   = { version = "1.5", default-features = false }
-animato-spring  = { version = "1.5", default-features = false }
-animato-path    = { version = "1.5", default-features = false }
-animato-physics = { version = "1.5", default-features = false }
-animato-color   = { version = "1.5", default-features = false }
+animato-core    = { version = "1.5.1", default-features = false }
+animato-tween   = { version = "1.5.1", default-features = false }
+animato-spring  = { version = "1.5.1", default-features = false }
+animato-path    = { version = "1.5.1", default-features = false }
+animato-physics = { version = "1.5.1", default-features = false }
+animato-color   = { version = "1.5.1", default-features = false }
 ```
 
 ## Quick Start

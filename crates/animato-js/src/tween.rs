@@ -205,6 +205,12 @@ impl Tween {
         lock(&self.inner).looping = Loop::PingPong;
     }
 
+    /// Use ping-pong looping for a fixed number of single-direction passes.
+    #[wasm_bindgen(js_name = setPingPongCount)]
+    pub fn set_ping_pong_count(&self, count: u32) {
+        lock(&self.inner).looping = Loop::PingPongTimes(count.max(1));
+    }
+
     /// Use infinite looping.
     #[wasm_bindgen(js_name = setForever)]
     pub fn set_forever(&self) {

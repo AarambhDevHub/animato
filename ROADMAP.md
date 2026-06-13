@@ -78,7 +78,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 - [x] `.progress() -> f32` and `.eased_progress() -> f32`
 - [x] `.is_complete()`, `.reset()`, `.seek(t: f32)`, `.reverse()`
 - [x] `.pause()` and `.resume()`
-- [x] `Loop` enum (`Once`, `Times(u32)`, `Forever`, `PingPong`)
+- [x] `Loop` enum (`Once`, `Times(u32)`, `Forever`, `PingPong`, `PingPongTimes(u32)`)
 - [x] Time scale support (`.time_scale(f32)`)
 - [x] `snap_to(value, grid)` and `round_to(value, decimals)` free functions
 - [x] `no_std` compatible — no heap allocation
