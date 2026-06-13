@@ -281,7 +281,7 @@ impl<T: Animatable> Tween<T> {
     fn complete_ping_pong_times(&mut self, passes: u32) -> bool {
         self.loop_count = passes;
         self.elapsed = self.duration;
-        self.ping_pong_reverse = passes % 2 == 0;
+        self.ping_pong_reverse = passes.is_multiple_of(2);
         self.state = TweenState::Completed;
         false
     }
