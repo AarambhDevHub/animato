@@ -17,12 +17,30 @@ struct DriverSlot {
     id: u32,
     animation: Box<dyn Update + Send>,
     active: bool,
+    label: Option<String>,
+    kind: &'static str,
+    progress: Box<dyn Fn() -> f32 + Send>,
+    state: Box<dyn Fn() -> String + Send>,
 }
 
 impl core::fmt::Debug for DriverSlot {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.debug_struct("DriverSlot").field("id", &self.id).finish()
+        f.debug_struct("DriverSlot")
+            .field("id", &self.id)
+            .field("label", &self.label)
+            .field("kind", &self.kind)
+            .finish()
     }
+}
+
+/// Snapshot metadata for JavaScript-owned rAF animations.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct RafSnapshot {
+    pub(crate) id: u32,
+    pub(crate) label: Option<String>,
+    pub(crate) kind: &'static str,
+    pub(crate) progress: f32,
+    pub(crate) state: String,
 }
 
 /// requestAnimationFrame timestamp driver for JavaScript-owned animations.
@@ -35,6 +53,7 @@ pub struct RafDriver {
     paused: bool,
     time_scale: f32,
     max_dt: f32,
+    completed_count: usize,
 }
 
 #[wasm_bindgen(js_class = RafDriver)]
@@ -49,13 +68,22 @@ impl RafDriver {
             paused: false,
             time_scale: 1.0,
             max_dt: 0.25,
+            completed_count: 0,
         }
     }
 
     /// Register a scalar tween and return its id.
     #[wasm_bindgen(js_name = addTween)]
     pub fn add_tween(&mut self, tween: &Tween) -> u32 {
-        self.add_boxed(Box::new(tween.shared()))
+        let progress_tween = tween.clone();
+        let state_tween = tween.clone();
+        self.add_boxed_with_meta(
+            Box::new(tween.shared()),
+            "tween",
+            None,
+            Box::new(move || progress_tween.progress()),
+            Box::new(move || state_tween.state()),
+        )
     }
 
     /// Register a 2D tween.
@@ -97,7 +125,27 @@ impl RafDriver {
     /// Register a scalar spring.
     #[wasm_bindgen(js_name = addSpring)]
     pub fn add_spring(&mut self, spring: &Spring) -> u32 {
-        self.add_boxed(Box::new(spring.shared()))
+        let progress_spring = spring.clone();
+        let state_spring = spring.clone();
+        self.add_boxed_with_meta(
+            Box::new(spring.shared()),
+            "spring",
+            None,
+            Box::new(move || {
+                if progress_spring.is_settled() {
+                    1.0
+                } else {
+                    0.0
+                }
+            }),
+            Box::new(move || {
+                if state_spring.is_settled() {
+                    "complete".to_owned()
+                } else {
+                    "playing".to_owned()
+                }
+            }),
+        )
     }
 
     /// Register a 2D spring.
@@ -121,7 +169,21 @@ impl RafDriver {
     /// Register a scalar keyframe track.
     #[wasm_bindgen(js_name = addKeyframes)]
     pub fn add_keyframes(&mut self, track: &KeyframeTrack) -> u32 {
-        self.add_boxed(Box::new(track.shared()))
+        let progress_track = track.clone();
+        let state_track = track.clone();
+        self.add_boxed_with_meta(
+            Box::new(track.shared()),
+            "keyframe",
+            None,
+            Box::new(move || progress_track.progress()),
+            Box::new(move || {
+                if state_track.is_complete() {
+                    "complete".to_owned()
+                } else {
+                    "playing".to_owned()
+                }
+            }),
+        )
     }
 
     /// Register a 2D keyframe track.
@@ -145,13 +207,35 @@ impl RafDriver {
     /// Register a timeline.
     #[wasm_bindgen(js_name = addTimeline)]
     pub fn add_timeline(&mut self, timeline: &Timeline) -> u32 {
-        self.add_boxed(Box::new(timeline.shared()))
+        let progress_timeline = timeline.clone();
+        let state_timeline = timeline.clone();
+        self.add_boxed_with_meta(
+            Box::new(timeline.shared()),
+            "timeline",
+            None,
+            Box::new(move || progress_timeline.progress()),
+            Box::new(move || state_timeline.state()),
+        )
     }
 
     /// Register an animation group.
     #[wasm_bindgen(js_name = addAnimationGroup)]
     pub fn add_animation_group(&mut self, group: &AnimationGroup) -> u32 {
-        self.add_boxed(Box::new(group.shared()))
+        let progress_group = group.clone();
+        let state_group = group.clone();
+        self.add_boxed_with_meta(
+            Box::new(group.shared()),
+            "group",
+            None,
+            Box::new(move || progress_group.progress()),
+            Box::new(move || {
+                if state_group.is_complete() {
+                    "complete".to_owned()
+                } else {
+                    "playing".to_owned()
+                }
+            }),
+        )
     }
 
     /// Register a motion path.
@@ -198,6 +282,9 @@ impl RafDriver {
         for slot in &mut self.slots {
             slot.active = slot.animation.update(dt);
         }
+        self.completed_count = self
+            .completed_count
+            .saturating_add(self.slots.iter().filter(|slot| !slot.active).count());
         self.slots.retain(|slot| slot.active);
     }
 
@@ -252,6 +339,58 @@ impl RafDriver {
         self.slots.len()
     }
 
+    /// Number of animations completed by this driver.
+    #[wasm_bindgen(js_name = completedCount)]
+    pub fn completed_count(&self) -> usize {
+        self.completed_count
+    }
+
+    /// Number of inspectable snapshots.
+    #[wasm_bindgen(js_name = snapshotCount)]
+    pub fn snapshot_count(&self) -> usize {
+        self.slots.len()
+    }
+
+    /// Snapshot animation id by index, or zero when out of range.
+    #[wasm_bindgen(js_name = snapshotId)]
+    pub fn snapshot_id(&self, index: usize) -> u32 {
+        self.slots.get(index).map_or(0, |slot| slot.id)
+    }
+
+    /// Snapshot label by index.
+    #[wasm_bindgen(js_name = snapshotLabel)]
+    pub fn snapshot_label(&self, index: usize) -> String {
+        self.slots
+            .get(index)
+            .and_then(|slot| slot.label.as_ref())
+            .cloned()
+            .unwrap_or_default()
+    }
+
+    /// Snapshot kind by index.
+    #[wasm_bindgen(js_name = snapshotKind)]
+    pub fn snapshot_kind(&self, index: usize) -> String {
+        self.slots
+            .get(index)
+            .map_or_else(String::new, |slot| slot.kind.to_owned())
+    }
+
+    /// Snapshot progress by index.
+    #[wasm_bindgen(js_name = snapshotProgress)]
+    pub fn snapshot_progress(&self, index: usize) -> f32 {
+        self.slots
+            .get(index)
+            .map_or(0.0, |slot| (slot.progress)().clamp(0.0, 1.0))
+    }
+
+    /// Snapshot state by index.
+    #[wasm_bindgen(js_name = snapshotState)]
+    pub fn snapshot_state(&self, index: usize) -> String {
+        self.slots
+            .get(index)
+            .map_or_else(String::new, |slot| (slot.state)())
+    }
+
     /// Whether an animation id is active.
     #[wasm_bindgen(js_name = isActive)]
     pub fn is_active(&self, id: u32) -> bool {
@@ -259,14 +398,48 @@ impl RafDriver {
     }
 
     fn add_boxed(&mut self, animation: Box<dyn Update + Send>) -> u32 {
+        self.add_boxed_with_meta(
+            animation,
+            "custom",
+            None,
+            Box::new(|| 0.0),
+            Box::new(|| "playing".to_owned()),
+        )
+    }
+
+    fn add_boxed_with_meta(
+        &mut self,
+        animation: Box<dyn Update + Send>,
+        kind: &'static str,
+        label: Option<String>,
+        progress: Box<dyn Fn() -> f32 + Send>,
+        state: Box<dyn Fn() -> String + Send>,
+    ) -> u32 {
         let id = self.next_id;
         self.next_id = self.next_id.saturating_add(1).max(1);
         self.slots.push(DriverSlot {
             id,
             animation,
             active: true,
+            label,
+            kind,
+            progress,
+            state,
         });
         id
+    }
+
+    pub(crate) fn snapshots(&self) -> Vec<RafSnapshot> {
+        self.slots
+            .iter()
+            .map(|slot| RafSnapshot {
+                id: slot.id,
+                label: slot.label.clone(),
+                kind: slot.kind,
+                progress: (slot.progress)().clamp(0.0, 1.0),
+                state: (slot.state)(),
+            })
+            .collect()
     }
 }
 

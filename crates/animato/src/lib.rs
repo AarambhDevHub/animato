@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.5.1", default-features = false }
-//! animato-tween  = { version = "1.5.1", default-features = false }
-//! animato-spring = { version = "1.5.1", default-features = false }
-//! animato-physics = { version = "1.5.1", default-features = false }
-//! animato-color = { version = "1.5.1", default-features = false }
+//! animato-core   = { version = "1.6.0", default-features = false }
+//! animato-tween  = { version = "1.6.0", default-features = false }
+//! animato-spring = { version = "1.6.0", default-features = false }
+//! animato-physics = { version = "1.6.0", default-features = false }
+//! animato-color = { version = "1.6.0", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -93,12 +93,14 @@
 //! | `dioxus` | Dioxus signal hooks, motion, presence, gestures, and native helpers |
 //! | `yew` | Yew hooks, CSS helpers, scroll, presence, FLIP lists, gestures, and agents |
 //! | `js` | WASM-to-NPM JavaScript bindings |
+//! | `devtools` | Timeline inspector, easing editor, spring visualizer, recorder controls, perf monitor |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
 // ── Core — always present ────────────────────────────────────────────────────
 pub use animato_core::{
-    Angle, Animatable, Color, Easing, Interpolate, Mat4, Playable, Quaternion, Update,
+    Angle, Animatable, AnimationIntrospection, AnimationKind, Color, Easing, Inspectable,
+    Interpolate, Mat4, Playable, PlaybackState, Quaternion, Update,
 };
 
 // ── Serde convenience re-export ─────────────────────────────────────────────
@@ -155,8 +157,8 @@ pub use palette;
 // ── Driver ───────────────────────────────────────────────────────────────────
 #[cfg(feature = "driver")]
 pub use animato_driver::{
-    AnimationDriver, AnimationId, Clock, ManualClock, MockClock, ScrollClock, ScrollDriver,
-    WallClock,
+    AnimationDriver, AnimationId, AnimationUpdateCost, Clock, DriverFrameProfile, DriverSnapshot,
+    ManualClock, MockClock, ScrollClock, ScrollDriver, WallClock,
 };
 
 #[cfg(all(feature = "driver", feature = "std"))]
@@ -218,3 +220,25 @@ pub mod js {
     //! JavaScript/WASM integration namespace.
     pub use animato_js::*;
 }
+
+// ── DevTools ────────────────────────────────────────────────────────────────
+#[cfg(feature = "devtools")]
+pub mod devtools {
+    //! DevTools integration namespace.
+    pub use animato_devtools::*;
+}
+
+#[cfg(feature = "devtools")]
+pub use animato_devtools::{
+    DevToolsState, EasingCurveEditor, PerformanceMonitor, RecorderControls, SpringVisualizer,
+    TimelineInspector,
+};
+
+#[cfg(feature = "devtools-web-panel")]
+pub use animato_devtools::DevToolsWebPanel;
+
+#[cfg(feature = "devtools-egui-panel")]
+pub use animato_devtools::DevToolsEguiPanel;
+
+#[cfg(feature = "devtools-tui-panel")]
+pub use animato_devtools::DevToolsTuiPanel;

@@ -4,7 +4,7 @@ use crate::config::SpringConfig;
 use crate::decompose::Decompose;
 use crate::spring::Spring;
 use alloc::vec::Vec;
-use animato_core::Update;
+use animato_core::{AnimationIntrospection, AnimationKind, Inspectable, PlaybackState, Update};
 use core::marker::PhantomData;
 
 /// A multi-dimensional spring that animates any type that can be decomposed
@@ -152,6 +152,23 @@ impl<T: Decompose> Update for SpringN<T> {
             s.update(dt);
         }
         !self.is_settled()
+    }
+}
+
+impl<T: Decompose> Inspectable for SpringN<T> {
+    fn introspect(&self) -> AnimationIntrospection {
+        AnimationIntrospection::new(
+            AnimationKind::Spring,
+            if self.is_settled() { 1.0 } else { 0.0 },
+            0.0,
+            None,
+            if self.is_settled() {
+                PlaybackState::Complete
+            } else {
+                PlaybackState::Playing
+            },
+            None,
+        )
     }
 }
 

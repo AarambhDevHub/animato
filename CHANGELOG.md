@@ -7,6 +7,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.6.0] — 2026-06-16 — DevTools
+
+### Added
+- `animato-devtools`: new DevTools crate with timeline inspection, easing curve editing, spring visualization, recorder controls, performance monitoring, and shared panel state.
+- `animato-core`: `AnimationKind`, `PlaybackState`, `AnimationIntrospection`, and `Inspectable` for non-breaking runtime inspection.
+- `animato-driver`: inspectable animation registration, reusable snapshots, completed-count tracking, and profiled ticks with per-animation update costs.
+- `animato-js`: JavaScript/WASM DevTools exports and `RafDriver` snapshot accessors for browser inspector UIs.
+- Examples: `examples/devtools_web_overlay`, `examples/devtools_bevy_egui`, `examples/devtools_tui`, and `examples/js_devtools`.
+- Documentation: `docs/devtools.md` and v1.6.0 GitHub release notes under `.github/release-notes/1.6.0.md`.
+
+### Changed
+- Bumped workspace crates and internal dependency requirements from `1.5.1` to `1.6.0`.
+- Updated README, API docs, JavaScript docs, examples docs, testing docs, release docs, roadmap, architecture notes, CI, and publish workflow for `v1.6.0`.
+- GitHub releases now use `body_path` release note files with generated release notes enabled.
+
+### Verification
+- `cargo check -p animato-core -p animato-tween -p animato-spring -p animato-timeline -p animato-driver -p animato-devtools --all-features`
+- `cargo check -p animato-js`
+- `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
+
 ## [1.5.1] — 2026-06-13 — Finite Ping-Pong
 
 ### Added
@@ -368,7 +388,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/AarambhDevHub/animato/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/AarambhDevHub/animato/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/AarambhDevHub/animato/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/AarambhDevHub/animato/compare/v1.3.0...v1.4.0

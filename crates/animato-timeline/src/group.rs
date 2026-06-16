@@ -3,7 +3,9 @@
 use crate::{At, Sequence, Timeline};
 use alloc::format;
 use alloc::vec::Vec;
-use animato_core::{Playable, Update};
+use animato_core::{
+    AnimationIntrospection, AnimationKind, Inspectable, Playable, PlaybackState, Update,
+};
 use animato_tween::StaggerPattern;
 use core::fmt;
 
@@ -165,6 +167,24 @@ impl Playable for AnimationGroup {
 
     fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
         self
+    }
+}
+
+impl Inspectable for AnimationGroup {
+    fn introspect(&self) -> AnimationIntrospection {
+        AnimationIntrospection::new(
+            AnimationKind::Group,
+            self.progress(),
+            self.inner.elapsed(),
+            Some(self.duration()),
+            match self.inner.state() {
+                crate::TimelineState::Idle => PlaybackState::Idle,
+                crate::TimelineState::Playing => PlaybackState::Playing,
+                crate::TimelineState::Paused => PlaybackState::Paused,
+                crate::TimelineState::Completed => PlaybackState::Complete,
+            },
+            None,
+        )
     }
 }
 

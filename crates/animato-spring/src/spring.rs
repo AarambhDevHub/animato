@@ -1,7 +1,7 @@
 //! 1D [`Spring`] — damped harmonic oscillator.
 
 use crate::config::SpringConfig;
-use animato_core::Update;
+use animato_core::{AnimationIntrospection, AnimationKind, Inspectable, PlaybackState, Update};
 
 /// Integration method for the spring ODE.
 #[derive(Clone, Debug, PartialEq)]
@@ -202,6 +202,23 @@ impl Update for Spring {
         }
         self.track_overshoot();
         !self.is_settled()
+    }
+}
+
+impl Inspectable for Spring {
+    fn introspect(&self) -> AnimationIntrospection {
+        AnimationIntrospection::new(
+            AnimationKind::Spring,
+            if self.is_settled() { 1.0 } else { 0.0 },
+            0.0,
+            None,
+            if self.is_settled() {
+                PlaybackState::Complete
+            } else {
+                PlaybackState::Playing
+            },
+            None,
+        )
     }
 }
 

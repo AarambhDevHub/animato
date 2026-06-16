@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
@@ -11,6 +11,10 @@ if (!version) {
 
 const pkgPath = resolve(root, "crates/animato-js/pkg/package.json");
 const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+const pkgDir = resolve(root, "crates/animato-js/pkg");
+
+copyFileSync(resolve(root, "LICENSE-MIT"), resolve(pkgDir, "LICENSE-MIT"));
+copyFileSync(resolve(root, "LICENSE-APACHE"), resolve(pkgDir, "LICENSE-APACHE"));
 
 Object.assign(pkg, {
   name: "@aarambhdevhub/animato-core",
@@ -30,6 +34,8 @@ Object.assign(pkg, {
     "animato_js.d.ts",
     "package.json",
     "README.md",
+    "LICENSE-MIT",
+    "LICENSE-APACHE",
   ],
   exports: {
     ".": {

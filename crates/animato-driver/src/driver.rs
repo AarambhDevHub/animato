@@ -1,6 +1,6 @@
 //! [`AnimationDriver`] — owns and ticks multiple animations simultaneously.
 
-use animato_core::Update;
+use animato_core::{AnimationIntrospection, Inspectable, Update};
 
 #[cfg(feature = "std")]
 use crate::recorder::AnimationRecorder;
@@ -11,9 +11,73 @@ use crate::recorder::AnimationRecorder;
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
 pub struct AnimationId(u64);
 
+/// Snapshot of one inspectable animation registered with [`AnimationDriver`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct DriverSnapshot {
+    /// Stable animation id returned by the driver.
+    pub id: AnimationId,
+    /// Optional user-facing label.
+    pub label: Option<String>,
+    /// Runtime state reported by the animation.
+    pub introspection: AnimationIntrospection,
+}
+
+/// Per-animation update cost produced by [`AnimationDriver::tick_profiled`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct AnimationUpdateCost {
+    /// Stable animation id returned by the driver.
+    pub id: AnimationId,
+    /// Optional user-facing label.
+    pub label: Option<String>,
+    /// Wall-clock time spent updating this animation.
+    pub update_time_ms: f32,
+}
+
+/// Timing data produced by a profiled driver tick.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DriverFrameProfile {
+    /// Delta seconds passed to the tick.
+    pub dt: f32,
+    /// Total wall-clock update time for all active animations.
+    pub total_update_time_ms: f32,
+    /// Per-animation update costs.
+    pub animation_costs: Vec<AnimationUpdateCost>,
+}
+
+enum SlotAnimation {
+    Basic(Box<dyn Update + Send>),
+    Inspectable(Box<dyn Inspectable + Send>),
+}
+
+impl SlotAnimation {
+    fn update(&mut self, dt: f32) -> bool {
+        match self {
+            Self::Basic(animation) => animation.update(dt),
+            Self::Inspectable(animation) => animation.update(dt),
+        }
+    }
+
+    fn introspect(&self) -> Option<AnimationIntrospection> {
+        match self {
+            Self::Basic(_) => None,
+            Self::Inspectable(animation) => Some(animation.introspect()),
+        }
+    }
+}
+
+impl std::fmt::Debug for SlotAnimation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Basic(_) => f.write_str("Basic(..)"),
+            Self::Inspectable(_) => f.write_str("Inspectable(..)"),
+        }
+    }
+}
+
 struct Slot {
     id: AnimationId,
-    animation: Box<dyn Update + Send>,
+    label: Option<String>,
+    animation: SlotAnimation,
     remove: bool,
     #[cfg(feature = "std")]
     recorder: Option<RecordedSampler>,
@@ -38,6 +102,7 @@ impl std::fmt::Debug for Slot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Slot")
             .field("id", &self.id)
+            .field("label", &self.label)
             .field("remove", &self.remove)
             .finish()
     }
@@ -70,6 +135,7 @@ impl std::fmt::Debug for Slot {
 pub struct AnimationDriver {
     slots: Vec<Slot>,
     next_id: u64,
+    completed_count: usize,
 }
 
 impl AnimationDriver {
@@ -78,6 +144,7 @@ impl AnimationDriver {
         Self {
             slots: Vec::new(),
             next_id: 0,
+            completed_count: 0,
         }
     }
 
@@ -90,7 +157,31 @@ impl AnimationDriver {
         self.next_id += 1;
         self.slots.push(Slot {
             id,
-            animation: Box::new(anim),
+            label: None,
+            animation: SlotAnimation::Basic(Box::new(anim)),
+            remove: false,
+            #[cfg(feature = "std")]
+            recorder: None,
+        });
+        id
+    }
+
+    /// Register an inspectable animation with a user-facing label.
+    ///
+    /// Inspectable animations can be captured by [`snapshots`](Self::snapshots)
+    /// and [`snapshots_into`](Self::snapshots_into). Ordinary animations added
+    /// through [`add`](Self::add) continue to work but do not appear in
+    /// snapshots.
+    pub fn add_inspectable<A>(&mut self, label: impl Into<String>, anim: A) -> AnimationId
+    where
+        A: Inspectable + Send + 'static,
+    {
+        let id = AnimationId(self.next_id);
+        self.next_id += 1;
+        self.slots.push(Slot {
+            id,
+            label: Some(label.into()),
+            animation: SlotAnimation::Inspectable(Box::new(anim)),
             remove: false,
             #[cfg(feature = "std")]
             recorder: None,
@@ -110,14 +201,16 @@ impl AnimationDriver {
         A: Update + Send + 'static,
         F: Fn() -> f64 + Send + 'static,
     {
+        let label = label.into();
         let id = AnimationId(self.next_id);
         self.next_id += 1;
         self.slots.push(Slot {
             id,
-            animation: Box::new(anim),
+            label: Some(label.clone()),
+            animation: SlotAnimation::Basic(Box::new(anim)),
             remove: false,
             recorder: Some(RecordedSampler {
-                label: label.into(),
+                label,
                 sample: Box::new(sampler),
             }),
         });
@@ -138,8 +231,7 @@ impl AnimationDriver {
                 slot.remove = true;
             }
         }
-        // Drain completed slots in one pass — O(n), no realloc.
-        self.slots.retain(|s| !s.remove);
+        self.drain_completed();
     }
 
     /// Advance all active animations and record sampled values after the tick.
@@ -157,7 +249,38 @@ impl AnimationDriver {
                 slot.remove = true;
             }
         }
-        self.slots.retain(|s| !s.remove);
+        self.drain_completed();
+    }
+
+    /// Advance all active animations and return wall-clock update costs.
+    pub fn tick_profiled(&mut self, dt: f32) -> DriverFrameProfile {
+        let dt = dt.max(0.0);
+        let frame_start = std::time::Instant::now();
+        let mut animation_costs = Vec::with_capacity(self.slots.len());
+
+        for slot in self.slots.iter_mut() {
+            if slot.remove {
+                continue;
+            }
+            let animation_start = std::time::Instant::now();
+            let still_running = slot.animation.update(dt);
+            let update_time_ms = animation_start.elapsed().as_secs_f32() * 1000.0;
+            animation_costs.push(AnimationUpdateCost {
+                id: slot.id,
+                label: slot.label.clone(),
+                update_time_ms,
+            });
+            if !still_running {
+                slot.remove = true;
+            }
+        }
+
+        self.drain_completed();
+        DriverFrameProfile {
+            dt,
+            total_update_time_ms: frame_start.elapsed().as_secs_f32() * 1000.0,
+            animation_costs,
+        }
     }
 
     /// Cancel an animation by id.
@@ -178,9 +301,41 @@ impl AnimationDriver {
         self.slots.len()
     }
 
+    /// Number of animations that completed naturally during driver ticks.
+    pub fn completed_count(&self) -> usize {
+        self.completed_count
+    }
+
+    /// Return snapshots for all active inspectable animations.
+    pub fn snapshots(&self) -> Vec<DriverSnapshot> {
+        let mut snapshots = Vec::new();
+        self.snapshots_into(&mut snapshots);
+        snapshots
+    }
+
+    /// Write snapshots for all active inspectable animations into a reusable buffer.
+    pub fn snapshots_into(&self, out: &mut Vec<DriverSnapshot>) {
+        out.clear();
+        out.extend(self.slots.iter().filter_map(|slot| {
+            slot.animation
+                .introspect()
+                .map(|introspection| DriverSnapshot {
+                    id: slot.id,
+                    label: slot.label.clone(),
+                    introspection,
+                })
+        }));
+    }
+
     /// `true` if the animation with the given id is still active.
     pub fn is_active(&self, id: AnimationId) -> bool {
         self.slots.iter().any(|s| s.id == id)
+    }
+
+    fn drain_completed(&mut self) {
+        let completed = self.slots.iter().filter(|slot| slot.remove).count();
+        self.completed_count = self.completed_count.saturating_add(completed);
+        self.slots.retain(|slot| !slot.remove);
     }
 }
 

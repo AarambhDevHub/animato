@@ -28,7 +28,7 @@ dependencies = [
 
 [[package]]
 name = "animato"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -44,7 +44,7 @@ dependencies = [
 
 [[package]]
 name = "animato-color"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "palette",
@@ -52,14 +52,14 @@ dependencies = [
 
 [[package]]
 name = "animato-core"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "libm",
 ]
 
 [[package]]
 name = "animato-dioxus"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-driver",
@@ -72,14 +72,14 @@ dependencies = [
 
 [[package]]
 name = "animato-driver"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
 ]
 
 [[package]]
 name = "animato-path"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -88,7 +88,7 @@ dependencies = [
 
 [[package]]
 name = "animato-physics"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "libm",
@@ -96,14 +96,14 @@ dependencies = [
 
 [[package]]
 name = "animato-spring"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
 ]
 
 [[package]]
 name = "animato-timeline"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -111,7 +111,7 @@ dependencies = [
 
 [[package]]
 name = "animato-tween"
-version = "1.5.0"
+version = "1.6.0"
 dependencies = [
  "animato-core",
 ]
@@ -199,7 +199,7 @@ dependencies = [
 
 [[package]]
 name = "autocfg"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c08606f8c3cbf4ce6ec8e28fb0014a2c086708fe954eaa885384a6165172e7e8"
 
@@ -332,7 +332,7 @@ checksum = "c8efb64bd706a16a1bdde310ae86b351e4d21550d98d056f22f8a7f7a2183fec"
 
 [[package]]
 name = "byteorder"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1fd0f2584146f6f2ef48085050886acf353beff7305ebd1ae69500e27c67f64b"
 
@@ -576,7 +576,7 @@ dependencies = [
 
 [[package]]
 name = "crc32fast"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
 dependencies = [

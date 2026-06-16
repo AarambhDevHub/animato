@@ -15,12 +15,12 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.5.1 API is stable. The current public crates cover easing, tweens,
+The v1.6.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
 first-class Leptos, Dioxus, Yew, JavaScript/WASM integration, and advanced
 engine primitives such as velocity springs, waveforms, quaternion slerp,
-animation groups, stagger patterns, and recording.
+animation groups, stagger patterns, recording, and runtime DevTools.
 
 ## Install
 
@@ -28,21 +28,21 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.5.1"
+animato = "1.6.0"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.5.1", features = ["path", "physics", "color"] }
+animato = { version = "1.6.0", features = ["path", "physics", "color"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.5.1", features = ["leptos-csr"] }
+animato = { version = "1.6.0", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -50,7 +50,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.5.1", features = ["dioxus-web"] }
+animato = { version = "1.6.0", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -58,7 +58,7 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.5.1", features = ["yew-csr"] }
+animato = { version = "1.6.0", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -80,12 +80,12 @@ For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.5.1", default-features = false }
-animato-tween   = { version = "1.5.1", default-features = false }
-animato-spring  = { version = "1.5.1", default-features = false }
-animato-path    = { version = "1.5.1", default-features = false }
-animato-physics = { version = "1.5.1", default-features = false }
-animato-color   = { version = "1.5.1", default-features = false }
+animato-core    = { version = "1.6.0", default-features = false }
+animato-tween   = { version = "1.6.0", default-features = false }
+animato-spring  = { version = "1.6.0", default-features = false }
+animato-path    = { version = "1.6.0", default-features = false }
+animato-physics = { version = "1.6.0", default-features = false }
+animato-color   = { version = "1.6.0", default-features = false }
 ```
 
 ## Quick Start
@@ -147,6 +147,7 @@ other target.
 | [`animato-dioxus`](./crates/animato-dioxus) | Dioxus signals, motion hooks, scroll, presence, lists, gestures, native helpers | wasm/std |
 | [`animato-yew`](./crates/animato-yew) | Yew hooks, CSS, scroll, presence, lists, gestures, transitions, agents | wasm/std |
 | [`animato-js`](./crates/animato-js) | WASM-to-NPM bindings for JavaScript and framework examples | wasm |
+| [`animato-devtools`](./crates/animato-devtools) | Timeline inspector, easing editor, spring visualizer, recorder controls, perf monitor | std/wasm |
 | [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
 
 ## Feature Flags
@@ -181,6 +182,10 @@ other target.
 | `yew-ssr` | `yew` plus Yew SSR mode |
 | `yew-agent` | `yew` plus serializable `f32` animation agent coordination |
 | `js` | JavaScript/WASM bindings namespace for package builds |
+| `devtools` | Timeline inspector, easing editor, spring visualizer, recorder controls, perf monitor |
+| `devtools-web-panel` | `devtools` plus web overlay adapter |
+| `devtools-egui-panel` | `devtools` plus desktop panel adapter |
+| `devtools-tui-panel` | `devtools` plus TUI panel adapter |
 | `serde` | Serialization for supported public types |
 | `tokio` | `Timeline::wait()` async completion helper |
 
@@ -205,6 +210,14 @@ cargo run --example gpu_particles --features gpu
 cargo run --example bevy_transform --features bevy
 cargo run --example tui_progress
 cargo run --example tui_spinner
+```
+
+DevTools examples:
+
+```sh
+cargo check --manifest-path examples/devtools_web_overlay/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/devtools_bevy_egui/Cargo.toml
+cargo run --manifest-path examples/devtools_tui/Cargo.toml
 ```
 
 WASM example:
@@ -261,11 +274,13 @@ npm ci --prefix examples/js_angular_color
 npm run build --prefix examples/js_angular_color
 npm ci --prefix examples/js_advanced_engine
 npm run build --prefix examples/js_advanced_engine
+npm ci --prefix examples/js_devtools
+npm run build --prefix examples/js_devtools
 ```
 
 ## Documentation
 
-The v1.5 documentation lives in [`docs/`](./docs/):
+The v1.6 documentation lives in [`docs/`](./docs/):
 
 | Start here | Details |
 |------------|---------|
@@ -279,15 +294,16 @@ The v1.5 documentation lives in [`docs/`](./docs/):
 | [Yew](./docs/yew.md) | Yew hooks, components, gestures, and agent coordination. |
 | [JavaScript](./docs/javascript.md) | NPM package API and JavaScript framework examples. |
 | [Advanced Engine](./docs/advanced-engine.md) | Velocity springs, waveforms, slerp, groups, staggers, recorder. |
+| [DevTools](./docs/devtools.md) | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
-| [Release](./docs/release.md) | v1.5 publishing checklist. |
+| [Release](./docs/release.md) | v1.6 publishing checklist. |
 
 The generated Rust API docs are available on
 [docs.rs/animato](https://docs.rs/animato).
 
 ## Testing
 
-The v1.5 release gate is:
+The v1.6 release gate is:
 
 ```sh
 cargo fmt --check
@@ -302,6 +318,7 @@ cargo check -p animato-dioxus
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel
 bash scripts/build-js-package.sh
 cargo bench --workspace --no-run
 ```

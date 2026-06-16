@@ -58,11 +58,12 @@ checksum = "4b46cbb362ab8752921c97e041f5e366ee6297bd428a31275b9fcf1e380f7299"
 
 [[package]]
 name = "animato"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-bevy",
  "animato-color",
  "animato-core",
+ "animato-devtools",
  "animato-dioxus",
  "animato-driver",
  "animato-gpu",
@@ -88,7 +89,7 @@ dependencies = [
 
 [[package]]
 name = "animato-bevy"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-spring",
@@ -102,7 +103,7 @@ dependencies = [
 
 [[package]]
 name = "animato-color"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "palette",
@@ -111,15 +112,28 @@ dependencies = [
 
 [[package]]
 name = "animato-core"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "libm",
  "serde",
 ]
 
 [[package]]
+name = "animato-devtools"
+version = "1.6.0"
+dependencies = [
+ "animato-core",
+ "animato-driver",
+ "animato-spring",
+ "animato-timeline",
+ "animato-tween",
+ "crossterm",
+ "ratatui",
+]
+
+[[package]]
 name = "animato-dioxus"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -139,7 +153,7 @@ dependencies = [
 
 [[package]]
 name = "animato-driver"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -147,7 +161,7 @@ dependencies = [
 
 [[package]]
 name = "animato-gpu"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -158,9 +172,10 @@ dependencies = [
 
 [[package]]
 name = "animato-js"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
+ "animato-devtools",
  "animato-driver",
  "animato-path",
  "animato-physics",
@@ -177,7 +192,7 @@ dependencies = [
 
 [[package]]
 name = "animato-leptos"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-color",
  "animato-core",
@@ -197,7 +212,7 @@ dependencies = [
 
 [[package]]
 name = "animato-path"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -207,7 +222,7 @@ dependencies = [
 
 [[package]]
 name = "animato-physics"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "libm",
@@ -216,7 +231,7 @@ dependencies = [
 
 [[package]]
 name = "animato-spring"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -224,7 +239,7 @@ dependencies = [
 
 [[package]]
 name = "animato-timeline"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-tween",
@@ -234,7 +249,7 @@ dependencies = [
 
 [[package]]
 name = "animato-tween"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "serde",
@@ -242,7 +257,7 @@ dependencies = [
 
 [[package]]
 name = "animato-wasm"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-core",
  "animato-driver",
@@ -254,7 +269,7 @@ dependencies = [
 
 [[package]]
 name = "animato-yew"
-version = "1.5.1"
+version = "1.6.0"
 dependencies = [
  "animato-color",
  "animato-core",

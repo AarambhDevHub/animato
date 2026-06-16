@@ -46,5 +46,8 @@ pub mod value;
 
 // Flatten the most important items to the crate root for convenience.
 pub use easing::Easing;
-pub use traits::{Animatable, Interpolate, Playable, Update};
+pub use traits::{
+    Animatable, AnimationIntrospection, AnimationKind, Inspectable, Interpolate, Playable,
+    PlaybackState, Update,
+};
 pub use value::{Angle, Color, Mat4, Quaternion};

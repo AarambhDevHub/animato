@@ -2,7 +2,10 @@
 
 use crate::loop_mode::Loop;
 use alloc::vec::Vec;
-use animato_core::{Animatable, Easing, Playable, Update};
+use animato_core::{
+    Animatable, AnimationIntrospection, AnimationKind, Easing, Inspectable, Playable,
+    PlaybackState, Update,
+};
 use core::cmp::Ordering;
 
 /// A value sample in a [`KeyframeTrack`].
@@ -344,6 +347,36 @@ impl<T: Animatable> Playable for KeyframeTrack<T> {
     fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
         self
     }
+}
+
+impl<T: Animatable> Inspectable for KeyframeTrack<T> {
+    fn introspect(&self) -> AnimationIntrospection {
+        let total = self.playback_duration();
+        AnimationIntrospection::new(
+            AnimationKind::Keyframe,
+            self.progress(),
+            self.elapsed,
+            total.is_finite().then_some(total),
+            if self.is_complete() {
+                PlaybackState::Complete
+            } else if self.elapsed == 0.0 {
+                PlaybackState::Idle
+            } else {
+                PlaybackState::Playing
+            },
+            current_easing(self).cloned(),
+        )
+    }
+}
+
+fn current_easing<T: Animatable>(track: &KeyframeTrack<T>) -> Option<&Easing> {
+    if track.frames.len() < 2 {
+        return None;
+    }
+    let time = track.active_time();
+    let upper = track.frames.partition_point(|frame| frame.time <= time);
+    let index = upper.saturating_sub(1).min(track.frames.len() - 2);
+    Some(&track.frames[index].easing)
 }
 
 #[cfg(test)]

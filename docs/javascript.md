@@ -1,6 +1,6 @@
 # JavaScript
 
-Animato v1.5.1 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
+Animato v1.6.0 publishes the WASM package as `@aarambhdevhub/animato-core`. It exposes the
 renderer-agnostic animation engines to JavaScript and TypeScript while keeping
 framework adapters in app code.
 
@@ -57,7 +57,8 @@ Core animation:
 | `TweenBatch` | Batch scalar tween evaluation. |
 | `Angle`, `Quaternion`, `Mat4` | Math-correct angle, rotation, and matrix value wrappers. |
 | `AngleTween`, `QuaternionTween`, `Mat4Tween` | Advanced value tweens with shortest-path/slerp/decompose interpolation. |
-| `Waveform`, `StaggerPattern`, `AnimationGroup`, `AnimationRecorder` | v1.5 advanced engine helpers. |
+| `Waveform`, `StaggerPattern`, `AnimationGroup`, `AnimationRecorder` | Advanced engine helpers. |
+| `TimelineInspector`, `EasingCurveEditor`, `SpringVisualizer`, `PerformanceMonitor`, `DevToolsState` | DevTools inspection and tuning helpers. |
 
 Motion, input, color, and DOM helpers:
 
@@ -87,9 +88,29 @@ The parser accepts camelCase, kebab-case, and lowercase names such as
 `cubicBezier(0.4, 0, 0.2, 1)`. Invalid names or malformed arguments throw a
 JavaScript error with a short message.
 
+## DevTools
+
+```js
+import init, { EasingCurveEditor, RafDriver, TimelineInspector, Tween } from "@aarambhdevhub/animato-core";
+
+await init();
+
+const tween = new Tween(0, 1, 1);
+const driver = new RafDriver();
+driver.addTween(tween);
+driver.tick(1000);
+driver.tick(1250);
+
+const inspector = new TimelineInspector();
+inspector.captureRafDriver(driver);
+
+const editor = new EasingCurveEditor("easeOutCubic");
+console.log(inspector.snapshotKind(0), editor.samplePoints());
+```
+
 ## Examples
 
-The v1.5.1 repository includes source examples for the common JS entry points:
+The v1.6.0 repository includes source examples for the common JS entry points:
 
 ```sh
 npm ci --prefix examples/js_vanilla_timeline
@@ -109,6 +130,9 @@ npm run build --prefix examples/js_angular_color
 
 npm ci --prefix examples/js_advanced_engine
 npm run build --prefix examples/js_advanced_engine
+
+npm ci --prefix examples/js_devtools
+npm run build --prefix examples/js_devtools
 ```
 
 Each example imports `@aarambhdevhub/animato-core` directly. Dedicated framework adapter
@@ -129,6 +153,7 @@ The package build rewrites the generated `wasm-pack` metadata to publish as
 
 - [Installation](./installation.md)
 - [Advanced Engine](./advanced-engine.md)
+- [DevTools](./devtools.md)
 - [Examples](./examples.md)
 - [Testing](./testing.md)
 - [Release](./release.md)

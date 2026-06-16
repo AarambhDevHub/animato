@@ -37,6 +37,14 @@ cd examples/wasm_counter
 wasm-pack build --target web
 ```
 
+## DevTools Examples
+
+```sh
+cargo check --manifest-path examples/devtools_web_overlay/Cargo.toml --target wasm32-unknown-unknown
+cargo check --manifest-path examples/devtools_bevy_egui/Cargo.toml
+cargo run --manifest-path examples/devtools_tui/Cargo.toml
+```
+
 ## Leptos Examples
 
 ```sh
@@ -131,6 +139,9 @@ npm run build --prefix examples/js_angular_color
 
 npm ci --prefix examples/js_advanced_engine
 npm run build --prefix examples/js_advanced_engine
+
+npm ci --prefix examples/js_devtools
+npm run build --prefix examples/js_devtools
 ```
 
 ## Compile Examples Without Running
@@ -143,5 +154,6 @@ cargo test -p animato --all-features --examples
 
 - [Getting Started](./getting-started.md)
 - [JavaScript](./javascript.md)
+- [DevTools](./devtools.md)
 - [Recipes](./recipes.md)
 - [Testing](./testing.md)

@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.5.1 API surface by crate. For signatures,
+This file lists the stable v1.6.0 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.5.1"
+animato = "1.6.0"
 ```
 
 ## animato-core
@@ -25,6 +25,8 @@ Stable public items:
 | `Animatable` | Blanket marker for `Interpolate + Clone + 'static`. |
 | `Update` | Advance state by `dt` seconds. |
 | `Playable` | Object-safe animation abstraction for composition. |
+| `Inspectable` | Object-safe runtime inspection abstraction for DevTools. |
+| `AnimationKind`, `PlaybackState`, `AnimationIntrospection` | Shared inspection state model. |
 | `Easing` | 38 named and parameterized easing variants plus `Custom`. |
 | `easing::*` | Free easing functions such as `ease_out_cubic`. |
 | `Angle` | Shortest-path angle interpolation. |
@@ -237,6 +239,7 @@ Stable public items:
 | Item | Purpose |
 |------|---------|
 | `AnimationDriver`, `AnimationId` | Own and tick many `Update` values. |
+| `DriverSnapshot`, `DriverFrameProfile`, `AnimationUpdateCost` | DevTools snapshot and profiling data. |
 | `Clock` | Abstract source of frame delta. |
 | `WallClock`, `ManualClock`, `MockClock` | Hosted, manual, and test clocks. |
 | `ScrollDriver`, `ScrollClock` | Drive animations from scroll position. |
@@ -252,6 +255,17 @@ let mut driver = AnimationDriver::new();
 let id = driver.add(Tween::new(0.0_f32, 1.0).duration(1.0).easing(Easing::Linear).build());
 driver.tick(1.0);
 assert!(!driver.is_active(id));
+```
+
+Inspectable animations can be registered for DevTools:
+
+```rust
+use animato::{AnimationDriver, Tween};
+
+let mut driver = AnimationDriver::new();
+driver.add_inspectable("opacity", Tween::new(0.0_f32, 1.0).duration(1.0).build());
+driver.tick(0.5);
+assert_eq!(driver.snapshots().len(), 1);
 ```
 
 ## animato-gpu
@@ -357,6 +371,39 @@ Stable public items include `use_tween`, `use_spring`, `use_timeline`,
 
 Use [yew.md](./yew.md) for app setup and examples.
 
+## animato-devtools
+
+Feature: `devtools`, with optional panel features `devtools-web-panel`,
+`devtools-egui-panel`, and `devtools-tui-panel`.
+
+Stable public items:
+
+| Item | Purpose |
+|------|---------|
+| `TimelineInspector`, `AnimationSnapshot` | Capture active inspectable animations from `AnimationDriver`. |
+| `EasingCurveEditor` | Generate easing samples, compare curves, and edit cubic-bezier points. |
+| `SpringVisualizer`, `SpringFrame` | Simulate springs and expose position/velocity history. |
+| `RecorderControls` | Start, stop, clear, export, import, and replay recordings. |
+| `PerformanceMonitor`, `AnimationCostRecord` | Rolling FPS, frame budget, and per-animation update costs. |
+| `DevToolsState` | Shared visibility/state model for panel adapters. |
+| `DevToolsWebPanel`, `DevToolsEguiPanel`, `DevToolsTuiPanel` | Optional panel adapters. |
+
+Example:
+
+```rust
+use animato::{AnimationDriver, TimelineInspector, Tween};
+
+let mut driver = AnimationDriver::new();
+driver.add_inspectable("fade", Tween::new(0.0_f32, 1.0).duration(1.0).build());
+driver.tick(0.25);
+
+let mut inspector = TimelineInspector::new();
+inspector.capture(&driver);
+assert_eq!(inspector.snapshots().len(), 1);
+```
+
+Use [devtools.md](./devtools.md) for setup and examples.
+
 ## animato-js
 
 Feature: `js` on the Rust facade; JavaScript apps install `@aarambhdevhub/animato-core`.
@@ -368,8 +415,9 @@ Stable JavaScript exports include `Tween`, `Tween2D`, `Tween3D`, `Tween4D`,
 `DragState`, `GestureRecognizer`, `ColorTween`, `ScrollSmoother`,
 `FlipAnimation`, `LayoutAnimator`, `SplitText`, `Draggable`, `Observer`, and
 `TweenBatch`, `Angle`, `Quaternion`, `Mat4`, `AngleTween`, `QuaternionTween`,
-`Mat4Tween`, `Waveform`, `StaggerPattern`, `AnimationGroup`, and
-`AnimationRecorder`.
+`Mat4Tween`, `Waveform`, `StaggerPattern`, `AnimationGroup`,
+`AnimationRecorder`, `TimelineInspector`, `EasingCurveEditor`,
+`SpringVisualizer`, `PerformanceMonitor`, and `DevToolsState`.
 
 Utility exports include `version`, `initAnimato`, `availableEasings`, `ease`,
 `parseEasing`, `snapTo`, `roundTo`, and `interpolateColor`.

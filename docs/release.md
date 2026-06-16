@@ -29,6 +29,7 @@ animato-bevy
 animato-leptos
 animato-dioxus
 animato-yew
+animato-devtools
 animato-js
 animato
 ```
@@ -36,18 +37,21 @@ animato
 ## Tag
 
 ```sh
-git tag v1.5.1
-git push origin v1.5.1
+git tag v1.6.0
+git push origin v1.6.0
 ```
 
-The publish workflow validates that `v1.5.1` matches the workspace package
-version `1.5.1`.
+The publish workflow validates that `v1.6.0` matches the workspace package
+version `1.6.0`.
 
 The NPM publish workflow also validates the tag, builds `@aarambhdevhub/animato-core`, checks
 the package size budget, skips already-published versions, and publishes with
 `NPM_TOKEN`.
 
 ## GitHub Release
+
+GitHub release bodies are stored under `.github/release-notes/` and consumed
+by `.github/workflows/publish.yml` through `body_path`.
 
 The release notes must include:
 

@@ -38,7 +38,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.3.0` | Yew | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | ✅ |
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | ✅ |
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | ✅ |
-| `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | 📋 |
+| `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | ✅ |
 
 ---
 
@@ -802,61 +802,61 @@ All enhancements go into existing crates as backward-compatible additions.
 ### Deliverables
 
 **`animato-devtools` — timeline inspector**
-- [ ] `TimelineInspector` — hooks into `AnimationDriver` to capture all running animation state
-- [ ] `AnimationSnapshot` struct: id, label, kind (Tween/Spring/Keyframe/Timeline), progress, elapsed, duration, state, easing
-- [ ] `capture(driver)` — snapshot all running animations in one call
-- [ ] `active_count()` / `completed_count()` — quick status queries
-- [ ] Visual progress bars with color-coded animation types
+- [x] `TimelineInspector` — hooks into `AnimationDriver` to capture all running animation state
+- [x] `AnimationSnapshot` struct: id, label, kind (Tween/Spring/Keyframe/Timeline), progress, elapsed, duration, state, easing
+- [x] `capture(driver)` — snapshot all running animations in one call
+- [x] `active_count()` / `completed_count()` — quick status queries
+- [x] Visual progress bars with color-coded animation types
 
 **`animato-devtools` — easing curve editor**
-- [ ] `EasingCurveEditor` — renders easing curve as (t, value) sample points
-- [ ] All 38 named easings selectable from a dropdown
-- [ ] Custom cubic-bezier control point dragging with live preview
-- [ ] Side-by-side comparison of two easings
-- [ ] Copy-to-clipboard of easing code: `Easing::CubicBezier(x1, y1, x2, y2)`
+- [x] `EasingCurveEditor` — renders easing curve as (t, value) sample points
+- [x] All 38 named easings selectable from a dropdown
+- [x] Custom cubic-bezier control point dragging with live preview
+- [x] Side-by-side comparison of two easings
+- [x] Copy-to-clipboard of easing code: `Easing::CubicBezier(x1, y1, x2, y2)`
 
 **`animato-devtools` — spring visualizer**
-- [ ] `SpringVisualizer` — simulates a spring and records position/velocity history
-- [ ] Real-time graph rendering (position over time, velocity over time)
-- [ ] Interactive sliders for stiffness, damping, mass
-- [ ] Preset switcher: gentle, wobbly, stiff, slow, snappy
-- [ ] Displays: settle time, overshoot percentage, oscillation count
+- [x] `SpringVisualizer` — simulates a spring and records position/velocity history
+- [x] Real-time graph rendering (position over time, velocity over time)
+- [x] Interactive sliders for stiffness, damping, mass
+- [x] Preset switcher: gentle, wobbly, stiff, slow, snappy
+- [x] Displays: settle time, overshoot percentage, oscillation count
 
 **`animato-devtools` — animation recorder**
-- [ ] Integrates with `AnimationRecorder` from v1.5.0 `animato-driver`
-- [ ] UI controls: start/stop recording, clear, export JSON, export binary
-- [ ] Visual playback scrubber for recorded sequences
-- [ ] Frame-by-frame stepping for debugging timing issues
+- [x] Integrates with `AnimationRecorder` from v1.5.0 `animato-driver`
+- [x] UI controls: start/stop recording, clear, export JSON, export binary
+- [x] Visual playback scrubber for recorded sequences
+- [x] Frame-by-frame stepping for debugging timing issues
 
 **`animato-devtools` — performance monitor**
-- [ ] `PerformanceMonitor` — rolling window FPS, avg/max frame time, budget usage
-- [ ] Per-animation update cost breakdown
-- [ ] Alert when frame budget exceeds 100% (dropped frames)
-- [ ] History graph of FPS over time
+- [x] `PerformanceMonitor` — rolling window FPS, avg/max frame time, budget usage
+- [x] Per-animation update cost breakdown
+- [x] Alert when frame budget exceeds 100% (dropped frames)
+- [x] History graph of FPS over time
 
 **`animato-devtools` — rendering backends**
-- [ ] `DevToolsWebPanel` — floating overlay panel for web apps (WASM), toggle with keyboard shortcut
-- [ ] `DevToolsEguiPanel` — egui window that integrates into Bevy/desktop apps
-- [ ] `DevToolsTuiPanel` — ratatui-based panel for terminal apps with sparkline graphs
-- [ ] All three backends share the same `DevToolsState` data model
+- [x] `DevToolsWebPanel` — floating overlay panel for web apps (WASM), toggle with keyboard shortcut
+- [x] `DevToolsEguiPanel` — egui window that integrates into Bevy/desktop apps
+- [x] `DevToolsTuiPanel` — ratatui-based panel for terminal apps with sparkline graphs
+- [x] All three backends share the same `DevToolsState` data model
 
 **`animato` facade**
-- [ ] `devtools` feature flag
-- [ ] Re-exports all `animato-devtools` public APIs
+- [x] `devtools` feature flag
+- [x] Re-exports all `animato-devtools` public APIs
 
 **Documentation & Examples**
-- [ ] `docs/devtools.md` — DevTools integration guide (web + desktop + TUI)
-- [ ] `examples/devtools_web_overlay/` — Leptos app with DevTools panel open
-- [ ] `examples/devtools_bevy_egui/` — Bevy app with egui DevTools panel
-- [ ] `examples/devtools_tui/` — terminal app with ratatui DevTools panel
+- [x] `docs/devtools.md` — DevTools integration guide (web + desktop + TUI)
+- [x] `examples/devtools_web_overlay/` — web overlay app with DevTools panel open
+- [x] `examples/devtools_bevy_egui/` — Bevy app with egui DevTools panel
+- [x] `examples/devtools_tui/` — terminal app with ratatui DevTools panel
 
 **Testing**
-- [ ] TimelineInspector: captures correct snapshot count, progress values, state transitions
-- [ ] EasingCurveEditor: sample endpoints (0,0) and (1,1), cubic-bezier control point updates
-- [ ] SpringVisualizer: simulate produces correct frame count, settle time calculation
-- [ ] AnimationRecorder integration: record → export → import → replay round-trip
-- [ ] PerformanceMonitor: FPS calculation accuracy, budget usage bounds
-- [ ] WASM compile check: `cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel`
+- [x] TimelineInspector: captures correct snapshot count, progress values, state transitions
+- [x] EasingCurveEditor: sample endpoints (0,0) and (1,1), cubic-bezier control point updates
+- [x] SpringVisualizer: simulate produces correct frame count, settle time calculation
+- [x] AnimationRecorder integration: record → export → import → replay round-trip
+- [x] PerformanceMonitor: FPS calculation accuracy, budget usage bounds
+- [x] WASM compile check: `cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel`
 
 ---
 
@@ -882,10 +882,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.5 stable API and open focused issues for bugs, documentation gaps, or post-1.5 feature proposals.
+The best way to contribute right now is to use the v1.6 stable API and open focused issues for bugs, documentation gaps, or post-1.6 feature proposals.
 
 ---
 
-*Roadmap version: 1.6.0 — last updated May 2026*  
-*v1.5.0 Advanced Engine shipped — DevTools work remains future scope*  
+*Roadmap version: 1.6.0 — last updated June 2026*
+*v1.6.0 DevTools shipped — post-1.6 ideas remain future scope*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

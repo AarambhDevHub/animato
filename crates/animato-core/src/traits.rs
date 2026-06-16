@@ -5,6 +5,7 @@
 //! - [`Animatable`] — blanket marker for any `Interpolate + Clone + 'static` type
 //! - [`Update`] — anything that advances through time when given a `dt`
 
+use crate::easing::Easing;
 use crate::math::round;
 use core::any::Any;
 
@@ -98,6 +99,90 @@ pub trait Update {
     ///
     /// Returns `true` while still running, `false` when complete.
     fn update(&mut self, dt: f32) -> bool;
+}
+
+/// High-level animation category reported to DevTools and inspectors.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum AnimationKind {
+    /// A tween from one value to another.
+    Tween,
+    /// A damped spring animation.
+    Spring,
+    /// A keyframe track.
+    Keyframe,
+    /// A composed timeline.
+    Timeline,
+    /// A grouped animation.
+    Group,
+    /// A custom user animation.
+    Custom,
+}
+
+/// Coarse playback state reported by inspectable animations.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub enum PlaybackState {
+    /// Waiting to start or reset to the beginning.
+    Idle,
+    /// Actively advancing.
+    Playing,
+    /// Paused mid-playback.
+    Paused,
+    /// Finished or settled.
+    Complete,
+}
+
+/// Renderer-agnostic runtime state for a single animation.
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct AnimationIntrospection {
+    /// High-level animation category.
+    pub kind: AnimationKind,
+    /// Normalized progress in `[0.0, 1.0]` when available.
+    pub progress: f32,
+    /// Elapsed seconds reported by the animation.
+    pub elapsed: f32,
+    /// Finite duration in seconds, or `None` for unbounded animations such as springs.
+    pub duration: Option<f32>,
+    /// Coarse playback state.
+    pub state: PlaybackState,
+    /// Active easing curve when the animation has one.
+    pub easing: Option<Easing>,
+}
+
+impl AnimationIntrospection {
+    /// Create a sanitized introspection record.
+    pub fn new(
+        kind: AnimationKind,
+        progress: f32,
+        elapsed: f32,
+        duration: Option<f32>,
+        state: PlaybackState,
+        easing: Option<Easing>,
+    ) -> Self {
+        Self {
+            kind,
+            progress: progress.clamp(0.0, 1.0),
+            elapsed: elapsed.max(0.0),
+            duration: duration
+                .filter(|value| value.is_finite())
+                .map(|value| value.max(0.0)),
+            state,
+            easing,
+        }
+    }
+}
+
+/// Animation interface for DevTools and runtime inspectors.
+///
+/// This extends [`Update`] with read-only runtime state. It is implemented by
+/// Animato's built-in animation types and can be implemented by custom
+/// animations that want to participate in [`AnimationDriver`](https://docs.rs/animato-driver)
+/// snapshots.
+pub trait Inspectable: Update {
+    /// Return a compact, allocation-free snapshot of the current animation state.
+    fn introspect(&self) -> AnimationIntrospection;
 }
 
 /// Object-safe animation interface used by composition containers.

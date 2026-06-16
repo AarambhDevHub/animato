@@ -41,6 +41,10 @@ yew-hydration = ["yew", "animato-yew/hydration"]
 yew-ssr  = ["yew", "animato-yew/ssr"]
 yew-agent = ["yew", "animato-yew/agent"]
 js       = ["dep:animato-js"]
+devtools = ["dep:animato-devtools"]
+devtools-web-panel = ["devtools", "animato-devtools/web-panel"]
+devtools-egui-panel = ["devtools", "animato-devtools/egui-panel"]
+devtools-tui-panel = ["devtools", "animato-devtools/tui-panel"]
 tokio    = ["timeline", "animato-timeline/tokio"]
 serde    = [
     "dep:serde",
@@ -69,6 +73,7 @@ animato-leptos   = { workspace = true, optional = true }
 animato-dioxus   = { workspace = true, optional = true }
 animato-yew      = { workspace = true, optional = true }
 animato-js       = { workspace = true, optional = true }
+animato-devtools = { workspace = true, optional = true }
 palette          = { workspace = true, optional = true }
 serde            = { workspace = true, optional = true }
 
@@ -89,6 +94,7 @@ animato-leptos = { workspace = true }
 animato-dioxus = { workspace = true }
 animato-yew    = { workspace = true }
 animato-js     = { workspace = true }
+animato-devtools = { workspace = true }
 bevy_app       = { workspace = true }
 bevy_ecs       = { workspace = true }
 bevy_time      = { workspace = true }
@@ -194,6 +200,11 @@ required-features = ["gpu"]
 name = "advanced_engine"
 path = "../../tests/advanced_engine.rs"
 required-features = ["tween", "timeline", "spring", "driver"]
+
+[[test]]
+name = "devtools_facade"
+path = "../../tests/devtools_facade.rs"
+required-features = ["devtools", "tween", "driver"]
 
 # ── Benchmarks ────────────────────────────────────────────────────────────────
 [[bench]]

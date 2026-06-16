@@ -225,6 +225,9 @@ jobs:
       - name: Check animato-yew CSR
         run: cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 
+      - name: Check animato-devtools web panel
+        run: cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel
+
       - name: Check Leptos examples
         run: |
           cargo check --manifest-path examples/leptos_basic_tween/Cargo.toml --target wasm32-unknown-unknown
@@ -312,7 +315,8 @@ jobs:
             examples/js_svelte_spring \
             examples/js_vue_motion \
             examples/js_angular_color \
-            examples/js_advanced_engine
+            examples/js_advanced_engine \
+            examples/js_devtools
           do
             npm ci --prefix "$example"
             npm run typecheck --prefix "$example"
@@ -357,6 +361,47 @@ jobs:
           cargo check --manifest-path examples/dioxus_desktop_spring/Cargo.toml
           cargo check --manifest-path examples/dioxus_cross_platform/Cargo.toml --no-default-features --features desktop
           cargo check --manifest-path examples/dioxus_tui_progress/Cargo.toml
+
+  devtools:
+    name: DevTools
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-devtools-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-devtools-
+            ${{ runner.os }}-cargo-
+
+      - name: Install Dioxus Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libxdo-dev
+
+      - name: Check and test animato-devtools
+        run: |
+          cargo check -p animato-devtools --all-features
+          cargo test -p animato-devtools --all-features
+          cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel
+
+      - name: Check DevTools examples
+        run: |
+          cargo check --manifest-path examples/devtools_web_overlay/Cargo.toml --target wasm32-unknown-unknown
+          cargo check --manifest-path examples/devtools_bevy_egui/Cargo.toml
+          cargo check --manifest-path examples/devtools_tui/Cargo.toml
 
   coverage:
     name: Coverage

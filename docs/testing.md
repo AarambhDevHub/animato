@@ -1,6 +1,6 @@
 # Testing
 
-This is the v1.5.1 release verification set.
+This is the v1.6.0 release verification set.
 
 ## Required Local Gates
 
@@ -17,6 +17,9 @@ cargo check -p animato-dioxus
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+cargo check -p animato-devtools --all-features
+cargo test -p animato-devtools --all-features
+cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel
 bash scripts/build-js-package.sh
 cargo bench --workspace --no-run
 ```
@@ -67,6 +70,7 @@ cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel
 cargo check --manifest-path examples/yew_basic_tween/Cargo.toml --target wasm32-unknown-unknown
 cargo check --manifest-path examples/yew_scroll_trigger/Cargo.toml --target wasm32-unknown-unknown
 cargo check --manifest-path examples/yew_animated_list/Cargo.toml --target wasm32-unknown-unknown
@@ -96,10 +100,12 @@ npm run typecheck --prefix examples/js_angular_color
 npm run build --prefix examples/js_angular_color
 npm run typecheck --prefix examples/js_advanced_engine
 npm run build --prefix examples/js_advanced_engine
+npm run typecheck --prefix examples/js_devtools
+npm run build --prefix examples/js_devtools
 ```
 
-The v1.5.1 package budget is 140 KiB gzipped WASM for the full JavaScript
-surface.
+The v1.6.0 package budget is 150 KiB gzipped WASM for the full JavaScript
+surface, including the DevTools exports.
 
 ## Related Docs
 

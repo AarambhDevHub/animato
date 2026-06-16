@@ -3,7 +3,9 @@
 use alloc::boxed::Box;
 use alloc::string::String;
 use alloc::vec::Vec;
-use animato_core::{Playable, Update};
+use animato_core::{
+    AnimationIntrospection, AnimationKind, Inspectable, Playable, PlaybackState, Update,
+};
 use animato_tween::Loop;
 use core::fmt;
 
@@ -737,6 +739,26 @@ impl Playable for Timeline {
 
     fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
         self
+    }
+}
+
+impl Inspectable for Timeline {
+    fn introspect(&self) -> AnimationIntrospection {
+        AnimationIntrospection::new(
+            AnimationKind::Timeline,
+            self.progress(),
+            self.elapsed(),
+            self.playback_duration()
+                .is_finite()
+                .then_some(self.playback_duration()),
+            match self.state() {
+                TimelineState::Idle => PlaybackState::Idle,
+                TimelineState::Playing => PlaybackState::Playing,
+                TimelineState::Paused => PlaybackState::Paused,
+                TimelineState::Completed => PlaybackState::Complete,
+            },
+            None,
+        )
     }
 }
 

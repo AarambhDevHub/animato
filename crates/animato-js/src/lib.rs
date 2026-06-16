@@ -10,6 +10,7 @@
 mod advanced;
 mod batch;
 mod color;
+mod devtools;
 mod driver;
 mod easing;
 mod error;
@@ -29,6 +30,9 @@ pub use advanced::{
 };
 pub use batch::TweenBatch;
 pub use color::{ColorTween, interpolate_color};
+pub use devtools::{
+    DevToolsState, EasingCurveEditor, PerformanceMonitor, SpringVisualizer, TimelineInspector,
+};
 pub use driver::{RafDriver, ScrollDriver};
 pub use easing::{available_easings, ease, parse_easing_for_js};
 pub use keyframe::{KeyframeTrack, KeyframeTrack2D, KeyframeTrack3D, KeyframeTrack4D};

@@ -1,0 +1,32 @@
+[package]
+name        = "animato-devtools"
+description = "Animation DevTools for Animato: timeline inspector, easing editor, spring visualizer, recorder controls, and performance monitor."
+readme.workspace  = true
+version.workspace     = true
+edition.workspace     = true
+license.workspace     = true
+repository.workspace  = true
+authors.workspace     = true
+rust-version.workspace = true
+keywords    = ["animation", "devtools", "inspector", "debugging"]
+categories  = ["development-tools", "gui"]
+
+[features]
+default = ["inspector", "easing-editor", "spring-viz", "recorder", "perf-monitor"]
+inspector = []
+easing-editor = []
+spring-viz = []
+recorder = []
+perf-monitor = []
+web-panel = []
+egui-panel = []
+tui-panel = ["dep:ratatui", "dep:crossterm"]
+
+[dependencies]
+animato-core     = { workspace = true }
+animato-tween    = { workspace = true, features = ["std"] }
+animato-spring   = { workspace = true, features = ["std"] }
+animato-timeline = { workspace = true, features = ["std"] }
+animato-driver   = { workspace = true }
+ratatui          = { workspace = true, optional = true }
+crossterm        = { workspace = true, optional = true }

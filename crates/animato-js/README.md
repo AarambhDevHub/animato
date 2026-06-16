@@ -7,7 +7,7 @@ npm install @aarambhdevhub/animato-core
 ```
 
 ```js
-import init, { Tween, RafDriver, ColorTween, Quaternion, QuaternionTween, Waveform } from "@aarambhdevhub/animato-core";
+import init, { Tween, RafDriver, TimelineInspector, ColorTween, Quaternion, QuaternionTween, Waveform } from "@aarambhdevhub/animato-core";
 
 await init();
 
@@ -17,6 +17,9 @@ tween.setEasing("easeOutCubic");
 const driver = new RafDriver();
 driver.addTween(tween);
 driver.tick(16.67);
+
+const inspector = new TimelineInspector();
+inspector.captureRafDriver(driver);
 
 const color = new ColorTween("#ff3355", "#2f80ed", 0.6, "oklch");
 color.update(0.3);
@@ -36,7 +39,8 @@ Exports include scalar/vector tweens, keyframes, timelines, springs, rAF and
 scroll drivers, motion paths, morphing, draw values, inertia, drag, gestures,
 color interpolation, DOM helpers, batch tween evaluation, velocity springs,
 waveforms, stagger patterns, quaternion/matrix tweens, animation groups, and
-recording.
+recording, plus DevTools timeline inspection, easing curve samples, spring
+visualization, and performance monitoring.
 
 Build the local package:
 

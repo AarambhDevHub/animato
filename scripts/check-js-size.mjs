@@ -6,7 +6,7 @@ const root = resolve(new URL("..", import.meta.url).pathname);
 const wasmPath = resolve(root, "crates/animato-js/pkg/animato_js_bg.wasm");
 const bytes = readFileSync(wasmPath);
 const gzipBytes = gzipSync(bytes, { level: 9 });
-const limit = Number.parseInt(process.env.ANIMATO_JS_GZIP_LIMIT ?? "143360", 10);
+const limit = Number.parseInt(process.env.ANIMATO_JS_GZIP_LIMIT ?? "153600", 10);
 
 console.log(`@aarambhdevhub/animato-core wasm: ${bytes.length} bytes raw, ${gzipBytes.length} bytes gzip`);
 

@@ -1,7 +1,10 @@
 //! Core [`Tween<T>`] type and [`TweenState`] enum.
 
 use crate::loop_mode::Loop;
-use animato_core::{Animatable, Easing, Playable, Update};
+use animato_core::{
+    Animatable, AnimationIntrospection, AnimationKind, Easing, Inspectable, Playable,
+    PlaybackState, Update,
+};
 
 /// The current execution state of a [`Tween`].
 #[derive(Clone, Debug, PartialEq)]
@@ -465,6 +468,38 @@ impl<T: Animatable> Playable for Tween<T> {
 
     fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
         self
+    }
+}
+
+impl<T: Animatable> Inspectable for Tween<T> {
+    fn introspect(&self) -> AnimationIntrospection {
+        let total = self.playback_duration();
+        let state = match self.state {
+            TweenState::Idle => PlaybackState::Idle,
+            TweenState::Running => PlaybackState::Playing,
+            TweenState::Paused => PlaybackState::Paused,
+            TweenState::Completed => PlaybackState::Complete,
+        };
+        let elapsed = if total.is_finite() {
+            self.delay_elapsed.min(self.delay)
+                + self.elapsed
+                + self.loop_count as f32 * self.duration
+        } else {
+            self.delay_elapsed.min(self.delay) + self.elapsed
+        };
+
+        AnimationIntrospection::new(
+            AnimationKind::Tween,
+            if total.is_finite() && total > 0.0 {
+                (elapsed / total).clamp(0.0, 1.0)
+            } else {
+                self.progress()
+            },
+            elapsed,
+            total.is_finite().then_some(total),
+            state,
+            Some(self.easing.clone()),
+        )
     }
 }
 

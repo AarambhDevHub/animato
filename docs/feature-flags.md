@@ -5,7 +5,7 @@ dependencies.
 
 ```toml
 [dependencies]
-animato = { version = "1.5.1", features = ["path", "physics"] }
+animato = { version = "1.6.0", features = ["path", "physics"] }
 ```
 
 ## Facade Features
@@ -40,6 +40,10 @@ animato = { version = "1.5.1", features = ["path", "physics"] }
 | `yew-ssr` | `yew` plus Yew SSR mode |
 | `yew-agent` | `yew` plus serializable `f32` animation agent coordination |
 | `js` | `animato-js` and the `animato::js::*` WASM/NPM namespace |
+| `devtools` | `animato-devtools` and the `animato::devtools::*` namespace |
+| `devtools-web-panel` | `devtools` plus the web overlay panel adapter |
+| `devtools-egui-panel` | `devtools` plus the desktop panel adapter |
+| `devtools-tui-panel` | `devtools` plus the terminal panel adapter |
 | `serde` | Serde derives and re-exports on supported types |
 | `tokio` | `Timeline::wait()` |
 
@@ -48,8 +52,8 @@ animato = { version = "1.5.1", features = ["path", "physics"] }
 Prefer focused crates for no_std:
 
 ```toml
-animato-core = { version = "1.5.1", default-features = false }
-animato-tween = { version = "1.5.1", default-features = false }
+animato-core = { version = "1.6.0", default-features = false }
+animato-tween = { version = "1.6.0", default-features = false }
 ```
 
 See [no-std.md](./no-std.md).
@@ -72,6 +76,8 @@ See [no-std.md](./no-std.md).
   such as `animato::yew::*`, to avoid duplicated hook/component names.
 - JavaScript apps should install `@aarambhdevhub/animato-core`; the Rust `js` feature is for
   facade re-export builds and crate-level docs.
+- DevTools is a hosted/runtime debugging feature and is not part of the no_std
+  gate.
 
 ## Related Docs
 

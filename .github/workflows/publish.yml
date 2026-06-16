@@ -71,6 +71,11 @@ jobs:
       - name: Run full test suite
         run: cargo test --workspace --all-features
 
+      - name: Check DevTools crate
+        run: |
+          cargo check -p animato-devtools --all-features
+          cargo test -p animato-devtools --all-features
+
       - name: Run full no-default-features gate
         run: cargo test --workspace --no-default-features
 
@@ -89,6 +94,7 @@ jobs:
           cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
           cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
           cargo check -p animato-js --target wasm32-unknown-unknown --all-features
+          cargo check -p animato-devtools --target wasm32-unknown-unknown --features web-panel
 
       - name: Check Leptos examples
         run: |
@@ -142,7 +148,9 @@ jobs:
             examples/js_react_tween \
             examples/js_svelte_spring \
             examples/js_vue_motion \
-            examples/js_angular_color
+            examples/js_angular_color \
+            examples/js_advanced_engine \
+            examples/js_devtools
           do
             npm ci --prefix "$example"
             npm run typecheck --prefix "$example"
@@ -235,6 +243,7 @@ jobs:
             animato-leptos \
             animato-dioxus \
             animato-yew \
+            animato-devtools \
             animato-js \
             animato
           do
@@ -264,105 +273,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — Finite Ping-Pong Looping"
-          body: |
-            ## Animato ${{ steps.version.outputs.TAG }} — Finite Ping-Pong Looping
-
-            Animato v1.5.1 adds finite ping-pong playback for Rust and
-            JavaScript APIs while preserving the existing v1.5 API behavior.
-
-            ### Highlights
-
-            - `Loop::PingPongTimes(u32)` counts single-direction passes:
-              `2` means forward -> backward, and `3` means forward ->
-              backward -> forward.
-            - Finite ping-pong support is wired through `Tween`,
-              `KeyframeTrack`, and `Timeline`.
-            - JavaScript bindings support `setPingPongCount(count)` and
-              loop-mode strings like `pingPongTimes2`, `alternateTimes2`,
-              and `yoyoTimes2`.
-            - Existing `Loop::PingPong` infinite playback and `Loop::Times`
-              forward-only playback remain unchanged.
-
-            ### Install
-
-            ```toml
-            [dependencies]
-            animato = "${{ steps.version.outputs.VERSION }}"
-            ```
-
-            ```sh
-            npm install @aarambhdevhub/animato-core
-            ```
-
-            ### Crates published to crates.io
-
-            | Crate | Version | Description |
-            |-------|---------|-------------|
-            | [`animato-core`](https://crates.io/crates/animato-core) | `${{ steps.version.outputs.VERSION }}` | Traits, interpolation, and easing |
-            | [`animato-color`](https://crates.io/crates/animato-color) | `${{ steps.version.outputs.VERSION }}` | Perceptual color wrappers |
-            | [`animato-tween`](https://crates.io/crates/animato-tween) | `${{ steps.version.outputs.VERSION }}` | `Tween<T>` and keyframe tracks |
-            | [`animato-spring`](https://crates.io/crates/animato-spring) | `${{ steps.version.outputs.VERSION }}` | Scalar and component springs |
-            | [`animato-path`](https://crates.io/crates/animato-path) | `${{ steps.version.outputs.VERSION }}` | Bezier, SVG paths, motion paths, morphing |
-            | [`animato-physics`](https://crates.io/crates/animato-physics) | `${{ steps.version.outputs.VERSION }}` | Inertia, drag, and gesture recognition |
-            | [`animato-driver`](https://crates.io/crates/animato-driver) | `${{ steps.version.outputs.VERSION }}` | Drivers, clocks, and scroll drivers |
-            | [`animato-timeline`](https://crates.io/crates/animato-timeline) | `${{ steps.version.outputs.VERSION }}` | Timeline, sequence, and stagger composition |
-            | [`animato-gpu`](https://crates.io/crates/animato-gpu) | `${{ steps.version.outputs.VERSION }}` | GPU/CPU fallback batch tween evaluation |
-            | [`animato-wasm`](https://crates.io/crates/animato-wasm) | `${{ steps.version.outputs.VERSION }}` | rAF and DOM helpers |
-            | [`animato-bevy`](https://crates.io/crates/animato-bevy) | `${{ steps.version.outputs.VERSION }}` | Bevy integration plugin |
-            | [`animato-leptos`](https://crates.io/crates/animato-leptos) | `${{ steps.version.outputs.VERSION }}` | Leptos signal hooks and components |
-            | [`animato-dioxus`](https://crates.io/crates/animato-dioxus) | `${{ steps.version.outputs.VERSION }}` | Dioxus signal hooks and native helpers |
-            | [`animato-yew`](https://crates.io/crates/animato-yew) | `${{ steps.version.outputs.VERSION }}` | Yew hooks, components, gestures, and agents |
-            | [`animato-js`](https://crates.io/crates/animato-js) | `${{ steps.version.outputs.VERSION }}` | WASM bindings published to NPM as `@aarambhdevhub/animato-core` |
-            | [`animato`](https://crates.io/crates/animato) | `${{ steps.version.outputs.VERSION }}` | Stable facade crate |
-
-            ### NPM package
-
-            | Package | Version | Description |
-            |---------|---------|-------------|
-            | [`@aarambhdevhub/animato-core`](https://www.npmjs.com/package/@aarambhdevhub/animato-core) | `${{ steps.version.outputs.VERSION }}` | JavaScript/WASM animation engine |
-
-            ### Verification
-
-            - `cargo fmt --check`
-            - `cargo clippy --workspace --all-features -- -D warnings`
-            - `cargo test --workspace --all-features`
-            - `cargo test --workspace --no-default-features`
-            - `cargo test -p animato --all-features --examples`
-            - `cargo doc --workspace --all-features --no-deps`
-            - `cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom`
-            - `cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr`
-            - `cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web`
-            - `cargo check -p animato-yew --target wasm32-unknown-unknown --features csr`
-            - `cargo check -p animato-js --target wasm32-unknown-unknown --all-features`
-            - Leptos, Dioxus, Yew, and JavaScript example compile/build checks
-            - `wasm-pack test --headless --chrome`
-            - `bash scripts/build-js-package.sh`
-            - `bash scripts/wasm-pack-test-js.sh`
-            - `node scripts/check-js-size.mjs`
-            - `cargo bench --workspace --no-run`
-            - `bash scripts/coverage-core.sh`
-            - `cargo +nightly fuzz run svg_path_parser -- -max_total_time=60`
-            - `cargo publish --dry-run` for every crate immediately before publish
-
-            ### Documentation
-
-            - [README](./README.md)
-            - [Full API map](./docs/api-full.md)
-            - [Getting started](./docs/getting-started.md)
-            - [Feature flags](./docs/feature-flags.md)
-            - [Leptos integration](./docs/leptos.md)
-            - [Dioxus integration](./docs/dioxus.md)
-            - [Yew integration](./docs/yew.md)
-            - [JavaScript integration](./docs/javascript.md)
-            - [Testing](./docs/testing.md)
-            - [Release process](./docs/release.md)
-            - [Changelog](./CHANGELOG.md)
-
-            ### Notes
-
-            Capture benchmark timing on release hardware before public
-            announcement and include it in follow-up release commentary when
-            publishing to community channels.
+          name: "Animato ${{ steps.version.outputs.TAG }} — DevTools"
+          body_path: .github/release-notes/1.6.0.md
+          generate_release_notes: true
           draft: false
           prerelease: false

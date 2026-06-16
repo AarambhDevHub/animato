@@ -28,6 +28,7 @@ animato-path     = { workspace = true, features = ["std"] }
 animato-physics  = { workspace = true, features = ["std"] }
 animato-driver   = { workspace = true }
 animato-wasm     = { workspace = true }
+animato-devtools = { workspace = true }
 js-sys           = { workspace = true }
 wasm-bindgen     = { workspace = true }
 web-sys          = { workspace = true, features = [

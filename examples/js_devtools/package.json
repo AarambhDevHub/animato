@@ -1,0 +1,13 @@
+{
+  "name": "animato-js-devtools",
+  "version": "1.6.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "node ../../scripts/verify-js-example.mjs .",
+    "build": "node ../../scripts/verify-js-example.mjs ."
+  },
+  "dependencies": {
+    "@aarambhdevhub/animato-core": "file:../../crates/animato-js/pkg"
+  }
+}

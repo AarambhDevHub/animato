@@ -42,7 +42,9 @@ pub mod recorder;
 pub mod scroll;
 
 pub use clock::{Clock, ManualClock, MockClock, WallClock};
-pub use driver::{AnimationDriver, AnimationId};
+pub use driver::{
+    AnimationDriver, AnimationId, AnimationUpdateCost, DriverFrameProfile, DriverSnapshot,
+};
 #[cfg(feature = "std")]
 pub use recorder::{AnimationRecorder, RecordedSample, RecordedTrack, RecorderError};
 pub use scroll::{ScrollClock, ScrollDriver};
