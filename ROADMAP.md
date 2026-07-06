@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.6.0`.  
+This roadmap tracks every planned release from `v0.1.0` through `v1.7.0`.  
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -39,6 +39,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | ✅ |
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | ✅ |
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | ✅ |
+| `v1.7.0` | Motion Macro | Declarative `animato!{}` macro DSL for tweens, springs, timelines, gestures, paths, colors, presets, and framework helpers | 📋 |
 
 ---
 
@@ -860,6 +861,283 @@ All enhancements go into existing crates as backward-compatible additions.
 
 ---
 
+## v1.7.0 — Motion Macro
+
+**Goal:** Make Animato dramatically easier to use by adding a declarative macro layer on top of the stable engine. Developers should be able to describe complex animations with readable Rust syntax while Animato generates the correct `Tween`, `Spring`, `Timeline`, `AnimationGroup`, `KeyframeTrack`, `MotionPathTween`, color animation, stagger pattern, and framework integration code internally.
+
+`v1.7.0` does not replace the existing API. It adds a higher-level ergonomic layer for users who want clean animation declarations instead of manually wiring builders, timelines, and groups.
+
+### Crates shipped
+
+* `animato-macro` `v1.7.0` — new procedural macro crate
+* All existing crates bumped to `v1.7.0`
+* `animato` facade exposes the macro behind the `macro` feature flag
+
+### Deliverables
+
+**`animato-macro` — core macro system**
+
+* [ ] `animato! {}` procedural macro
+* [ ] `motion! {}` alias for users who prefer motion-style naming
+* [ ] `tween! {}` helper macro for standalone tween generation
+* [ ] `spring! {}` helper macro for standalone spring generation
+* [ ] `timeline! {}` helper macro for timeline-only composition
+* [ ] `keyframes! {}` helper macro for keyframe-track generation
+* [ ] `preset! {}` helper macro for reusable named animation presets
+* [ ] Compile-time parsing using `syn`
+* [ ] Token generation using `quote`
+* [ ] Compile-time validation for malformed animation blocks
+* [ ] Helpful compiler errors for missing `duration`, invalid easing names, invalid spring presets, wrong value types, unknown DSL keywords, and unsupported nesting
+* [ ] Generated code must use existing stable Animato primitives instead of creating a separate runtime
+
+**`animato-macro` — composition DSL**
+
+* [ ] `sequence { ... }` — generate sequential timeline playback
+* [ ] `parallel { ... }` — generate parallel animation groups
+* [ ] `stagger delay: 0.05 { ... }` — generate staggered animations
+* [ ] `stagger pattern: grid(cols: 4, rows: 3, origin: center) { ... }`
+* [ ] `stagger pattern: random(seed: 42, min: 0.02, max: 0.12) { ... }`
+* [ ] `group parallel { ... }`
+* [ ] `group sequence { ... }`
+* [ ] Nested `sequence`, `parallel`, `stagger`, and `group` blocks
+* [ ] Labels for timeline anchors: `label "intro";`
+* [ ] Relative offsets: `at "+0.2"`, `at "-0.1"`
+* [ ] Absolute offsets: `at 1.25`
+* [ ] Timeline nesting: generated `Timeline::add_timeline(...)`
+* [ ] Named generated outputs for reuse in examples and tests
+
+**`animato-macro` — tween DSL**
+
+* [ ] Scalar tween syntax: `tween opacity: 0.0 => 1.0, duration: 0.4`
+* [ ] Vector tween syntax: `tween position: [0.0, 20.0] => [0.0, 0.0], duration: 0.6`
+* [ ] Integer tween syntax for supported interpolated numeric values
+* [ ] Angle tween syntax using `Angle`
+* [ ] Quaternion tween syntax using `Quaternion`
+* [ ] Matrix tween syntax using `Mat4`
+* [ ] Color tween syntax using `Color`, `InLab`, `InOklch`, and `InLinear`
+* [ ] Easing by enum: `easing: Easing::EaseOutCubic`
+* [ ] Easing by short name: `easing: ease_out_cubic`
+* [ ] CSS-style easing parser inside macro: `easing: cubic_bezier(0.22, 1.0, 0.36, 1.0)`
+* [ ] Step easing syntax: `easing: steps(5)`
+* [ ] Advanced easing syntax: `easing: wiggle(4)`, `rough(strength: 0.5, points: 8)`, `slowmo(linear_ratio: 0.7, power: 2.0)`
+* [ ] Delay support: `delay: 0.2`
+* [ ] Time-scale support: `time_scale: 1.5`
+* [ ] Loop support: `loop: once`, `times(3)`, `forever`, `ping_pong`, `ping_pong_times(4)`
+* [ ] Snap and round modifiers: `snap: 8.0`, `round: 2`
+* [ ] Reverse support: `reverse: true`
+* [ ] Generated builder code should remain readable in macro expansion tests
+
+**`animato-macro` — spring DSL**
+
+* [ ] Basic spring syntax: `spring x: 0.0 => 100.0, preset: snappy`
+* [ ] Spring config syntax: `spring scale: 0.8 => 1.0, stiffness: 350.0, damping: 28.0, mass: 1.0`
+* [ ] Preset support: `gentle`, `wobbly`, `stiff`, `slow`, `snappy`
+* [ ] Damping mode support: `critically_damped(stiffness)`, `overdamped(stiffness, ratio)`, `underdamped(stiffness, ratio)`
+* [ ] Velocity spring syntax: `spring x: 0.0 => 320.0, velocity: 900.0, preset: snappy`
+* [ ] Multi-dimensional spring syntax for `[f32; 2]`, `[f32; 3]`, and `[f32; 4]`
+* [ ] Settle epsilon syntax: `epsilon: 0.001`
+* [ ] RK4 option: `integrator: rk4`
+* [ ] Generated code uses `Spring`, `SpringN`, and `SpringConfig`
+
+**`animato-macro` — keyframe DSL**
+
+* [ ] `keyframes opacity { 0%: 0.0, 50%: 0.7, 100%: 1.0 }`
+* [ ] Time syntax: `0.0s`, `0.25s`, `1.0s`
+* [ ] Percentage syntax: `0%`, `50%`, `100%`
+* [ ] Per-keyframe easing: `50%: 0.7 ease_out_cubic`
+* [ ] Loop support for keyframe tracks
+* [ ] Ping-pong keyframe support
+* [ ] Generated `KeyframeTrack<T>` with sorted frames
+* [ ] Compile-time validation for duplicate or unsorted keyframe times where possible
+
+**`animato-macro` — path and SVG DSL**
+
+* [ ] Motion path syntax: `path position along "M 0 0 C 50 100 150 100 200 0", duration: 1.2`
+* [ ] Bezier path syntax: `bezier from [0.0, 0.0], ctrl [50.0, 100.0], to [200.0, 0.0]`
+* [ ] Cubic Bezier path syntax with two control points
+* [ ] Catmull-Rom path syntax for point arrays
+* [ ] Auto-rotate syntax: `auto_rotate: true`
+* [ ] Start/end offset syntax: `offset: 0.1..0.9`
+* [ ] SVG draw syntax: `draw svg_path, duration: 1.0`
+* [ ] Morph syntax: `morph shape_a => shape_b, samples: 64, duration: 0.8`
+* [ ] Generated code uses `MotionPath`, `MotionPathTween`, `SvgPathParser`, `DrawSvg`, and `MorphPath`
+
+**`animato-macro` — color DSL**
+
+* [ ] RGB color tween syntax: `color background: "#ff0000" => "#0000ff", duration: 0.5`
+* [ ] Linear interpolation mode: `space: linear`
+* [ ] Lab interpolation mode: `space: lab`
+* [ ] Oklch interpolation mode: `space: oklch`
+* [ ] Named color support for common CSS color names where practical
+* [ ] Hex parser for `#rgb`, `#rgba`, `#rrggbb`, and `#rrggbbaa`
+* [ ] Generated code uses `animato-color` wrappers
+* [ ] Compile-time or early runtime error for invalid color strings
+
+**`animato-macro` — waveform DSL**
+
+* [ ] `waveform sine frequency: 2.0, amplitude: 1.0, phase: 0.0`
+* [ ] `waveform sawtooth frequency: 2.0, amplitude: 1.0`
+* [ ] `waveform square frequency: 2.0, amplitude: 1.0, duty_cycle: 0.5`
+* [ ] `waveform triangle frequency: 2.0, amplitude: 1.0`
+* [ ] `waveform noise seed: 42, smoothness: 0.8`
+* [ ] Convert waveform to generated `KeyframeTrack<f32>`
+* [ ] Support procedural idle animations, loading animations, breathing motion, shimmer, pulse, shake, and wiggle presets
+
+**`animato-macro` — gesture and physics DSL**
+
+* [ ] `drag position, axis: both, inertia: smooth`
+* [ ] `drag x, axis: x, bounds: 0.0..320.0`
+* [ ] `inertia velocity: 800.0, friction: 0.92`
+* [ ] `gesture swipe direction: left`
+* [ ] `gesture tap`
+* [ ] `gesture long_press duration: 0.5`
+* [ ] `gesture pinch`
+* [ ] `gesture rotation`
+* [ ] Generated code uses `DragState`, `Inertia`, `InertiaN`, and `GestureRecognizer`
+* [ ] Framework-specific event binding remains optional and renderer-side
+
+**`animato-macro` — preset system**
+
+* [ ] Built-in `fade_in`
+* [ ] Built-in `fade_out`
+* [ ] Built-in `slide_in`
+* [ ] Built-in `slide_out`
+* [ ] Built-in `scale_in`
+* [ ] Built-in `scale_out`
+* [ ] Built-in `bounce_in`
+* [ ] Built-in `bounce_out`
+* [ ] Built-in `modal_enter`
+* [ ] Built-in `modal_exit`
+* [ ] Built-in `drawer_open`
+* [ ] Built-in `drawer_close`
+* [ ] Built-in `toast_enter`
+* [ ] Built-in `toast_exit`
+* [ ] Built-in `page_enter`
+* [ ] Built-in `page_exit`
+* [ ] Built-in `stagger_children`
+* [ ] Built-in `loading_pulse`
+* [ ] Built-in `loading_wave`
+* [ ] Built-in `shake`
+* [ ] Built-in `wiggle`
+* [ ] Built-in `heartbeat`
+* [ ] Built-in `float`
+* [ ] Built-in `shimmer`
+* [ ] Allow user-defined presets with `preset! {}` macro
+* [ ] Presets expand into normal Animato types, not hidden runtime objects
+
+**`animato-macro` — framework helper generation**
+
+* [ ] Leptos helper macro: `leptos_motion! { ... }`
+* [ ] Dioxus helper macro: `dioxus_motion! { ... }`
+* [ ] Yew helper macro: `yew_motion! { ... }`
+* [ ] WASM helper macro: `wasm_motion! { ... }`
+* [ ] Bevy helper macro: `bevy_motion! { ... }`
+* [ ] Generated framework helpers should call existing integration crates
+* [ ] Framework helpers remain feature-gated
+* [ ] No framework dependency is pulled unless the matching feature is enabled
+* [ ] SSR-safe macro expansions for Leptos/Yew where applicable
+
+**`animato-macro` — JavaScript/WASM helper generation**
+
+* [ ] Macro-generated examples for `animato-js` parity
+* [ ] Exportable preset metadata for JavaScript docs
+* [ ] Optional generated TypeScript preset descriptions
+* [ ] Ensure macro DSL concepts map cleanly to `@aarambhdevhub/animato-core`
+* [ ] Add docs showing Rust macro DSL and JS equivalent APIs side by side
+
+**`animato` facade**
+
+* [ ] Add `macro` feature flag
+* [ ] Re-export `animato_macro::animato`
+* [ ] Re-export `animato_macro::motion`
+* [ ] Re-export helper macros where stable
+* [ ] Add `prelude` module with macro-friendly imports
+* [ ] Ensure `default` features do not include `macro`
+* [ ] Ensure `no_std` users can continue using focused crates without procedural macro dependency
+
+**Documentation & Examples**
+
+* [ ] `docs/motion-macro.md` — complete macro guide
+* [ ] `docs/macro-recipes.md` — copy-paste animation recipes
+* [ ] `docs/macro-reference.md` — full DSL grammar
+* [ ] `docs/macro-expansion.md` — explains what code the macro generates
+* [ ] `docs/macro-frameworks.md` — Leptos, Dioxus, Yew, Bevy, WASM usage
+* [ ] Update `README.md` with a small `animato!{}` hero example
+* [ ] Update `ARCHITECTURE.md` with `animato-macro`
+* [ ] Update `docs/api-full.md`
+* [ ] `examples/macro_basic_tween.rs`
+* [ ] `examples/macro_sequence.rs`
+* [ ] `examples/macro_parallel.rs`
+* [ ] `examples/macro_stagger_grid.rs`
+* [ ] `examples/macro_keyframes.rs`
+* [ ] `examples/macro_spring_card.rs`
+* [ ] `examples/macro_motion_path.rs`
+* [ ] `examples/macro_color_theme.rs`
+* [ ] `examples/macro_loading_wave.rs`
+* [ ] `examples/macro_hero_intro.rs`
+* [ ] `examples/macro_modal_transition.rs`
+* [ ] `examples/macro_page_transition.rs`
+
+**Testing**
+
+* [ ] Unit tests for macro parser
+* [ ] Snapshot tests for generated token output
+* [ ] Runtime tests proving macro-generated tweens match manual tweens
+* [ ] Runtime tests proving macro-generated timelines match manual timelines
+* [ ] Runtime tests proving macro-generated spring configs match manual spring configs
+* [ ] Runtime tests for sequence, parallel, stagger, keyframes, paths, colors, and presets
+* [ ] Compile-fail tests using `trybuild`
+* [ ] Compile-pass tests using `trybuild`
+* [ ] Tests for helpful error messages
+* [ ] Tests for feature-gated framework macros
+* [ ] Tests that `animato` without `macro` does not pull procedural macro dependencies
+* [ ] CI job for macro compile tests
+* [ ] CI job for macro examples
+* [ ] Docs build with macro examples
+
+### Example target syntax
+
+```rust
+use animato::prelude::*;
+
+let intro = animato! {
+    sequence {
+        tween opacity: 0.0 => 1.0,
+            duration: 0.35,
+            easing: ease_out_cubic;
+
+        parallel {
+            tween y: 24.0 => 0.0,
+                duration: 0.55,
+                easing: ease_out_back;
+
+            spring scale: 0.92 => 1.0,
+                preset: snappy;
+        }
+
+        stagger pattern: grid(cols: 3, rows: 2, origin: center), delay: 0.06 {
+            tween card[0].opacity: 0.0 => 1.0, duration: 0.25;
+            tween card[1].opacity: 0.0 => 1.0, duration: 0.25;
+            tween card[2].opacity: 0.0 => 1.0, duration: 0.25;
+            tween card[3].opacity: 0.0 => 1.0, duration: 0.25;
+            tween card[4].opacity: 0.0 => 1.0, duration: 0.25;
+            tween card[5].opacity: 0.0 => 1.0, duration: 0.25;
+        }
+    }
+};
+```
+
+### Release positioning
+
+Animato v1.7.0 should be announced as:
+
+**Animato v1.7.0 — Motion Macro: Declarative Animation for Rust**
+
+This release turns Animato from a powerful low-level animation engine into a high-level animation authoring toolkit while preserving the stable renderer-agnostic core.
+
+---
+
+
 ## Post-1.6 Ideas (Future / `v2.x+`)
 
 These are not committed — they are ideas to revisit after DevTools ships.
@@ -870,7 +1148,6 @@ These are not committed — they are ideas to revisit after DevTools ships.
 | `animato-iced` | Iced Elm-architecture animation with `Message::AnimationTick` |
 | `animato-slint` | Slint property binding animations for embedded/automotive |
 | `animato-tauri` | Tauri IPC bridge for driving Animato from the Rust backend |
-| `animato-macro` | `animato!{ }` proc macro for declarative GSAP-style chaining |
 | `@aarambhdevhub/animato-react` | Dedicated React hooks NPM package wrapping `@aarambhdevhub/animato-core` |
 | `@aarambhdevhub/animato-svelte` | Dedicated Svelte stores/actions NPM package wrapping `@aarambhdevhub/animato-core` |
 | `@aarambhdevhub/animato-vue` | Dedicated Vue composables NPM package wrapping `@aarambhdevhub/animato-core` |
@@ -882,10 +1159,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.6 stable API and open focused issues for bugs, documentation gaps, or post-1.6 feature proposals.
+The best way to contribute right now is to use the v1.6 stable API, test the planned v1.7 Motion Macro design, and open focused issues for bugs, documentation gaps, or macro feature proposals.
 
 ---
 
-*Roadmap version: 1.6.0 — last updated June 2026*
-*v1.6.0 DevTools shipped — post-1.6 ideas remain future scope*
+*Roadmap version: 1.7.0 — last updated July 2026*
+*v1.6.0 DevTools shipped; v1.7.0 Motion Macro is the next planned milestone*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

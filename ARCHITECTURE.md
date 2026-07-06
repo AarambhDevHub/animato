@@ -30,7 +30,8 @@
    - 4.14 [animato-yew](#414-animato-yew)
    - 4.15 [animato-js](#415-animato-js)
    - 4.16 [animato-devtools](#416-animato-devtools)
-   - 4.17 [animato (facade)](#417-animato-facade)
+   - 4.17 [animato-macro](#417-animato-macro)
+   - 4.18 [animato facade](#418-animato-facade)
 5. [Data Flow & Runtime Loop](#5-data-flow--runtime-loop)
 6. [Type System Design](#6-type-system-design)
 7. [Feature Flag Strategy](#7-feature-flag-strategy)
@@ -266,10 +267,23 @@ animato/
 │   │       ├── egui_panel.rs            ← egui panel for Bevy/desktop apps
 │   │       └── tui_panel.rs             ← TUI panel via ratatui for terminal apps
 │   │
+│   ├── animato-macro/                    ← procedural macro DSL for declarative animation authoring
+│   │   ├── Cargo.toml
+│   │   └── src/
+│   │       ├── lib.rs                    ← exports animato!, motion!, tween!, spring!, timeline!, keyframes!
+│   │       ├── parser.rs                 ← parses macro DSL into internal AST
+│   │       ├── ast.rs                    ← TweenSpec, SpringSpec, TimelineSpec, PresetSpec, PathSpec
+│   │       ├── expand.rs                 ← converts AST into stable Animato builder code
+│   │       ├── validate.rs               ← compile-time validation and friendly diagnostics
+│   │       ├── easing.rs                 ← easing name parser for macro syntax
+│   │       ├── presets.rs                ← built-in animation presets
+│   │       ├── framework.rs              ← feature-gated Leptos/Dioxus/Yew/Bevy/WASM helpers
+│   │       └── error.rs                  ← diagnostic helpers
+│   │
 │   └── animato/                          ← facade crate — the one users add to Cargo.toml
 │       ├── Cargo.toml
 │       └── src/
-│           └── lib.rs                  ← pub use everything from every sub-crate
+│           └── lib.rs                    ← pub use everything from every sub-crate
 │
 ├── examples/
 │   ├── basic_tween.rs
@@ -322,11 +336,12 @@ members = [
     "crates/animato-yew",
     "crates/animato-js",
     "crates/animato-devtools",
+    "crates/animato-macro",
     "crates/animato",
 ]
 
 [workspace.package]
-version      = "1.6.0"
+version      = "1.7.0"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -335,22 +350,28 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.6.0" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.6.0" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.6.0" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.6.0" }
-animato-path     = { path = "crates/animato-path",     version = "1.6.0" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.6.0" }
-animato-color    = { path = "crates/animato-color",    version = "1.6.0" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.6.0" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.6.0" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.6.0" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.6.0" }
-animato-leptos   = { path = "crates/animato-leptos",   version = "1.6.0" }
-animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.6.0" }
-animato-yew      = { path = "crates/animato-yew",      version = "1.6.0" }
-animato-js       = { path = "crates/animato-js",       version = "1.6.0" }
-animato-devtools = { path = "crates/animato-devtools", version = "1.6.0" }
+animato-core     = { path = "crates/animato-core",     version = "1.7.0" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.7.0" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.7.0" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.7.0" }
+animato-path     = { path = "crates/animato-path",     version = "1.7.0" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.7.0" }
+animato-color    = { path = "crates/animato-color",    version = "1.7.0" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.7.0" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.7.0" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.7.0" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.7.0" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.7.0" }
+animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.7.0" }
+animato-yew      = { path = "crates/animato-yew",      version = "1.7.0" }
+animato-js       = { path = "crates/animato-js",       version = "1.7.0" }
+animato-devtools = { path = "crates/animato-devtools", version = "1.7.0" }
+animato-macro    = { path = "crates/animato-macro",    version = "1.7.0" }
+
+syn         = { version = "2", features = ["full", "parsing", "extra-traits"] }
+quote       = { version = "1" }
+proc-macro2 = { version = "1" }
+trybuild    = { version = "1" }
 
 # external crates — shared version pins
 serde        = { version = "1",    features = ["derive"] }
@@ -373,8 +394,8 @@ leptos       = { version = "0.8.19" }
 leptos_router = { version = "0.8.13" }
 dioxus       = { version = "0.7.9", default-features = false, features = ["hooks", "html", "macro", "signals"] }
 dioxus-router = { version = "0.7.9", default-features = false }
-yew          = { version = "0.21" }
-yew-router   = { version = "0.18" }
+yew          = { version = "0.23", default-features = false }
+yew-router   = { version = "0.20", default-features = false }
 ```
 
 ---
@@ -2168,7 +2189,388 @@ crossterm        = { version = "0.28", optional = true }
 
 ---
 
-### 4.17 `animato` (facade)
+## 4.17 `animato-macro`
+
+**Responsibility:** Declarative animation authoring. `animato-macro` provides procedural macros that convert readable animation DSL syntax into stable Animato engine code.
+
+This crate does not introduce a new animation runtime. It is a compile-time authoring layer. Every macro expansion must generate existing Animato primitives such as `Tween<T>`, `Spring`, `SpringN<T>`, `Timeline`, `Sequence`, `AnimationGroup`, `KeyframeTrack<T>`, `MotionPathTween`, `MorphPath`, `DragState`, `GestureRecognizer`, and color interpolation wrappers.
+
+**Depends on:**
+
+* `proc-macro2`
+* `quote`
+* `syn`
+* Optional internal Animato crates only for generated paths and tests
+* No rendering framework dependency unless a framework feature is explicitly enabled
+
+**Design rules:**
+
+| Rule                                      | Meaning                                                 |
+| ----------------------------------------- | ------------------------------------------------------- |
+| Macro is ergonomic, engine remains stable | The macro generates code using existing stable APIs     |
+| No hidden renderer                        | Macro-generated animations still compute values only    |
+| No forced dependencies                    | Framework helpers are feature-gated                     |
+| Errors must be readable                   | Bad DSL should produce useful compiler diagnostics      |
+| Expansion must be testable                | Generated code is covered by snapshot and runtime tests |
+| No replacement for builders               | Builders remain the canonical low-level API             |
+| Macro is additive                         | Existing Animato users do not need to change code       |
+
+### Public macros
+
+```rust
+animato! { ... }      // main declarative animation DSL
+motion! { ... }       // alias focused on UI-style motion
+tween! { ... }        // standalone Tween<T> generator
+spring! { ... }       // standalone Spring / SpringN<T> generator
+timeline! { ... }     // standalone Timeline generator
+keyframes! { ... }    // standalone KeyframeTrack<T> generator
+preset! { ... }       // user-defined reusable preset generator
+```
+
+### Macro architecture
+
+```text
+TokenStream
+    ↓
+parser.rs
+    ↓
+AST
+    ↓
+validate.rs
+    ↓
+expand.rs
+    ↓
+Generated Rust code
+    ↓
+Animato stable primitives
+```
+
+### Internal AST
+
+```rust
+pub enum MotionNode {
+    Tween(TweenSpec),
+    Spring(SpringSpec),
+    Keyframes(KeyframeSpec),
+    Sequence(Vec<MotionNode>),
+    Parallel(Vec<MotionNode>),
+    Stagger(StaggerSpec),
+    Path(PathSpec),
+    Morph(MorphSpec),
+    Color(ColorSpec),
+    Waveform(WaveformSpec),
+    Gesture(GestureSpec),
+    Preset(PresetCall),
+}
+
+pub struct TweenSpec {
+    pub target: TargetPath,
+    pub from: ValueExpr,
+    pub to: ValueExpr,
+    pub duration: f32,
+    pub easing: Option<EasingSpec>,
+    pub delay: Option<f32>,
+    pub loop_mode: Option<LoopSpec>,
+    pub time_scale: Option<f32>,
+    pub modifiers: Vec<ModifierSpec>,
+}
+
+pub struct SpringSpec {
+    pub target: TargetPath,
+    pub from: ValueExpr,
+    pub to: ValueExpr,
+    pub preset: Option<SpringPreset>,
+    pub stiffness: Option<f32>,
+    pub damping: Option<f32>,
+    pub mass: Option<f32>,
+    pub velocity: Option<ValueExpr>,
+    pub epsilon: Option<f32>,
+    pub integrator: Option<IntegratorSpec>,
+}
+
+pub struct TimelineSpec {
+    pub nodes: Vec<MotionNode>,
+    pub labels: Vec<LabelSpec>,
+    pub time_scale: Option<f32>,
+    pub loop_mode: Option<LoopSpec>,
+}
+```
+
+### Expansion strategy
+
+The macro should generate normal Animato code.
+
+Example input:
+
+```rust
+let intro = animato! {
+    sequence {
+        tween opacity: 0.0 => 1.0, duration: 0.3, easing: ease_out_cubic;
+        spring scale: 0.8 => 1.0, preset: snappy;
+    }
+};
+```
+
+Expected generated shape:
+
+```rust
+{
+    let mut sequence = animato::Sequence::new();
+
+    sequence.then(
+        "opacity",
+        animato::Tween::new(0.0_f32, 1.0_f32)
+            .duration(0.3)
+            .easing(animato::Easing::EaseOutCubic)
+            .build(),
+    );
+
+    sequence.then(
+        "scale",
+        animato::Spring::new(animato::SpringConfig::snappy())
+            .with_position(0.8)
+            .with_target(1.0),
+    );
+
+    sequence.build()
+}
+```
+
+The exact generated code can evolve, but the important rule is: macro output must be ordinary, understandable Animato code.
+
+### DSL capabilities
+
+`animato-macro` should support the following animation categories:
+
+| Category          | DSL support                                            |
+| ----------------- | ------------------------------------------------------ |
+| Tweens            | scalar, vector, angle, quaternion, matrix, color       |
+| Springs           | scalar, vector, velocity springs, damping modes        |
+| Keyframes         | percentage stops, second-based stops, per-frame easing |
+| Timelines         | sequence, parallel, group, nested timelines            |
+| Stagger           | linear, grid, random, center-out, edges-in             |
+| Paths             | SVG path, Bezier, Catmull-Rom, motion path tween       |
+| Morphing          | shape morph with resampling                            |
+| SVG draw          | draw-on and draw-on-reverse animation                  |
+| Colors            | RGB, Lab, Oklch, linear interpolation                  |
+| Waveforms         | sine, square, sawtooth, triangle, noise                |
+| Physics           | inertia, drag declarations, bounds, axis lock          |
+| Gestures          | tap, double tap, long press, swipe, pinch, rotation    |
+| Presets           | built-in and user-defined presets                      |
+| Framework helpers | Leptos, Dioxus, Yew, Bevy, WASM                        |
+| DevTools metadata | generated labels for easier inspection                 |
+
+### Built-in presets
+
+`animato-macro` owns preset definitions only at compile time. Presets expand into normal Animato code.
+
+Required presets:
+
+```text
+fade_in
+fade_out
+slide_in
+slide_out
+scale_in
+scale_out
+bounce_in
+bounce_out
+modal_enter
+modal_exit
+drawer_open
+drawer_close
+toast_enter
+toast_exit
+page_enter
+page_exit
+stagger_children
+loading_pulse
+loading_wave
+shake
+wiggle
+heartbeat
+float
+shimmer
+```
+
+### Framework helper architecture
+
+Framework helpers must remain optional.
+
+```toml
+[features]
+default = []
+leptos = ["dep:animato-leptos"]
+dioxus = ["dep:animato-dioxus"]
+yew = ["dep:animato-yew"]
+bevy = ["dep:animato-bevy"]
+wasm = ["dep:animato-wasm"]
+```
+
+Helper macros:
+
+```rust
+leptos_motion! { ... }
+dioxus_motion! { ... }
+yew_motion! { ... }
+bevy_motion! { ... }
+wasm_motion! { ... }
+```
+
+These helpers should generate adapter code that calls existing integration crates. They should not duplicate framework logic inside `animato-macro`.
+
+### Error handling
+
+The macro must prefer clear diagnostics over silent fallback.
+
+Examples:
+
+```text
+error: tween `opacity` is missing required field `duration`
+help: add `duration: 0.3`
+
+error: unknown easing `ease_out_magic`
+help: did you mean `ease_out_cubic`?
+
+error: `stagger grid` requires `cols` and `rows`
+help: use `stagger pattern: grid(cols: 3, rows: 2, origin: center)`
+```
+
+### Testing strategy for `animato-macro`
+
+Required tests:
+
+* Parser unit tests
+* AST validation tests
+* Macro expansion snapshot tests
+* `trybuild` compile-pass tests
+* `trybuild` compile-fail tests
+* Runtime equivalence tests comparing macro-generated animations to manual builder code
+* Feature-gate tests proving framework helpers compile only when enabled
+* README doctests
+* Example compile checks
+* CI job for macro examples
+
+### Facade integration
+
+Update `crates/animato/Cargo.toml`:
+
+```toml
+[features]
+macro = ["dep:animato-macro"]
+```
+
+Update facade dependencies:
+
+```toml
+animato-macro = { workspace = true, optional = true }
+```
+
+Update `crates/animato/src/lib.rs`:
+
+```rust
+#[cfg(feature = "macro")]
+pub use animato_macro::{
+    animato,
+    keyframes,
+    motion,
+    preset,
+    spring,
+    timeline,
+    tween,
+};
+
+pub mod prelude {
+    pub use crate::{
+        Easing,
+        Interpolate,
+        Update,
+    };
+
+    #[cfg(feature = "tween")]
+    pub use crate::{Tween, Loop, KeyframeTrack};
+
+    #[cfg(feature = "spring")]
+    pub use crate::{Spring, SpringConfig, SpringN};
+
+    #[cfg(feature = "timeline")]
+    pub use crate::{Timeline, Sequence, AnimationGroup, At};
+
+    #[cfg(feature = "macro")]
+    pub use crate::{animato, motion, tween, spring, timeline, keyframes, preset};
+}
+```
+
+### Runtime data flow with macro
+
+```text
+User DSL
+  ↓
+animato! procedural macro
+  ↓
+Generated Tween/Spring/Timeline/Group code
+  ↓
+AnimationDriver or framework hook
+  ↓
+update(dt)
+  ↓
+computed value
+  ↓
+user renderer / Bevy / WASM DOM / TUI / Leptos / Dioxus / Yew
+```
+
+### Non-goals for `animato-macro`
+
+* It does not render DOM, Bevy sprites, terminal widgets, or UI components directly.
+* It does not replace `TweenBuilder`, `SpringConfig`, `Timeline`, or `AnimationGroup`.
+* It does not force `std` into `no_std` users unless the user enables macro/facade paths that require it.
+* It does not hide runtime behavior behind global state.
+* It does not create a new animation engine separate from Animato.
+
+### Documentation required
+
+Add:
+
+```text
+docs/motion-macro.md
+docs/macro-reference.md
+docs/macro-recipes.md
+docs/macro-frameworks.md
+docs/macro-expansion.md
+```
+
+Add examples:
+
+```text
+examples/macro_basic_tween.rs
+examples/macro_sequence.rs
+examples/macro_parallel.rs
+examples/macro_stagger_grid.rs
+examples/macro_keyframes.rs
+examples/macro_spring_card.rs
+examples/macro_motion_path.rs
+examples/macro_color_theme.rs
+examples/macro_loading_wave.rs
+examples/macro_hero_intro.rs
+examples/macro_modal_transition.rs
+examples/macro_page_transition.rs
+```
+
+### Architecture summary
+
+`animato-macro` is the authoring layer of Animato.
+
+Before v1.7.0, Animato is powerful but builder-heavy. After v1.7.0, users can choose between:
+
+1. Low-level explicit builders for maximum control.
+2. High-level `animato!{}` DSL for fast authoring.
+3. Framework helper macros for UI projects.
+4. JS/WASM APIs for web ecosystem users.
+
+This keeps Animato renderer-agnostic while making it feel much easier to use.
+---
+
+### 4.18 `animato` (facade)
 
 **Responsibility:** The one crate users put in their `Cargo.toml`. Feature flags on this crate activate the matching sub-crates and re-export their public APIs.
 
@@ -2416,6 +2818,7 @@ NOT available in no_std (require allocation):
 | `yew` | Hook/agent animation, scroll, presence, transitions, FLIP lists, gestures | `animato-yew`, `yew` |
 | `js` | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | `animato-js`, `wasm-bindgen` |
 | `devtools` | Animation inspector, easing editor, spring visualizer, recorder, perf monitor | `animato-devtools` |
+| `macro` | Declarative `animato!{}` / `motion!{}` animation DSL | `animato-macro`, `syn`, `quote`, `proc-macro2` |
 | `serde` | `Serialize`/`Deserialize` on all public types | `serde` |
 | `tokio` | `.wait().await` on timelines | `tokio` |
 
@@ -2432,8 +2835,9 @@ NOT available in no_std (require allocation):
 | React / Svelte / Vue (via WASM) | `js` (build with `wasm-pack`) |
 | GPU particle system | `gpu` |
 | Debugging animations | `devtools` |
+| Declarative animation authoring | `macro` |
 | Embedded / no_std | `default-features = false` |
-| Everything | `default,path,physics,color,gpu,leptos,dioxus,yew,devtools,serde,tokio` |
+| Everything | `default,path,physics,color,gpu,leptos,dioxus,yew,devtools,macro,serde,tokio` |
 
 ---
 
@@ -2748,7 +3152,7 @@ animato-core → animato-tween → animato-spring → animato-path → animato-p
           → animato-color → animato-driver → animato-timeline
           → animato-gpu → animato-bevy → animato-wasm
           → animato-leptos → animato-dioxus → animato-yew → animato-js
-          → animato-devtools → animato
+          → animato-devtools → animato-macro → animato
 ```
 
 ---
@@ -2789,5 +3193,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.6.0 — covers architecture through Animato 1.6.0 core + Leptos 1.6.0 + Dioxus 1.6.0 + Yew 1.6.0 + JS 1.6.0 + Advanced Engine 1.6.0 + DevTools 1.6.0*
+*Document version: 1.7.0 — covers architecture through Animato 1.6.0 shipped crates plus the planned Animato 1.7.0 Motion Macro authoring layer*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*
