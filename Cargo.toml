@@ -39,6 +39,7 @@ members = [
     "crates/animato-yew",
     "crates/animato-js",
     "crates/animato-devtools",
+    "crates/animato-macro",
     "crates/animato",
 ]
 
@@ -69,6 +70,7 @@ animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.6.0" }
 animato-yew      = { path = "crates/animato-yew",      version = "1.6.0" }
 animato-js       = { path = "crates/animato-js",       version = "1.6.0" }
 animato-devtools = { path = "crates/animato-devtools", version = "1.6.0" }
+animato-macro    = { path = "crates/animato-macro",    version = "1.6.0" }
 
 # External crates — shared version pins
 serde        = { version = "1",   features = ["derive"] }
@@ -98,6 +100,12 @@ yew-router   = { version = "0.20", default-features = false }
 yew-agent    = { version = "0.5" }
 ratatui      = { version = "0.30.0" }
 crossterm    = { version = "0.29.0" }
+
+
+syn         = { version = "2", features = ["full", "parsing", "extra-traits"] }
+quote       = { version = "1" }
+proc-macro2 = { version = "1" }
+trybuild    = { version = "1" }
 
 [profile.release]
 lto = true

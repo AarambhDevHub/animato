@@ -94,6 +94,7 @@
 //! | `yew` | Yew hooks, CSS helpers, scroll, presence, FLIP lists, gestures, and agents |
 //! | `js` | WASM-to-NPM JavaScript bindings |
 //! | `devtools` | Timeline inspector, easing editor, spring visualizer, recorder controls, perf monitor |
+//! | `macro` | Declarative `animato!{}` Motion Macro DSL |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
 
@@ -242,3 +243,7 @@ pub use animato_devtools::DevToolsEguiPanel;
 
 #[cfg(feature = "devtools-tui-panel")]
 pub use animato_devtools::DevToolsTuiPanel;
+
+// ── Motion Macro ──────────────────────────────────────────────────────────────
+#[cfg(feature = "macro")]
+pub use animato_macro::{animato, keyframes, motion, preset, spring, timeline, tween};

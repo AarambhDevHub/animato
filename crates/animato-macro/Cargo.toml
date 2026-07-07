@@ -1,0 +1,30 @@
+[package]
+name        = "animato-macro"
+description = "Procedural macro DSL for declarative Animato animation authoring."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+rust-version.workspace = true
+keywords = ["animation", "macro", "dsl", "tween", "spring"]
+categories = ["development-tools", "game-development"]
+
+[lib]
+proc-macro = true
+
+[features]
+default = []
+leptos = []
+dioxus = []
+yew = []
+bevy = []
+wasm = []
+
+[dependencies]
+proc-macro2 = { workspace = true }
+quote       = { workspace = true }
+syn         = { workspace = true }
+
+[dev-dependencies]
+trybuild = { workspace = true }

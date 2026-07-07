@@ -45,6 +45,7 @@ devtools = ["dep:animato-devtools"]
 devtools-web-panel = ["devtools", "animato-devtools/web-panel"]
 devtools-egui-panel = ["devtools", "animato-devtools/egui-panel"]
 devtools-tui-panel = ["devtools", "animato-devtools/tui-panel"]
+macro = ["dep:animato-macro"]
 tokio    = ["timeline", "animato-timeline/tokio"]
 serde    = [
     "dep:serde",
@@ -74,6 +75,7 @@ animato-dioxus   = { workspace = true, optional = true }
 animato-yew      = { workspace = true, optional = true }
 animato-js       = { workspace = true, optional = true }
 animato-devtools = { workspace = true, optional = true }
+animato-macro    = { workspace = true, optional = true }
 palette          = { workspace = true, optional = true }
 serde            = { workspace = true, optional = true }
 
