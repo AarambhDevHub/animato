@@ -525,8 +525,6 @@ jobs:
           # Pre-existing advisories in transitive dependencies (GTK3 bindings
           # from Dioxus desktop, wgpu chain, bincode, anyhow, rand, etc.).
           # These are upstream issues, not introduced by Animato's own code.
-          # Yanked crates (enumset) are skipped since they are transitive deps
-          # we cannot control.
           cargo audit \
             --ignore RUSTSEC-2026-0204 \
             --ignore RUSTSEC-2026-0185 \
@@ -536,5 +534,4 @@ jobs:
             --ignore RUSTSEC-2026-0190 \
             --ignore RUSTSEC-2024-0429 \
             --ignore RUSTSEC-2026-0186 \
-            --ignore RUSTSEC-2026-0097 \
-            --yanked skip
+            --ignore RUSTSEC-2026-0097
