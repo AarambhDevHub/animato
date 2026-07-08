@@ -279,20 +279,15 @@ pub struct ColorSpec {
 }
 
 /// Color interpolation space.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ColorSpace {
     /// Linear RGB (gamma-correct sRGB lerp).
+    #[default]
     Linear,
     /// CIE L*a*b* (perceptually uniform).
     Lab,
     /// Oklch (modern perceptual).
     Oklch,
-}
-
-impl Default for ColorSpace {
-    fn default() -> Self {
-        Self::Linear
-    }
 }
 
 /// A waveform specification.

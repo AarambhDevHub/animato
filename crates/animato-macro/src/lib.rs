@@ -43,6 +43,14 @@
 //! | `wasm` | Enables `wasm_motion!` |
 
 #![deny(missing_docs)]
+// Framework helpers and some error/diagnostic functions are feature-gated or
+// reserved for future use — allow dead code in the proc-macro crate.
+#![allow(dead_code)]
+// The DSL parser uses explicit if-else chains and references that clippy
+// would otherwise collapse; allow these patterns for readability.
+#![allow(clippy::collapsible_if)]
+#![allow(clippy::needless_borrow)]
+#![allow(clippy::needless_lifetimes)]
 
 mod ast;
 mod easing;
@@ -54,7 +62,6 @@ mod presets;
 mod validate;
 
 use proc_macro::TokenStream;
-use quote::quote;
 
 /// Main declarative animation macro.
 ///

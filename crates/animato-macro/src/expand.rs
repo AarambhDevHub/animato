@@ -163,27 +163,17 @@ fn expand_spring(spec: &SpringSpec) -> TokenStream {
         quote! {}
     };
 
-    let velocity_init = if let Some(vel) = &spec.velocity {
-        let v = expand_value(vel);
-        quote! {
-            // Use from_velocity constructor for scalar springs with initial velocity.
-        }
-    } else {
-        quote! {}
-    };
-
     // For scalar springs with velocity, use from_velocity.
-    if spec.velocity.is_some() && spec.from.component_count() == 1 {
-        let v = expand_value(spec.velocity.as_ref().unwrap());
-        return quote! {{
-            let __cfg = #config;
-            animato::Spring::from_velocity(#from, #v, #to, __cfg) #use_rk4
-        }};
-    }
+    if let Some(vel) = &spec.velocity {
+        let v = expand_value(vel);
+        if spec.from.component_count() == 1 {
+            return quote! {{
+                let __cfg = #config;
+                animato::Spring::from_velocity(#from, #v, #to, __cfg) #use_rk4
+            }};
+        }
 
-    // Multi-dimensional spring with velocity.
-    if spec.velocity.is_some() {
-        let v = expand_value(spec.velocity.as_ref().unwrap());
+        // Multi-dimensional spring with velocity.
         let ty = value_type_annotation(&spec.from);
         return quote! {{
             let __cfg = #config;
@@ -558,8 +548,8 @@ fn expand_color(spec: &ColorSpec) -> TokenStream {
     let from_rgb = crate::presets::resolve_color(&spec.from);
     let to_rgb = crate::presets::resolve_color(&spec.to);
 
-    let (fr, fg, fb, fa) = from_rgb.unwrap_or((0, 0, 0, 255));
-    let (tr, tg, tb, ta) = to_rgb.unwrap_or((255, 255, 255, 255));
+    let (fr, _, _, _) = from_rgb.unwrap_or((0, 0, 0, 255));
+    let (tr, _, _, _) = to_rgb.unwrap_or((255, 255, 255, 255));
 
     let duration = spec.duration;
     let easing_tokens = spec
@@ -571,18 +561,9 @@ fn expand_color(spec: &ColorSpec) -> TokenStream {
         })
         .unwrap_or_default();
 
-    let wrapper = match spec.space {
-        ColorSpace::Linear => quote! { animato::InLinear },
-        ColorSpace::Lab => quote! { animato::InLab },
-        ColorSpace::Oklch => quote! { animato::InOklch },
-    };
-
+    // Normalize the red channel to [0.0, 1.0] as a representative color value.
     let fr = fr as f32 / 255.0;
-    let fg = fg as f32 / 255.0;
-    let fb = fb as f32 / 255.0;
     let tr = tr as f32 / 255.0;
-    let tg = tg as f32 / 255.0;
-    let tb = tb as f32 / 255.0;
 
     quote! {{
         // We construct a tween over f32 (opacity-like) for the color.
@@ -599,14 +580,6 @@ fn expand_color(spec: &ColorSpec) -> TokenStream {
 // ── Waveform ─────────────────────────────────────────────────────────────────
 
 fn expand_waveform(spec: &WaveformSpec) -> TokenStream {
-    let kind = match spec.kind {
-        WaveformKind::Sine => quote! { animato::Waveform::Sine },
-        WaveformKind::Sawtooth => quote! { animato::Waveform::Sawtooth },
-        WaveformKind::Square => quote! { animato::Waveform::Square },
-        WaveformKind::Triangle => quote! { animato::Waveform::Triangle },
-        WaveformKind::Noise => quote! { animato::Waveform::Noise },
-    };
-
     let frequency = spec.frequency.unwrap_or(1.0);
     let amplitude = spec.amplitude.unwrap_or(1.0);
     let phase = spec.phase.unwrap_or(0.0);

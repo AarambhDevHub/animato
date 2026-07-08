@@ -322,7 +322,7 @@ fn bounce_in(
     easing: Option<EasingSpec>,
     span: proc_macro2::Span,
 ) -> MotionNode {
-    let dur = default_duration(duration, 0.6);
+    let _dur = default_duration(duration, 0.6);
     let ease = easing.unwrap_or_else(|| EasingSpec::Named("ease_out_bounce".into()));
     MotionNode::Keyframes(KeyframeSpec {
         target: "scale".into(),
@@ -358,7 +358,7 @@ fn bounce_out(
     easing: Option<EasingSpec>,
     span: proc_macro2::Span,
 ) -> MotionNode {
-    let dur = default_duration(duration, 0.6);
+    let _dur = default_duration(duration, 0.6);
     let ease = easing.unwrap_or_else(|| EasingSpec::Named("ease_in_bounce".into()));
     MotionNode::Keyframes(KeyframeSpec {
         target: "scale".into(),

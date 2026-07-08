@@ -9,16 +9,6 @@ use animato::{animato, keyframes, spring, tween};
 const DT: f32 = 1.0 / 60.0;
 const STEPS: usize = 120;
 
-/// Manually advance an animation and collect its values.
-fn collect_values<T: Clone>(anim: &mut impl Update, get_value: impl Fn() -> T) -> Vec<T> {
-    let mut values = Vec::with_capacity(STEPS);
-    for _ in 0..STEPS {
-        anim.update(DT);
-        values.push(get_value());
-    }
-    values
-}
-
 #[test]
 fn tween_scalar_parity() {
     // Macro-generated tween.
@@ -154,7 +144,7 @@ fn keyframes_parity() {
 
 #[test]
 fn sequence_produces_timeline() {
-    let mut timeline = animato! {
+    let timeline = animato! {
         sequence {
             tween opacity: 0.0 => 1.0, duration: 0.3, easing: ease_out_cubic;
             spring scale: 0.8 => 1.0, preset: snappy;
@@ -167,7 +157,7 @@ fn sequence_produces_timeline() {
 
 #[test]
 fn parallel_produces_group() {
-    let mut group = animato! {
+    let group = animato! {
         parallel {
             tween x: 0.0 => 100.0, duration: 1.0;
             tween y: 0.0 => 50.0, duration: 1.0;
