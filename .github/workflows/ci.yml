@@ -437,13 +437,13 @@ jobs:
         run: cargo test -p animato-macro
 
       - name: Test trybuild compile-pass/fail suite
-        run: cargo test -p animato --features macro --test trybuild_suite
+        run: cargo test -p animato --features macro,tween,spring,timeline,path --test trybuild_suite
 
       - name: Test runtime parity
-        run: cargo test -p animato --features macro --test macro_runtime_parity
+        run: cargo test -p animato --features macro,tween,spring,timeline --test macro_runtime_parity
 
       - name: Check macro examples compile
-        run: cargo test -p animato --features macro --examples
+        run: cargo test -p animato --features macro,tween,spring,timeline,path,color --examples
 
       - name: Verify macro feature is non-default
         run: |

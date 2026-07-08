@@ -424,4 +424,56 @@ mod tests {
         }
         assert!(s.overshoot_count() > 0);
     }
+
+    // ── Playable impl tests ─────────────────────────────────────────────────
+
+    #[test]
+    fn playable_duration_is_infinite() {
+        let s = Spring::new(SpringConfig::snappy());
+        assert!(Playable::duration(&s).is_infinite());
+    }
+
+    #[test]
+    fn playable_is_complete_when_settled() {
+        let mut s = Spring::new(SpringConfig::snappy());
+        s.set_target(100.0);
+        assert!(!Playable::is_complete(&s));
+        run_to_settle(&mut s);
+        assert!(Playable::is_complete(&s));
+    }
+
+    #[test]
+    fn playable_seek_to_one_snaps_to_target() {
+        let mut s = Spring::new(SpringConfig::snappy());
+        s.set_target(100.0);
+        Playable::seek_to(&mut s, 1.0);
+        assert!(s.is_settled());
+        assert!((s.position() - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn playable_seek_to_zero_does_not_snap() {
+        let mut s = Spring::new(SpringConfig::snappy());
+        s.set_target(100.0);
+        Playable::seek_to(&mut s, 0.0);
+        assert!(!s.is_settled());
+    }
+
+    #[test]
+    fn playable_reset_zeroes_position() {
+        let mut s = Spring::new(SpringConfig::snappy());
+        s.set_target(100.0);
+        run_to_settle(&mut s);
+        assert!((s.position() - 100.0).abs() < 0.01);
+        Playable::reset(&mut s);
+        assert_eq!(s.position(), 0.0);
+    }
+
+    #[test]
+    fn playable_as_any_downcasts() {
+        let s = Spring::new(SpringConfig::default());
+        assert!(Playable::as_any(&s).is::<Spring>());
+        let mut s = s;
+        assert!(Playable::as_any_mut(&mut s).is::<Spring>());
+    }
 }

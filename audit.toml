@@ -1,0 +1,45 @@
+# cargo-audit configuration
+# https://github.com/rustsec/rustsec/tree/main/cargo-audit
+
+# Advisories to ignore. These are pre-existing vulnerabilities in transitive
+# dependencies (GTK3 bindings from Dioxus desktop, wgpu chain, etc.) that
+# cannot be fixed without upstream releases. They are not introduced by
+# Animato's own code.
+[advisories]
+ignore = [
+    # crossbeam-epoch: Invalid pointer dereference in fmt::Pointer impl
+    # Transitive dep — waiting for upstream update.
+    "RUSTSEC-2026-0204",
+
+    # quinn-proto: Remote memory exhaustion from unbounded out-of-order stream reassembly
+    # Transitive dep — waiting for upstream update.
+    "RUSTSEC-2026-0185",
+
+    # atk / atk-sys: gtk-rs GTK3 bindings - no longer maintained
+    # Comes from Dioxus desktop feature (optional).
+    "RUSTSEC-2024-0413",
+    "RUSTSEC-2024-0416",
+
+    # bincode: unmaintained + unsound Error::downcast_mut
+    # Transitive dep — waiting for upstream update.
+    "RUSTSEC-2025-0141",
+    "RUSTSEC-2026-0190",
+
+    # glib: Unsoundness in Iterator impls for VariantStrIter
+    # Comes from GTK3 bindings (Dioxus desktop).
+    "RUSTSEC-2024-0429",
+
+    # memmap2: Unchecked pointer offset
+    # Transitive dep from wgpu — waiting for upstream update.
+    "RUSTSEC-2026-0186",
+
+    # rand 0.7: unsound with custom logger using rand::rng()
+    # Transitive dep — waiting for upstream update.
+    "RUSTSEC-2026-0097",
+]
+
+# Yanked crates to ignore.
+[yanked]
+enabled = true
+# enumset 1.1.12 is yanked but is a transitive dependency we cannot control.
+# Leaving yanked checking enabled but the build will warn rather than fail.
