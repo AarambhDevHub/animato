@@ -81,6 +81,7 @@ serde            = { workspace = true, optional = true }
 
 [dev-dependencies]
 criterion      = { workspace = true }
+trybuild       = { workspace = true }
 animato-core   = { workspace = true }
 animato-tween  = { workspace = true, features = ["alloc"] }
 animato-timeline = { workspace = true }
@@ -97,6 +98,7 @@ animato-dioxus = { workspace = true }
 animato-yew    = { workspace = true }
 animato-js     = { workspace = true }
 animato-devtools = { workspace = true }
+animato-macro = { workspace = true }
 bevy_app       = { workspace = true }
 bevy_ecs       = { workspace = true }
 bevy_time      = { workspace = true }
@@ -207,6 +209,23 @@ required-features = ["tween", "timeline", "spring", "driver"]
 name = "devtools_facade"
 path = "../../tests/devtools_facade.rs"
 required-features = ["devtools", "tween", "driver"]
+
+# ── v1.7.0 Motion Macro tests ────────────────────────────────────────────────
+[[test]]
+name = "macro_runtime_parity"
+path = "../../tests/macro_runtime_parity.rs"
+required-features = ["macro", "tween", "spring", "timeline"]
+
+[[test]]
+name = "macro_integration"
+path = "../../tests/macro_integration.rs"
+required-features = ["macro", "tween", "spring", "timeline"]
+
+[[test]]
+name = "trybuild_suite"
+path = "../../tests/trybuild_suite.rs"
+required-features = ["macro", "tween", "spring", "timeline", "path"]
+harness = false
 
 # ── Benchmarks ────────────────────────────────────────────────────────────────
 [[bench]]
@@ -334,3 +353,64 @@ required-features = ["tween", "driver"]
 name = "gpu_particles"
 path = "../../examples/gpu_particles.rs"
 required-features = ["gpu"]
+
+# ── v1.7.0 Motion Macro examples ──────────────────────────────────────────────
+[[example]]
+name = "macro_basic_tween"
+path = "../../examples/macro_basic_tween.rs"
+required-features = ["macro", "tween"]
+
+[[example]]
+name = "macro_sequence"
+path = "../../examples/macro_sequence.rs"
+required-features = ["macro", "tween", "timeline", "spring"]
+
+[[example]]
+name = "macro_parallel"
+path = "../../examples/macro_parallel.rs"
+required-features = ["macro", "tween", "timeline"]
+
+[[example]]
+name = "macro_stagger_grid"
+path = "../../examples/macro_stagger_grid.rs"
+required-features = ["macro", "tween", "timeline"]
+
+[[example]]
+name = "macro_keyframes"
+path = "../../examples/macro_keyframes.rs"
+required-features = ["macro", "tween"]
+
+[[example]]
+name = "macro_spring_card"
+path = "../../examples/macro_spring_card.rs"
+required-features = ["macro", "spring"]
+
+[[example]]
+name = "macro_motion_path"
+path = "../../examples/macro_motion_path.rs"
+required-features = ["macro", "path"]
+
+[[example]]
+name = "macro_color_theme"
+path = "../../examples/macro_color_theme.rs"
+required-features = ["macro", "color", "tween"]
+
+[[example]]
+name = "macro_loading_wave"
+path = "../../examples/macro_loading_wave.rs"
+required-features = ["macro", "tween"]
+
+[[example]]
+name = "macro_hero_intro"
+path = "../../examples/macro_hero_intro.rs"
+required-features = ["macro", "tween", "timeline", "spring"]
+
+[[example]]
+name = "macro_modal_transition"
+path = "../../examples/macro_modal_transition.rs"
+required-features = ["macro", "tween", "timeline", "spring"]
+
+[[example]]
+name = "macro_page_transition"
+path = "../../examples/macro_page_transition.rs"
+required-features = ["macro", "tween", "timeline"]

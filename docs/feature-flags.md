@@ -44,6 +44,7 @@ animato = { version = "1.6.0", features = ["path", "physics"] }
 | `devtools-web-panel` | `devtools` plus the web overlay panel adapter |
 | `devtools-egui-panel` | `devtools` plus the desktop panel adapter |
 | `devtools-tui-panel` | `devtools` plus the terminal panel adapter |
+| `macro` | Declarative `animato!{}` / `motion!{}` Motion Macro DSL (v1.7.0) |
 | `serde` | Serde derives and re-exports on supported types |
 | `tokio` | `Timeline::wait()` |
 

@@ -1,7 +1,9 @@
 //! 1D [`Spring`] — damped harmonic oscillator.
 
 use crate::config::SpringConfig;
-use animato_core::{AnimationIntrospection, AnimationKind, Inspectable, PlaybackState, Update};
+use animato_core::{
+    AnimationIntrospection, AnimationKind, Inspectable, Playable, PlaybackState, Update,
+};
 
 /// Integration method for the spring ODE.
 #[derive(Clone, Debug, PartialEq)]
@@ -219,6 +221,40 @@ impl Inspectable for Spring {
             },
             None,
         )
+    }
+}
+
+impl Playable for Spring {
+    fn duration(&self) -> f32 {
+        // Springs have no finite duration — they settle asymptotically.
+        f32::INFINITY
+    }
+
+    fn reset(&mut self) {
+        // Reset to the initial position (current target becomes the new start).
+        let target = self.target;
+        self.snap_to(0.0);
+        self.target = target;
+    }
+
+    fn seek_to(&mut self, _progress: f32) {
+        // Springs don't support meaningful seeking; snap to target at progress=1.0.
+        if _progress >= 1.0 {
+            let target = self.target;
+            self.snap_to(target);
+        }
+    }
+
+    fn is_complete(&self) -> bool {
+        self.is_settled()
+    }
+
+    fn as_any(&self) -> &dyn core::any::Any {
+        self
+    }
+
+    fn as_any_mut(&mut self) -> &mut dyn core::any::Any {
+        self
     }
 }
 

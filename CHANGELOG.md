@@ -7,6 +7,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.7.0] — 2026-07-08 — Motion Macro
+
+### Added
+- `animato-macro`: new procedural macro crate providing a declarative `animato!{}` DSL for tweens, springs, keyframes, timelines, stagger patterns, motion paths, morphing, SVG draw, color interpolation, waveforms, gestures, and built-in presets.
+- Seven public macros: `animato!{}`, `motion!{}` (alias), `tween!{}`, `spring!{}`, `timeline!{}`, `keyframes!{}`, `preset!{}`.
+- Five feature-gated framework helper macros: `leptos_motion!{}`, `dioxus_motion!{}`, `yew_motion!{}`, `bevy_motion!{}`, `wasm_motion!{}`.
+- Twenty-three built-in animation presets: `fade_in`, `fade_out`, `slide_in`, `slide_out`, `scale_in`, `scale_out`, `bounce_in`, `bounce_out`, `modal_enter`, `modal_exit`, `drawer_open`, `drawer_close`, `toast_enter`, `toast_exit`, `page_enter`, `page_exit`, `stagger_children`, `loading_pulse`, `loading_wave`, `shake`, `wiggle`, `heartbeat`, `float`, `shimmer`.
+- `animato` facade: new `macro` feature flag (opt-in, non-default) and `prelude` module with macro-friendly re-exports.
+- Examples: `macro_basic_tween`, `macro_sequence`, `macro_parallel`, `macro_stagger_grid`, `macro_keyframes`, `macro_spring_card`, `macro_motion_path`, `macro_color_theme`, `macro_loading_wave`, `macro_hero_intro`, `macro_modal_transition`, `macro_page_transition`.
+- Documentation: `docs/motion-macro.md`, `docs/macro-reference.md`, `docs/macro-recipes.md`, `docs/macro-frameworks.md`, `docs/macro-expansion.md`, and `.github/release-notes/1.7.0.md`.
+- Tests: `tests/macro_runtime_parity.rs` runtime equivalence tests and `tests/trybuild_suite.rs` with compile-pass and compile-fail suites including `.stderr` snapshots for span-aware diagnostics.
+- Macro DSL supports twelve animation categories: tween, spring, keyframe, timeline/composition, stagger, path, morph, draw, color, waveform, preset, and framework helpers.
+- Span-aware compiler diagnostics with "did you mean…?" suggestions for unknown easing names, spring presets, and DSL keywords.
+- Compile-time validation for missing required fields, mismatched value types, negative durations, invalid colors, and unknown preset names.
+
+### Changed
+- Bumped workspace crates and internal dependency requirements from `1.6.0` to `1.7.0`.
+- Updated README with `animato!{}` hero example, `macro` feature documentation, and v1.7.0 version references.
+- Updated `docs/api-full.md`, `docs/feature-flags.md`, and `docs/release.md` for v1.7.0.
+- Updated ROADMAP v1.7.0 status to complete.
+
+### Migration
+- No breaking changes. The `macro` feature is opt-in and non-default. Existing `no_std` and focused sub-crate users are completely unaffected — the procedural macro crate is never pulled in unless `macro` is explicitly enabled.
+
+### Verification
+- `cargo check -p animato-macro`
+- `cargo test -p animato-macro`
+- `cargo test -p animato --features macro --examples`
+- `cargo test -p animato --features macro --test trybuild_suite`
+- `cargo test -p animato --features macro --test macro_runtime_parity`
+- `cargo test --workspace --all-features`
+- `cargo test --workspace --no-default-features`
+- `cargo clippy --workspace --all-features -- -D warnings`
+- `cargo doc --workspace --all-features --no-deps`
+
 ## [1.6.0] — 2026-06-16 — DevTools
 
 ### Added
@@ -388,7 +423,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/AarambhDevHub/animato/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/AarambhDevHub/animato/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/AarambhDevHub/animato/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/AarambhDevHub/animato/compare/v1.4.0...v1.5.0

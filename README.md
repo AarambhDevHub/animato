@@ -15,12 +15,13 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.6.0 API is stable. The current public crates cover easing, tweens,
+The v1.7.0 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
 first-class Leptos, Dioxus, Yew, JavaScript/WASM integration, and advanced
 engine primitives such as velocity springs, waveforms, quaternion slerp,
-animation groups, stagger patterns, recording, and runtime DevTools.
+animation groups, stagger patterns, recording, runtime DevTools, and the
+declarative `animato!{}` Motion Macro DSL for ergonomic animation authoring.
 
 ## Install
 
@@ -28,21 +29,28 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.6.0"
+animato = "1.7.0"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.6.0", features = ["path", "physics", "color"] }
+animato = { version = "1.7.0", features = ["path", "physics", "color"] }
+```
+
+Enable the Motion Macro DSL for declarative animation authoring:
+
+```toml
+[dependencies]
+animato = { version = "1.7.0", features = ["macro"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.6.0", features = ["leptos-csr"] }
+animato = { version = "1.7.0", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -50,7 +58,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.6.0", features = ["dioxus-web"] }
+animato = { version = "1.7.0", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -58,7 +66,7 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.6.0", features = ["yew-csr"] }
+animato = { version = "1.7.0", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -80,15 +88,17 @@ For `no_std`, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.6.0", default-features = false }
-animato-tween   = { version = "1.6.0", default-features = false }
-animato-spring  = { version = "1.6.0", default-features = false }
-animato-path    = { version = "1.6.0", default-features = false }
-animato-physics = { version = "1.6.0", default-features = false }
-animato-color   = { version = "1.6.0", default-features = false }
+animato-core    = { version = "1.7.0", default-features = false }
+animato-tween   = { version = "1.7.0", default-features = false }
+animato-spring  = { version = "1.7.0", default-features = false }
+animato-path    = { version = "1.7.0", default-features = false }
+animato-physics = { version = "1.7.0", default-features = false }
+animato-color   = { version = "1.7.0", default-features = false }
 ```
 
 ## Quick Start
+
+### Builder API
 
 ```rust
 use animato::{Easing, Tween, Update};
@@ -105,6 +115,32 @@ tween.update(0.5);
 assert_eq!(tween.value(), 100.0);
 assert!(tween.is_complete());
 ```
+
+### Motion Macro DSL (v1.7.0)
+
+For declarative, readable animation authoring, enable the `macro` feature and
+use the `animato!{}` DSL:
+
+```rust,ignore
+use animato::prelude::*;
+
+let intro = animato! {
+    sequence {
+        tween opacity: 0.0 => 1.0, duration: 0.35, easing: ease_out_cubic;
+        parallel {
+            tween y: 24.0 => 0.0, duration: 0.55, easing: ease_out_back;
+            spring scale: 0.92 => 1.0, preset: snappy;
+        }
+        stagger pattern: grid(cols: 3, rows: 2, origin: center), delay: 0.06 {
+            tween opacity: 0.0 => 1.0, duration: 0.25;
+        }
+    }
+};
+```
+
+The macro expands into the same stable `Tween`, `Spring`, `Timeline`, and
+`AnimationGroup` primitives — no hidden runtime. See the
+[Motion Macro guide](./docs/motion-macro.md) for the full DSL grammar.
 
 ## Core Concepts
 
@@ -148,6 +184,7 @@ other target.
 | [`animato-yew`](./crates/animato-yew) | Yew hooks, CSS, scroll, presence, lists, gestures, transitions, agents | wasm/std |
 | [`animato-js`](./crates/animato-js) | WASM-to-NPM bindings for JavaScript and framework examples | wasm |
 | [`animato-devtools`](./crates/animato-devtools) | Timeline inspector, easing editor, spring visualizer, recorder controls, perf monitor | std/wasm |
+| [`animato-macro`](./crates/animato-macro) | Declarative `animato!{}` Motion Macro DSL | compile-time |
 | [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
 
 ## Feature Flags
@@ -186,6 +223,7 @@ other target.
 | `devtools-web-panel` | `devtools` plus web overlay adapter |
 | `devtools-egui-panel` | `devtools` plus desktop panel adapter |
 | `devtools-tui-panel` | `devtools` plus TUI panel adapter |
+| `macro` | Declarative `animato!{}` / `motion!{}` Motion Macro DSL |
 | `serde` | Serialization for supported public types |
 | `tokio` | `Timeline::wait()` async completion helper |
 
@@ -210,6 +248,23 @@ cargo run --example gpu_particles --features gpu
 cargo run --example bevy_transform --features bevy
 cargo run --example tui_progress
 cargo run --example tui_spinner
+```
+
+Motion Macro examples (v1.7.0):
+
+```sh
+cargo run --example macro_basic_tween --features macro
+cargo run --example macro_sequence --features macro
+cargo run --example macro_parallel --features macro
+cargo run --example macro_stagger_grid --features macro
+cargo run --example macro_keyframes --features macro
+cargo run --example macro_spring_card --features macro
+cargo run --example macro_motion_path --features macro
+cargo run --example macro_color_theme --features macro
+cargo run --example macro_loading_wave --features macro
+cargo run --example macro_hero_intro --features macro
+cargo run --example macro_modal_transition --features macro
+cargo run --example macro_page_transition --features macro
 ```
 
 DevTools examples:
@@ -280,11 +335,16 @@ npm run build --prefix examples/js_devtools
 
 ## Documentation
 
-The v1.6 documentation lives in [`docs/`](./docs/):
+The v1.7 documentation lives in [`docs/`](./docs/):
 
 | Start here | Details |
 |------------|---------|
 | [Getting Started](./docs/getting-started.md) | First animation and update loop. |
+| [Motion Macro](./docs/motion-macro.md) | Declarative `animato!{}` DSL guide (v1.7.0). |
+| [Macro Reference](./docs/macro-reference.md) | Full DSL grammar and keyword reference. |
+| [Macro Recipes](./docs/macro-recipes.md) | Copy-paste animation recipes for the macro. |
+| [Macro Frameworks](./docs/macro-frameworks.md) | Leptos, Dioxus, Yew, Bevy, WASM macro helpers. |
+| [Macro Expansion](./docs/macro-expansion.md) | What code the macro generates. |
 | [API Full](./docs/api-full.md) | Complete stable API map by crate. |
 | [Feature Flags](./docs/feature-flags.md) | Exact feature requirements. |
 | [Concepts](./docs/concepts.md) | `Interpolate`, `Update`, clocks, composition. |
@@ -296,14 +356,14 @@ The v1.6 documentation lives in [`docs/`](./docs/):
 | [Advanced Engine](./docs/advanced-engine.md) | Velocity springs, waveforms, slerp, groups, staggers, recorder. |
 | [DevTools](./docs/devtools.md) | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor. |
 | [Testing](./docs/testing.md) | Local and CI verification commands. |
-| [Release](./docs/release.md) | v1.6 publishing checklist. |
+| [Release](./docs/release.md) | v1.7 publishing checklist. |
 
 The generated Rust API docs are available on
 [docs.rs/animato](https://docs.rs/animato).
 
 ## Testing
 
-The v1.6 release gate is:
+The v1.7 release gate is:
 
 ```sh
 cargo fmt --check

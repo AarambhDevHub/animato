@@ -39,7 +39,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.4.0` | JavaScript | WASM-compiled NPM package for React, Svelte, Vue, Angular, vanilla JS | ✅ |
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | ✅ |
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | ✅ |
-| `v1.7.0` | Motion Macro | Declarative `animato!{}` macro DSL for tweens, springs, timelines, gestures, paths, colors, presets, and framework helpers | 📋 |
+| `v1.7.0` | Motion Macro | Declarative `animato!{}` macro DSL for tweens, springs, timelines, gestures, paths, colors, presets, and framework helpers | ✅ |
 
 ---
 
@@ -877,223 +877,223 @@ All enhancements go into existing crates as backward-compatible additions.
 
 **`animato-macro` — core macro system**
 
-* [ ] `animato! {}` procedural macro
-* [ ] `motion! {}` alias for users who prefer motion-style naming
-* [ ] `tween! {}` helper macro for standalone tween generation
-* [ ] `spring! {}` helper macro for standalone spring generation
-* [ ] `timeline! {}` helper macro for timeline-only composition
-* [ ] `keyframes! {}` helper macro for keyframe-track generation
-* [ ] `preset! {}` helper macro for reusable named animation presets
-* [ ] Compile-time parsing using `syn`
-* [ ] Token generation using `quote`
-* [ ] Compile-time validation for malformed animation blocks
-* [ ] Helpful compiler errors for missing `duration`, invalid easing names, invalid spring presets, wrong value types, unknown DSL keywords, and unsupported nesting
-* [ ] Generated code must use existing stable Animato primitives instead of creating a separate runtime
+* [x] `animato! {}` procedural macro
+* [x] `motion! {}` alias for users who prefer motion-style naming
+* [x] `tween! {}` helper macro for standalone tween generation
+* [x] `spring! {}` helper macro for standalone spring generation
+* [x] `timeline! {}` helper macro for timeline-only composition
+* [x] `keyframes! {}` helper macro for keyframe-track generation
+* [x] `preset! {}` helper macro for reusable named animation presets
+* [x] Compile-time parsing using `syn`
+* [x] Token generation using `quote`
+* [x] Compile-time validation for malformed animation blocks
+* [x] Helpful compiler errors for missing `duration`, invalid easing names, invalid spring presets, wrong value types, unknown DSL keywords, and unsupported nesting
+* [x] Generated code must use existing stable Animato primitives instead of creating a separate runtime
 
 **`animato-macro` — composition DSL**
 
-* [ ] `sequence { ... }` — generate sequential timeline playback
-* [ ] `parallel { ... }` — generate parallel animation groups
-* [ ] `stagger delay: 0.05 { ... }` — generate staggered animations
-* [ ] `stagger pattern: grid(cols: 4, rows: 3, origin: center) { ... }`
-* [ ] `stagger pattern: random(seed: 42, min: 0.02, max: 0.12) { ... }`
-* [ ] `group parallel { ... }`
-* [ ] `group sequence { ... }`
-* [ ] Nested `sequence`, `parallel`, `stagger`, and `group` blocks
-* [ ] Labels for timeline anchors: `label "intro";`
-* [ ] Relative offsets: `at "+0.2"`, `at "-0.1"`
-* [ ] Absolute offsets: `at 1.25`
-* [ ] Timeline nesting: generated `Timeline::add_timeline(...)`
-* [ ] Named generated outputs for reuse in examples and tests
+* [x] `sequence { ... }` — generate sequential timeline playback
+* [x] `parallel { ... }` — generate parallel animation groups
+* [x] `stagger delay: 0.05 { ... }` — generate staggered animations
+* [x] `stagger pattern: grid(cols: 4, rows: 3, origin: center) { ... }`
+* [x] `stagger pattern: random(seed: 42, min: 0.02, max: 0.12) { ... }`
+* [x] `group parallel { ... }`
+* [x] `group sequence { ... }`
+* [x] Nested `sequence`, `parallel`, `stagger`, and `group` blocks
+* [x] Labels for timeline anchors: `label "intro";`
+* [x] Relative offsets: `at "+0.2"`, `at "-0.1"`
+* [x] Absolute offsets: `at 1.25`
+* [x] Timeline nesting: generated `Timeline::add_timeline(...)`
+* [x] Named generated outputs for reuse in examples and tests
 
 **`animato-macro` — tween DSL**
 
-* [ ] Scalar tween syntax: `tween opacity: 0.0 => 1.0, duration: 0.4`
-* [ ] Vector tween syntax: `tween position: [0.0, 20.0] => [0.0, 0.0], duration: 0.6`
-* [ ] Integer tween syntax for supported interpolated numeric values
-* [ ] Angle tween syntax using `Angle`
-* [ ] Quaternion tween syntax using `Quaternion`
-* [ ] Matrix tween syntax using `Mat4`
-* [ ] Color tween syntax using `Color`, `InLab`, `InOklch`, and `InLinear`
-* [ ] Easing by enum: `easing: Easing::EaseOutCubic`
-* [ ] Easing by short name: `easing: ease_out_cubic`
-* [ ] CSS-style easing parser inside macro: `easing: cubic_bezier(0.22, 1.0, 0.36, 1.0)`
-* [ ] Step easing syntax: `easing: steps(5)`
-* [ ] Advanced easing syntax: `easing: wiggle(4)`, `rough(strength: 0.5, points: 8)`, `slowmo(linear_ratio: 0.7, power: 2.0)`
-* [ ] Delay support: `delay: 0.2`
-* [ ] Time-scale support: `time_scale: 1.5`
-* [ ] Loop support: `loop: once`, `times(3)`, `forever`, `ping_pong`, `ping_pong_times(4)`
-* [ ] Snap and round modifiers: `snap: 8.0`, `round: 2`
-* [ ] Reverse support: `reverse: true`
-* [ ] Generated builder code should remain readable in macro expansion tests
+* [x] Scalar tween syntax: `tween opacity: 0.0 => 1.0, duration: 0.4`
+* [x] Vector tween syntax: `tween position: [0.0, 20.0] => [0.0, 0.0], duration: 0.6`
+* [x] Integer tween syntax for supported interpolated numeric values
+* [x] Angle tween syntax using `Angle`
+* [x] Quaternion tween syntax using `Quaternion`
+* [x] Matrix tween syntax using `Mat4`
+* [x] Color tween syntax using `Color`, `InLab`, `InOklch`, and `InLinear`
+* [x] Easing by enum: `easing: Easing::EaseOutCubic`
+* [x] Easing by short name: `easing: ease_out_cubic`
+* [x] CSS-style easing parser inside macro: `easing: cubic_bezier(0.22, 1.0, 0.36, 1.0)`
+* [x] Step easing syntax: `easing: steps(5)`
+* [x] Advanced easing syntax: `easing: wiggle(4)`, `rough(strength: 0.5, points: 8)`, `slowmo(linear_ratio: 0.7, power: 2.0)`
+* [x] Delay support: `delay: 0.2`
+* [x] Time-scale support: `time_scale: 1.5`
+* [x] Loop support: `loop: once`, `times(3)`, `forever`, `ping_pong`, `ping_pong_times(4)`
+* [x] Snap and round modifiers: `snap: 8.0`, `round: 2`
+* [x] Reverse support: `reverse: true`
+* [x] Generated builder code should remain readable in macro expansion tests
 
 **`animato-macro` — spring DSL**
 
-* [ ] Basic spring syntax: `spring x: 0.0 => 100.0, preset: snappy`
-* [ ] Spring config syntax: `spring scale: 0.8 => 1.0, stiffness: 350.0, damping: 28.0, mass: 1.0`
-* [ ] Preset support: `gentle`, `wobbly`, `stiff`, `slow`, `snappy`
-* [ ] Damping mode support: `critically_damped(stiffness)`, `overdamped(stiffness, ratio)`, `underdamped(stiffness, ratio)`
-* [ ] Velocity spring syntax: `spring x: 0.0 => 320.0, velocity: 900.0, preset: snappy`
-* [ ] Multi-dimensional spring syntax for `[f32; 2]`, `[f32; 3]`, and `[f32; 4]`
-* [ ] Settle epsilon syntax: `epsilon: 0.001`
-* [ ] RK4 option: `integrator: rk4`
-* [ ] Generated code uses `Spring`, `SpringN`, and `SpringConfig`
+* [x] Basic spring syntax: `spring x: 0.0 => 100.0, preset: snappy`
+* [x] Spring config syntax: `spring scale: 0.8 => 1.0, stiffness: 350.0, damping: 28.0, mass: 1.0`
+* [x] Preset support: `gentle`, `wobbly`, `stiff`, `slow`, `snappy`
+* [x] Damping mode support: `critically_damped(stiffness)`, `overdamped(stiffness, ratio)`, `underdamped(stiffness, ratio)`
+* [x] Velocity spring syntax: `spring x: 0.0 => 320.0, velocity: 900.0, preset: snappy`
+* [x] Multi-dimensional spring syntax for `[f32; 2]`, `[f32; 3]`, and `[f32; 4]`
+* [x] Settle epsilon syntax: `epsilon: 0.001`
+* [x] RK4 option: `integrator: rk4`
+* [x] Generated code uses `Spring`, `SpringN`, and `SpringConfig`
 
 **`animato-macro` — keyframe DSL**
 
-* [ ] `keyframes opacity { 0%: 0.0, 50%: 0.7, 100%: 1.0 }`
-* [ ] Time syntax: `0.0s`, `0.25s`, `1.0s`
-* [ ] Percentage syntax: `0%`, `50%`, `100%`
-* [ ] Per-keyframe easing: `50%: 0.7 ease_out_cubic`
-* [ ] Loop support for keyframe tracks
-* [ ] Ping-pong keyframe support
-* [ ] Generated `KeyframeTrack<T>` with sorted frames
-* [ ] Compile-time validation for duplicate or unsorted keyframe times where possible
+* [x] `keyframes opacity { 0%: 0.0, 50%: 0.7, 100%: 1.0 }`
+* [x] Time syntax: `0.0s`, `0.25s`, `1.0s`
+* [x] Percentage syntax: `0%`, `50%`, `100%`
+* [x] Per-keyframe easing: `50%: 0.7 ease_out_cubic`
+* [x] Loop support for keyframe tracks
+* [x] Ping-pong keyframe support
+* [x] Generated `KeyframeTrack<T>` with sorted frames
+* [x] Compile-time validation for duplicate or unsorted keyframe times where possible
 
 **`animato-macro` — path and SVG DSL**
 
-* [ ] Motion path syntax: `path position along "M 0 0 C 50 100 150 100 200 0", duration: 1.2`
-* [ ] Bezier path syntax: `bezier from [0.0, 0.0], ctrl [50.0, 100.0], to [200.0, 0.0]`
-* [ ] Cubic Bezier path syntax with two control points
-* [ ] Catmull-Rom path syntax for point arrays
-* [ ] Auto-rotate syntax: `auto_rotate: true`
-* [ ] Start/end offset syntax: `offset: 0.1..0.9`
-* [ ] SVG draw syntax: `draw svg_path, duration: 1.0`
-* [ ] Morph syntax: `morph shape_a => shape_b, samples: 64, duration: 0.8`
-* [ ] Generated code uses `MotionPath`, `MotionPathTween`, `SvgPathParser`, `DrawSvg`, and `MorphPath`
+* [x] Motion path syntax: `path position along "M 0 0 C 50 100 150 100 200 0", duration: 1.2`
+* [x] Bezier path syntax: `bezier from [0.0, 0.0], ctrl [50.0, 100.0], to [200.0, 0.0]`
+* [x] Cubic Bezier path syntax with two control points
+* [x] Catmull-Rom path syntax for point arrays
+* [x] Auto-rotate syntax: `auto_rotate: true`
+* [x] Start/end offset syntax: `offset: 0.1..0.9`
+* [x] SVG draw syntax: `draw svg_path, duration: 1.0`
+* [x] Morph syntax: `morph shape_a => shape_b, samples: 64, duration: 0.8`
+* [x] Generated code uses `MotionPath`, `MotionPathTween`, `SvgPathParser`, `DrawSvg`, and `MorphPath`
 
 **`animato-macro` — color DSL**
 
-* [ ] RGB color tween syntax: `color background: "#ff0000" => "#0000ff", duration: 0.5`
-* [ ] Linear interpolation mode: `space: linear`
-* [ ] Lab interpolation mode: `space: lab`
-* [ ] Oklch interpolation mode: `space: oklch`
-* [ ] Named color support for common CSS color names where practical
-* [ ] Hex parser for `#rgb`, `#rgba`, `#rrggbb`, and `#rrggbbaa`
-* [ ] Generated code uses `animato-color` wrappers
-* [ ] Compile-time or early runtime error for invalid color strings
+* [x] RGB color tween syntax: `color background: "#ff0000" => "#0000ff", duration: 0.5`
+* [x] Linear interpolation mode: `space: linear`
+* [x] Lab interpolation mode: `space: lab`
+* [x] Oklch interpolation mode: `space: oklch`
+* [x] Named color support for common CSS color names where practical
+* [x] Hex parser for `#rgb`, `#rgba`, `#rrggbb`, and `#rrggbbaa`
+* [x] Generated code uses `animato-color` wrappers
+* [x] Compile-time or early runtime error for invalid color strings
 
 **`animato-macro` — waveform DSL**
 
-* [ ] `waveform sine frequency: 2.0, amplitude: 1.0, phase: 0.0`
-* [ ] `waveform sawtooth frequency: 2.0, amplitude: 1.0`
-* [ ] `waveform square frequency: 2.0, amplitude: 1.0, duty_cycle: 0.5`
-* [ ] `waveform triangle frequency: 2.0, amplitude: 1.0`
-* [ ] `waveform noise seed: 42, smoothness: 0.8`
-* [ ] Convert waveform to generated `KeyframeTrack<f32>`
-* [ ] Support procedural idle animations, loading animations, breathing motion, shimmer, pulse, shake, and wiggle presets
+* [x] `waveform sine frequency: 2.0, amplitude: 1.0, phase: 0.0`
+* [x] `waveform sawtooth frequency: 2.0, amplitude: 1.0`
+* [x] `waveform square frequency: 2.0, amplitude: 1.0, duty_cycle: 0.5`
+* [x] `waveform triangle frequency: 2.0, amplitude: 1.0`
+* [x] `waveform noise seed: 42, smoothness: 0.8`
+* [x] Convert waveform to generated `KeyframeTrack<f32>`
+* [x] Support procedural idle animations, loading animations, breathing motion, shimmer, pulse, shake, and wiggle presets
 
 **`animato-macro` — gesture and physics DSL**
 
-* [ ] `drag position, axis: both, inertia: smooth`
-* [ ] `drag x, axis: x, bounds: 0.0..320.0`
-* [ ] `inertia velocity: 800.0, friction: 0.92`
-* [ ] `gesture swipe direction: left`
-* [ ] `gesture tap`
-* [ ] `gesture long_press duration: 0.5`
-* [ ] `gesture pinch`
-* [ ] `gesture rotation`
-* [ ] Generated code uses `DragState`, `Inertia`, `InertiaN`, and `GestureRecognizer`
-* [ ] Framework-specific event binding remains optional and renderer-side
+* [x] `drag position, axis: both, inertia: smooth`
+* [x] `drag x, axis: x, bounds: 0.0..320.0`
+* [x] `inertia velocity: 800.0, friction: 0.92`
+* [x] `gesture swipe direction: left`
+* [x] `gesture tap`
+* [x] `gesture long_press duration: 0.5`
+* [x] `gesture pinch`
+* [x] `gesture rotation`
+* [x] Generated code uses `DragState`, `Inertia`, `InertiaN`, and `GestureRecognizer`
+* [x] Framework-specific event binding remains optional and renderer-side
 
 **`animato-macro` — preset system**
 
-* [ ] Built-in `fade_in`
-* [ ] Built-in `fade_out`
-* [ ] Built-in `slide_in`
-* [ ] Built-in `slide_out`
-* [ ] Built-in `scale_in`
-* [ ] Built-in `scale_out`
-* [ ] Built-in `bounce_in`
-* [ ] Built-in `bounce_out`
-* [ ] Built-in `modal_enter`
-* [ ] Built-in `modal_exit`
-* [ ] Built-in `drawer_open`
-* [ ] Built-in `drawer_close`
-* [ ] Built-in `toast_enter`
-* [ ] Built-in `toast_exit`
-* [ ] Built-in `page_enter`
-* [ ] Built-in `page_exit`
-* [ ] Built-in `stagger_children`
-* [ ] Built-in `loading_pulse`
-* [ ] Built-in `loading_wave`
-* [ ] Built-in `shake`
-* [ ] Built-in `wiggle`
-* [ ] Built-in `heartbeat`
-* [ ] Built-in `float`
-* [ ] Built-in `shimmer`
-* [ ] Allow user-defined presets with `preset! {}` macro
-* [ ] Presets expand into normal Animato types, not hidden runtime objects
+* [x] Built-in `fade_in`
+* [x] Built-in `fade_out`
+* [x] Built-in `slide_in`
+* [x] Built-in `slide_out`
+* [x] Built-in `scale_in`
+* [x] Built-in `scale_out`
+* [x] Built-in `bounce_in`
+* [x] Built-in `bounce_out`
+* [x] Built-in `modal_enter`
+* [x] Built-in `modal_exit`
+* [x] Built-in `drawer_open`
+* [x] Built-in `drawer_close`
+* [x] Built-in `toast_enter`
+* [x] Built-in `toast_exit`
+* [x] Built-in `page_enter`
+* [x] Built-in `page_exit`
+* [x] Built-in `stagger_children`
+* [x] Built-in `loading_pulse`
+* [x] Built-in `loading_wave`
+* [x] Built-in `shake`
+* [x] Built-in `wiggle`
+* [x] Built-in `heartbeat`
+* [x] Built-in `float`
+* [x] Built-in `shimmer`
+* [x] Allow user-defined presets with `preset! {}` macro
+* [x] Presets expand into normal Animato types, not hidden runtime objects
 
 **`animato-macro` — framework helper generation**
 
-* [ ] Leptos helper macro: `leptos_motion! { ... }`
-* [ ] Dioxus helper macro: `dioxus_motion! { ... }`
-* [ ] Yew helper macro: `yew_motion! { ... }`
-* [ ] WASM helper macro: `wasm_motion! { ... }`
-* [ ] Bevy helper macro: `bevy_motion! { ... }`
-* [ ] Generated framework helpers should call existing integration crates
-* [ ] Framework helpers remain feature-gated
-* [ ] No framework dependency is pulled unless the matching feature is enabled
-* [ ] SSR-safe macro expansions for Leptos/Yew where applicable
+* [x] Leptos helper macro: `leptos_motion! { ... }`
+* [x] Dioxus helper macro: `dioxus_motion! { ... }`
+* [x] Yew helper macro: `yew_motion! { ... }`
+* [x] WASM helper macro: `wasm_motion! { ... }`
+* [x] Bevy helper macro: `bevy_motion! { ... }`
+* [x] Generated framework helpers should call existing integration crates
+* [x] Framework helpers remain feature-gated
+* [x] No framework dependency is pulled unless the matching feature is enabled
+* [x] SSR-safe macro expansions for Leptos/Yew where applicable
 
 **`animato-macro` — JavaScript/WASM helper generation**
 
-* [ ] Macro-generated examples for `animato-js` parity
-* [ ] Exportable preset metadata for JavaScript docs
-* [ ] Optional generated TypeScript preset descriptions
-* [ ] Ensure macro DSL concepts map cleanly to `@aarambhdevhub/animato-core`
-* [ ] Add docs showing Rust macro DSL and JS equivalent APIs side by side
+* [x] Macro-generated examples for `animato-js` parity
+* [x] Exportable preset metadata for JavaScript docs
+* [x] Optional generated TypeScript preset descriptions
+* [x] Ensure macro DSL concepts map cleanly to `@aarambhdevhub/animato-core`
+* [x] Add docs showing Rust macro DSL and JS equivalent APIs side by side
 
 **`animato` facade**
 
-* [ ] Add `macro` feature flag
-* [ ] Re-export `animato_macro::animato`
-* [ ] Re-export `animato_macro::motion`
-* [ ] Re-export helper macros where stable
-* [ ] Add `prelude` module with macro-friendly imports
-* [ ] Ensure `default` features do not include `macro`
-* [ ] Ensure `no_std` users can continue using focused crates without procedural macro dependency
+* [x] Add `macro` feature flag
+* [x] Re-export `animato_macro::animato`
+* [x] Re-export `animato_macro::motion`
+* [x] Re-export helper macros where stable
+* [x] Add `prelude` module with macro-friendly imports
+* [x] Ensure `default` features do not include `macro`
+* [x] Ensure `no_std` users can continue using focused crates without procedural macro dependency
 
 **Documentation & Examples**
 
-* [ ] `docs/motion-macro.md` — complete macro guide
-* [ ] `docs/macro-recipes.md` — copy-paste animation recipes
-* [ ] `docs/macro-reference.md` — full DSL grammar
-* [ ] `docs/macro-expansion.md` — explains what code the macro generates
-* [ ] `docs/macro-frameworks.md` — Leptos, Dioxus, Yew, Bevy, WASM usage
-* [ ] Update `README.md` with a small `animato!{}` hero example
-* [ ] Update `ARCHITECTURE.md` with `animato-macro`
-* [ ] Update `docs/api-full.md`
-* [ ] `examples/macro_basic_tween.rs`
-* [ ] `examples/macro_sequence.rs`
-* [ ] `examples/macro_parallel.rs`
-* [ ] `examples/macro_stagger_grid.rs`
-* [ ] `examples/macro_keyframes.rs`
-* [ ] `examples/macro_spring_card.rs`
-* [ ] `examples/macro_motion_path.rs`
-* [ ] `examples/macro_color_theme.rs`
-* [ ] `examples/macro_loading_wave.rs`
-* [ ] `examples/macro_hero_intro.rs`
-* [ ] `examples/macro_modal_transition.rs`
-* [ ] `examples/macro_page_transition.rs`
+* [x] `docs/motion-macro.md` — complete macro guide
+* [x] `docs/macro-recipes.md` — copy-paste animation recipes
+* [x] `docs/macro-reference.md` — full DSL grammar
+* [x] `docs/macro-expansion.md` — explains what code the macro generates
+* [x] `docs/macro-frameworks.md` — Leptos, Dioxus, Yew, Bevy, WASM usage
+* [x] Update `README.md` with a small `animato!{}` hero example
+* [x] Update `ARCHITECTURE.md` with `animato-macro`
+* [x] Update `docs/api-full.md`
+* [x] `examples/macro_basic_tween.rs`
+* [x] `examples/macro_sequence.rs`
+* [x] `examples/macro_parallel.rs`
+* [x] `examples/macro_stagger_grid.rs`
+* [x] `examples/macro_keyframes.rs`
+* [x] `examples/macro_spring_card.rs`
+* [x] `examples/macro_motion_path.rs`
+* [x] `examples/macro_color_theme.rs`
+* [x] `examples/macro_loading_wave.rs`
+* [x] `examples/macro_hero_intro.rs`
+* [x] `examples/macro_modal_transition.rs`
+* [x] `examples/macro_page_transition.rs`
 
 **Testing**
 
-* [ ] Unit tests for macro parser
-* [ ] Snapshot tests for generated token output
-* [ ] Runtime tests proving macro-generated tweens match manual tweens
-* [ ] Runtime tests proving macro-generated timelines match manual timelines
-* [ ] Runtime tests proving macro-generated spring configs match manual spring configs
-* [ ] Runtime tests for sequence, parallel, stagger, keyframes, paths, colors, and presets
-* [ ] Compile-fail tests using `trybuild`
-* [ ] Compile-pass tests using `trybuild`
-* [ ] Tests for helpful error messages
-* [ ] Tests for feature-gated framework macros
-* [ ] Tests that `animato` without `macro` does not pull procedural macro dependencies
-* [ ] CI job for macro compile tests
-* [ ] CI job for macro examples
-* [ ] Docs build with macro examples
+* [x] Unit tests for macro parser
+* [x] Snapshot tests for generated token output
+* [x] Runtime tests proving macro-generated tweens match manual tweens
+* [x] Runtime tests proving macro-generated timelines match manual timelines
+* [x] Runtime tests proving macro-generated spring configs match manual spring configs
+* [x] Runtime tests for sequence, parallel, stagger, keyframes, paths, colors, and presets
+* [x] Compile-fail tests using `trybuild`
+* [x] Compile-pass tests using `trybuild`
+* [x] Tests for helpful error messages
+* [x] Tests for feature-gated framework macros
+* [x] Tests that `animato` without `macro` does not pull procedural macro dependencies
+* [x] CI job for macro compile tests
+* [x] CI job for macro examples
+* [x] Docs build with macro examples
 
 ### Example target syntax
 
@@ -1159,10 +1159,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.6 stable API, test the planned v1.7 Motion Macro design, and open focused issues for bugs, documentation gaps, or macro feature proposals.
+The best way to contribute right now is to use the v1.7 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
 
 ---
 
 *Roadmap version: 1.7.0 — last updated July 2026*
-*v1.6.0 DevTools shipped; v1.7.0 Motion Macro is the next planned milestone*
+*v1.7.0 Motion Macro shipped — the final committed roadmap milestone*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

@@ -2,76 +2,232 @@
 //!
 //! Procedural macro DSL for declarative Animato animation authoring.
 //!
-//! This crate is the compile-time authoring layer for Animato. It does not
-//! introduce a new runtime. Every macro expansion should eventually generate
-//! normal Animato primitives such as `Tween`, `Spring`, `Timeline`,
-//! `AnimationGroup`, `KeyframeTrack`, `MotionPathTween`, and related types.
+//! This crate is the compile-time authoring layer for Animato. It does **not**
+//! introduce a new runtime. Every macro expansion generates normal Animato
+//! primitives such as `Tween`, `Spring`, `Timeline`, `AnimationGroup`,
+//! `KeyframeTrack`, `MotionPathTween`, and related types.
 //!
-//! The first implementation step only exposes macro entry points. The parser,
-//! AST, validation, and code generation modules will be added incrementally.
+//! ## Quick Start
+//!
+//! ```ignore
+//! use animato::prelude::*;
+//!
+//! let intro = animato! {
+//!     sequence {
+//!         tween opacity: 0.0 => 1.0, duration: 0.35, easing: ease_out_cubic;
+//!         spring scale: 0.92 => 1.0, preset: snappy;
+//!     }
+//! };
+//! ```
+//!
+//! ## Macros
+//!
+//! | Macro | Purpose |
+//! |-------|---------|
+//! | `animato! { ... }` | Primary declarative DSL |
+//! | `motion! { ... }` | Alias for `animato!` |
+//! | `tween! { ... }` | Standalone `Tween<T>` generator |
+//! | `spring! { ... }` | Standalone `Spring` / `SpringN<T>` generator |
+//! | `timeline! { ... }` | Standalone `Timeline` generator |
+//! | `keyframes! { ... }` | Standalone `KeyframeTrack<T>` generator |
+//! | `preset! { ... }` | User-defined reusable preset generator |
+//!
+//! ## Feature Flags
+//!
+//! | Feature | Effect |
+//! |---------|--------|
+//! | `leptos` | Enables `leptos_motion!` |
+//! | `dioxus` | Enables `dioxus_motion!` |
+//! | `yew` | Enables `yew_motion!` |
+//! | `bevy` | Enables `bevy_motion!` |
+//! | `wasm` | Enables `wasm_motion!` |
+
+#![deny(missing_docs)]
+
+mod ast;
+mod easing;
+mod error;
+mod expand;
+mod framework;
+mod parser;
+mod presets;
+mod validate;
 
 use proc_macro::TokenStream;
+use quote::quote;
 
 /// Main declarative animation macro.
 ///
-/// Planned syntax:
+/// Parses a block of motion nodes (tweens, springs, keyframes, sequences,
+/// parallels, staggers, paths, colors, waveforms, presets) and generates
+/// the corresponding Animato primitive expression.
+///
+/// # Example
 ///
 /// ```ignore
 /// let intro = animato! {
 ///     sequence {
-///         tween opacity: 0.0 => 1.0, duration: 0.3, easing: ease_out_cubic;
-///         spring scale: 0.8 => 1.0, preset: snappy;
+///         tween opacity: 0.0 => 1.0, duration: 0.35, easing: ease_out_cubic;
+///         parallel {
+///             tween y: 24.0 => 0.0, duration: 0.55, easing: ease_out_back;
+///             spring scale: 0.92 => 1.0, preset: snappy;
+///         }
 ///     }
 /// };
 /// ```
 #[proc_macro]
-pub fn animato(_input: TokenStream) -> TokenStream {
-    not_implemented("animato!")
+pub fn animato(input: TokenStream) -> TokenStream {
+    expand_macro(input, "animato")
 }
 
-/// Alias for [`animato!`] focused on UI-style motion authoring.
+/// Alias for [`animato!`](macro@animato) focused on UI-style motion authoring.
+///
+/// Produces identical expansion to `animato!{}`.
 #[proc_macro]
-pub fn motion(_input: TokenStream) -> TokenStream {
-    not_implemented("motion!")
+pub fn motion(input: TokenStream) -> TokenStream {
+    expand_macro(input, "motion")
 }
 
 /// Standalone tween macro.
+///
+/// Generates a single `Tween<T>` from a `tween ...;` statement.
+///
+/// # Example
+///
+/// ```ignore
+/// let t = tween!{ opacity: 0.0 => 1.0, duration: 0.4, easing: ease_out_cubic };
+/// ```
 #[proc_macro]
-pub fn tween(_input: TokenStream) -> TokenStream {
-    not_implemented("tween!")
+pub fn tween(input: TokenStream) -> TokenStream {
+    expand_macro(input, "tween")
 }
 
 /// Standalone spring macro.
+///
+/// Generates a `Spring` or `SpringN<T>` from a `spring ...;` statement.
+///
+/// # Example
+///
+/// ```ignore
+/// let s = spring!{ scale: 0.8 => 1.0, preset: snappy };
+/// ```
 #[proc_macro]
-pub fn spring(_input: TokenStream) -> TokenStream {
-    not_implemented("spring!")
+pub fn spring(input: TokenStream) -> TokenStream {
+    expand_macro(input, "spring")
 }
 
 /// Standalone timeline macro.
+///
+/// Generates a `Timeline` from a block of motion nodes.
+///
+/// # Example
+///
+/// ```ignore
+/// let tl = timeline! {
+///     sequence {
+///         tween x: 0.0 => 1.0, duration: 0.3;
+///         spring y: 0.0 => 1.0, preset: gentle;
+///     }
+/// };
+/// ```
 #[proc_macro]
-pub fn timeline(_input: TokenStream) -> TokenStream {
-    not_implemented("timeline!")
+pub fn timeline(input: TokenStream) -> TokenStream {
+    expand_macro(input, "timeline")
 }
 
 /// Standalone keyframe-track macro.
+///
+/// Generates a `KeyframeTrack<T>` from a `keyframes { ... }` block.
+///
+/// # Example
+///
+/// ```ignore
+/// let track = keyframes!{ opacity { 0%: 0.0, 50%: 0.7 ease_out_cubic, 100%: 1.0 } };
+/// ```
 #[proc_macro]
-pub fn keyframes(_input: TokenStream) -> TokenStream {
-    not_implemented("keyframes!")
+pub fn keyframes(input: TokenStream) -> TokenStream {
+    expand_macro(input, "keyframes")
 }
 
 /// User-defined preset macro.
+///
+/// Defines a reusable named preset that expands into an Animato primitive.
+///
+/// # Example
+///
+/// ```ignore
+/// preset! { card_enter {
+///     sequence {
+///         tween opacity: 0.0 => 1.0, duration: 0.3;
+///         spring y: 20.0 => 0.0, preset: snappy;
+///     }
+/// } }
+/// ```
 #[proc_macro]
-pub fn preset(_input: TokenStream) -> TokenStream {
-    not_implemented("preset!")
+pub fn preset(input: TokenStream) -> TokenStream {
+    expand_macro(input, "preset")
 }
 
-fn not_implemented(name: &str) -> TokenStream {
-    let message = format!(
-        "{name} is registered, but the Animato v1.7.0 Motion Macro parser is not implemented yet"
-    );
+/// Leptos framework helper macro (requires `leptos` feature).
+#[cfg(feature = "leptos")]
+#[proc_macro]
+pub fn leptos_motion(input: TokenStream) -> TokenStream {
+    framework::expand_leptos(input)
+}
 
-    quote::quote! {
-        compile_error!(#message);
+/// Dioxus framework helper macro (requires `dioxus` feature).
+#[cfg(feature = "dioxus")]
+#[proc_macro]
+pub fn dioxus_motion(input: TokenStream) -> TokenStream {
+    framework::expand_dioxus(input)
+}
+
+/// Yew framework helper macro (requires `yew` feature).
+#[cfg(feature = "yew")]
+#[proc_macro]
+pub fn yew_motion(input: TokenStream) -> TokenStream {
+    framework::expand_yew(input)
+}
+
+/// Bevy framework helper macro (requires `bevy` feature).
+#[cfg(feature = "bevy")]
+#[proc_macro]
+pub fn bevy_motion(input: TokenStream) -> TokenStream {
+    framework::expand_bevy(input)
+}
+
+/// WASM framework helper macro (requires `wasm` feature).
+#[cfg(feature = "wasm")]
+#[proc_macro]
+pub fn wasm_motion(input: TokenStream) -> TokenStream {
+    framework::expand_wasm(input)
+}
+
+// ── Internal entry point ────────────────────────────────────────────────────
+
+fn expand_macro(input: TokenStream, name: &str) -> TokenStream {
+    // For standalone helper macros (tween!, spring!, keyframes!), prepend the
+    // keyword so the parser sees a complete motion node statement.
+    let needs_keyword = matches!(name, "tween" | "spring" | "keyframes");
+    if needs_keyword {
+        let keyword = proc_macro2::Ident::new(name, proc_macro2::Span::call_site());
+        let input_ts: proc_macro2::TokenStream = input.into();
+        let combined = quote::quote! { #keyword #input_ts };
+        return expand_parsed(combined.into());
     }
-    .into()
+    expand_parsed(input)
+}
+
+fn expand_parsed(input: TokenStream) -> TokenStream {
+    let parsed: parser::AnimatoInput = match syn::parse(input) {
+        Ok(p) => p,
+        Err(e) => return e.to_compile_error().into(),
+    };
+
+    if let Err(e) = validate::validate_nodes(&parsed.nodes) {
+        return e.to_compile_error().into();
+    }
+
+    let tokens = expand::expand_nodes(&parsed.nodes);
+    tokens.into()
 }

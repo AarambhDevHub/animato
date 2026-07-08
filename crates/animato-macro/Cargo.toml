@@ -28,3 +28,9 @@ syn         = { workspace = true }
 
 [dev-dependencies]
 trybuild = { workspace = true }
+animato = { path = "../animato", features = ["tween", "spring", "timeline", "path", "physics", "color", "driver", "macro"] }
+animato-core = { workspace = true }
+animato-tween = { workspace = true, features = ["alloc"] }
+animato-spring = { workspace = true, features = ["alloc"] }
+animato-timeline = { workspace = true }
+animato-path = { workspace = true, features = ["std"] }

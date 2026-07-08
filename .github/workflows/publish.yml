@@ -76,6 +76,11 @@ jobs:
           cargo check -p animato-devtools --all-features
           cargo test -p animato-devtools --all-features
 
+      - name: Check animato-macro crate
+        run: |
+          cargo check -p animato-macro
+          cargo test -p animato-macro
+
       - name: Run full no-default-features gate
         run: cargo test --workspace --no-default-features
 
@@ -244,6 +249,7 @@ jobs:
             animato-dioxus \
             animato-yew \
             animato-devtools \
+            animato-macro \
             animato-js \
             animato
           do
@@ -273,8 +279,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.TAG }}
-          name: "Animato ${{ steps.version.outputs.TAG }} — DevTools"
-          body_path: .github/release-notes/1.6.0.md
+          name: "Animato ${{ steps.version.outputs.TAG }} — Motion Macro"
+          body_path: .github/release-notes/1.7.0.md
           generate_release_notes: true
           draft: false
           prerelease: false

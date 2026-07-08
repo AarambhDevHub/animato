@@ -66,11 +66,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.6.0", default-features = false }
-//! animato-tween  = { version = "1.6.0", default-features = false }
-//! animato-spring = { version = "1.6.0", default-features = false }
-//! animato-physics = { version = "1.6.0", default-features = false }
-//! animato-color = { version = "1.6.0", default-features = false }
+//! animato-core   = { version = "1.7.0", default-features = false }
+//! animato-tween  = { version = "1.7.0", default-features = false }
+//! animato-spring = { version = "1.7.0", default-features = false }
+//! animato-physics = { version = "1.7.0", default-features = false }
+//! animato-color = { version = "1.7.0", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -247,3 +247,61 @@ pub use animato_devtools::DevToolsTuiPanel;
 // ── Motion Macro ──────────────────────────────────────────────────────────────
 #[cfg(feature = "macro")]
 pub use animato_macro::{animato, keyframes, motion, preset, spring, timeline, tween};
+
+/// Prelude module with macro-friendly re-exports.
+///
+/// Import everything for ergonomic macro usage:
+///
+/// ```ignore
+/// use animato::prelude::*;
+///
+/// let intro = animato! {
+///     sequence {
+///         tween opacity: 0.0 => 1.0, duration: 0.35, easing: ease_out_cubic;
+///         spring scale: 0.92 => 1.0, preset: snappy;
+///     }
+/// };
+/// ```
+pub mod prelude {
+    pub use crate::{
+        Angle, Animatable, AnimationIntrospection, AnimationKind, Color, Easing, Inspectable,
+        Interpolate, Mat4, Playable, PlaybackState, Quaternion, Update,
+    };
+
+    #[cfg(feature = "tween")]
+    pub use crate::{
+        GridOrigin, Keyframe, KeyframeTrack, Loop, StaggerPattern, Tween, TweenBuilder, TweenState,
+        Waveform, round_to, snap_to,
+    };
+
+    #[cfg(feature = "timeline")]
+    pub use crate::{AnimationGroup, At, Sequence, Timeline, TimelineState, stagger};
+
+    #[cfg(feature = "spring")]
+    pub use crate::{Integrator, Spring, SpringConfig, SpringN};
+
+    #[cfg(feature = "path")]
+    pub use crate::{
+        CatmullRomSpline, CompoundPath, CubicBezierCurve, DrawSvg, DrawValues, EllipticalArc,
+        LineSegment, MorphPath, MotionPath, MotionPathTween, MotionPathTweenBuilder, PathCommand,
+        PathEvaluate, PathSegment, PolyPath, QuadBezier, SvgPathError, SvgPathParser, resample,
+    };
+
+    #[cfg(feature = "physics")]
+    pub use crate::{
+        DragAxis, DragConstraints, DragState, Gesture, GestureConfig, GestureRecognizer, Inertia,
+        InertiaBounds, InertiaConfig, InertiaN, PointerData, SwipeDirection,
+    };
+
+    #[cfg(feature = "color")]
+    pub use crate::{InLab, InLinear, InOklch};
+
+    #[cfg(feature = "driver")]
+    pub use crate::{
+        AnimationDriver, AnimationId, Clock, ManualClock, MockClock, ScrollClock, ScrollDriver,
+        WallClock,
+    };
+
+    #[cfg(feature = "macro")]
+    pub use crate::{animato, keyframes, motion, preset, spring, timeline, tween};
+}
