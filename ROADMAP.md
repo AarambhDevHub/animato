@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.7.0`.  
+This roadmap tracks every planned release from `v0.1.0` through `v1.7.1`.
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -40,6 +40,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.5.0` | Advanced Engine | Spring from velocity, waveforms, quaternion slerp, animation groups, stagger patterns | ✅ |
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | ✅ |
 | `v1.7.0` | Motion Macro | Declarative `animato!{}` macro DSL for tweens, springs, timelines, gestures, paths, colors, presets, and framework helpers | ✅ |
+| `v1.7.1` | Animated List Reliability | Leptos first-render enter animations, configurable spacing and wrapper classes, delayed FLIP movement | ✅ |
 
 ---
 
@@ -1138,9 +1139,34 @@ This release turns Animato from a powerful low-level animation engine into a hig
 ---
 
 
-## Post-1.6 Ideas (Future / `v2.x+`)
+## v1.7.1 — Animated List Reliability
 
-These are not committed — they are ideas to revisit after DevTools ships.
+**Goal:** Resolve the Leptos `AnimatedFor` lifecycle and layout issues reported
+in #47, #48, #49, and #50 without changing the stable v1 architecture.
+
+### Deliverables
+
+* [x] Initial list rows execute the configured enter animation.
+* [x] `move_delay` defers FLIP movement for existing rows without delaying enter animations.
+* [x] The hardcoded 10px container gap is removed; `gap` provides explicit opt-in spacing.
+* [x] `item_class` exposes generated row wrappers for stacking-context and hover z-index rules.
+* [x] Enter rows use `PresenceAnimation` duration and easing; moving rows use move timing.
+* [x] Regression tests cover enter timing and delayed movement.
+* [x] Leptos examples, API documentation, architecture notes, changelog, and release automation are updated.
+* [x] All workspace crates are versioned together at `1.7.1`.
+
+### Compatibility
+
+No Rust API was removed. The only visible layout correction is that
+`AnimatedFor` no longer inserts an implicit 10px gap. Set `gap=10.0` to retain
+the previous spacing intentionally.
+
+---
+
+
+## Post-1.7 Ideas (Future / `v2.x+`)
+
+These are not committed — they are ideas to revisit in a future major release.
 
 | Idea | Notes |
 |------|-------|
@@ -1159,10 +1185,10 @@ These are not committed — they are ideas to revisit after DevTools ships.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.7 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
+The best way to contribute right now is to use the v1.7.1 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
 
 ---
 
-*Roadmap version: 1.7.0 — last updated July 2026*
-*v1.7.0 Motion Macro shipped — the final committed roadmap milestone*
+*Roadmap version: 1.7.1 — last updated July 16, 2026*
+*v1.7.1 Animated List Reliability shipped — future items remain uncommitted*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

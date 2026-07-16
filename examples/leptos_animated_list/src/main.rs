@@ -120,7 +120,10 @@ fn App() -> impl IntoView {
                     enter=PresenceAnimation::slide_up()
                     move_duration=0.42
                     move_easing=Easing::EaseOutCubic
+                    move_delay=0.08
                     stagger_delay=0.04
+                    gap=10.0
+                    item_class="animated-list-row"
                 />
             </section>
         </main>

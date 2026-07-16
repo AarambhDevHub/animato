@@ -4,7 +4,7 @@ use crate::PresenceAnimation;
 use animato_core::Easing;
 use leptos::prelude::*;
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
-use std::cell::RefCell;
+use std::cell::{Cell, RefCell};
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
 use std::collections::HashMap;
 use std::collections::hash_map::DefaultHasher;
@@ -36,9 +36,21 @@ pub fn AnimatedFor<T, K, KF, CF, IV>(
     /// Move animation easing.
     #[prop(optional)]
     move_easing: Option<Easing>,
+    /// Delay before existing rows move to their new positions, in seconds.
+    #[prop(optional)]
+    move_delay: Option<f32>,
     /// Stagger delay between rows.
     #[prop(optional)]
     stagger_delay: Option<f32>,
+    /// Gap between generated row wrappers in pixels. Defaults to zero.
+    #[prop(optional)]
+    gap: Option<f32>,
+    /// CSS class applied to each generated row wrapper.
+    ///
+    /// This is useful for stacking-context rules such as
+    /// `item_class="relative z-0 hover:z-50"`.
+    #[prop(optional, into)]
+    item_class: Option<String>,
 ) -> impl IntoView
 where
     T: Clone + Send + Sync + 'static,
@@ -52,24 +64,39 @@ where
     let duration = move_duration.unwrap_or(0.25).max(0.0);
     let easing = move_easing.unwrap_or(Easing::EaseOutCubic);
     let easing_label = format!("{easing:?}");
+    let move_delay = move_delay.unwrap_or(0.0).max(0.0);
     let stagger = stagger_delay.unwrap_or(0.0).max(0.0);
+    let gap = gap.unwrap_or(0.0).max(0.0);
+    let container_style = format!("display:flex; flex-direction:column; gap:{gap:.3}px;");
+    let item_class = item_class.unwrap_or_default();
     let container = NodeRef::<leptos::html::Div>::new();
     let key_for_key = key.clone();
     let key_for_child = key.clone();
     let each_for_render = each;
     let child_fn = children.clone();
+    let item_class_for_child = item_class.clone();
 
     #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
     {
         let previous_rects = Rc::new(RefCell::new(HashMap::new()));
+        let effect_initialized = Rc::new(Cell::new(false));
         let animation = enter.clone();
         let each_for_effect = each;
         let key_for_effect = key.clone();
         let easing_for_effect = easing.clone();
         let initial_rects = Rc::clone(&previous_rects);
+        let initial_effect = Rc::clone(&effect_initialized);
+        let initial_animation = animation.clone();
         container.on_load(move |container| {
-            let elements = list_item_elements(&container);
-            *initial_rects.borrow_mut() = collect_rects(&elements);
+            animate_flip(
+                &container,
+                Rc::clone(&initial_rects),
+                duration,
+                css_timing_function(&easing),
+                move_delay,
+                stagger,
+                initial_animation.clone(),
+            );
         });
 
         Effect::new(move || {
@@ -78,11 +105,22 @@ where
                 .iter()
                 .map(|item| stable_key(&key_for_effect(item)))
                 .collect::<Vec<_>>();
+
+            // The mount hook owns the initial enter pass. Skipping the effect's
+            // first run prevents duplicate scheduling regardless of whether the
+            // effect or node load callback runs first.
+            if !initial_effect.replace(true) {
+                return;
+            }
+            let Some(container) = container.get_untracked() else {
+                return;
+            };
             animate_flip(
-                container,
+                &container,
                 Rc::clone(&previous_rects),
                 duration,
                 css_timing_function(&easing_for_effect),
+                move_delay,
                 stagger,
                 animation.clone(),
             );
@@ -95,8 +133,10 @@ where
             data-animato-animated-for="true"
             data-move-duration=duration
             data-move-easing=easing_label
+            data-move-delay=move_delay
             data-stagger-delay=stagger
-            style="display:flex; flex-direction:column; gap:10px;"
+            data-gap=gap
+            style=container_style
         >
             <For
                 each=move || each_for_render.get()
@@ -104,11 +144,13 @@ where
                 children=move |item| {
                     let key_value = stable_key(&key_for_child(&item));
                     let child = child_fn(item);
+                    let item_class = item_class_for_child.clone();
                     view! {
                         <div
+                            class=item_class
                             data-animato-list-item="true"
                             data-animato-key=key_value
-                            style="will-change:transform,opacity;"
+                            style="will-change:transform,opacity,filter;"
                         >
                             {child}
                         </div>
@@ -134,10 +176,11 @@ struct ItemRect {
 
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
 fn animate_flip(
-    container: NodeRef<leptos::html::Div>,
+    container: &web_sys::Element,
     previous_rects: Rc<RefCell<HashMap<String, ItemRect>>>,
-    duration: f32,
-    easing: &'static str,
+    move_duration: f32,
+    move_easing: &'static str,
+    move_delay: f32,
     stagger: f32,
     enter: PresenceAnimation,
 ) {
@@ -145,17 +188,10 @@ fn animate_flip(
         return;
     }
 
-    let Some(container) = container.get_untracked() else {
-        return;
-    };
-
-    let elements = list_item_elements(&container);
+    let elements = list_item_elements(container);
     let previous = previous_rects.borrow().clone();
     let mut next = HashMap::new();
-    let transition = format!(
-        "transform {:.3}s {}, opacity {:.3}s {}, filter {:.3}s {}",
-        duration, easing, duration, easing, duration, easing
-    );
+    let mut targets = Vec::with_capacity(elements.len());
 
     for (index, element) in elements.iter().enumerate() {
         let Some(key) = element.get_attribute("data-animato-key") else {
@@ -173,10 +209,9 @@ fn animate_flip(
         let Some(html) = element.dyn_ref::<web_sys::HtmlElement>() else {
             continue;
         };
-        let delay = format!("{:.3}s", stagger * index as f32);
+        let entering = !previous.contains_key(&key);
         let style = html.style();
         let _ = style.set_property("transition", "none");
-        let _ = style.set_property("transition-delay", &delay);
 
         if let Some(before) = previous.get(&key) {
             let dx = before.left - rect.left();
@@ -197,24 +232,45 @@ fn animate_flip(
                 let _ = style.set_property("filter", &format!("blur({blur}px)"));
             }
         }
+
+        targets.push((element.clone(), index, entering));
     }
 
     *previous_rects.borrow_mut() = next;
 
-    let target_transform = enter.to.transform_string();
+    let target_transform = {
+        let transform = enter.to.transform_string();
+        if transform.is_empty() {
+            "none".to_owned()
+        } else {
+            transform
+        }
+    };
     let target_opacity = enter.to.opacity.unwrap_or(1.0).to_string();
     let target_filter = enter
         .to
         .blur
         .map(|blur| format!("blur({blur}px)"))
         .unwrap_or_else(|| "none".to_owned());
+    let enter_duration = enter.duration.max(0.0);
+    let enter_easing = css_timing_function(&enter.easing);
 
     let _ = leptos::prelude::request_animation_frame_with_handle(move || {
         let _ = leptos::prelude::request_animation_frame_with_handle(move || {
-            for element in elements {
+            for (element, index, entering) in targets {
                 let Some(html) = element.dyn_ref::<web_sys::HtmlElement>() else {
                     continue;
                 };
+                let transition = item_transition(
+                    move_duration,
+                    move_easing,
+                    move_delay,
+                    enter_duration,
+                    enter_easing,
+                    stagger,
+                    index,
+                    entering,
+                );
                 let style = html.style();
                 let _ = style.set_property("transition", &transition);
                 let _ = style.set_property("transform", &target_transform);
@@ -225,30 +281,44 @@ fn animate_flip(
     });
 }
 
+#[allow(clippy::too_many_arguments)]
+#[cfg(any(
+    test,
+    all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate"))
+))]
+fn item_transition(
+    move_duration: f32,
+    move_easing: &str,
+    move_delay: f32,
+    enter_duration: f32,
+    enter_easing: &str,
+    stagger: f32,
+    index: usize,
+    entering: bool,
+) -> String {
+    let stagger_delay = stagger.max(0.0) * index as f32;
+    if entering {
+        format!(
+            "transform {enter_duration:.3}s {enter_easing} {stagger_delay:.3}s, \
+             opacity {enter_duration:.3}s {enter_easing} {stagger_delay:.3}s, \
+             filter {enter_duration:.3}s {enter_easing} {stagger_delay:.3}s"
+        )
+    } else {
+        let transform_delay = move_delay.max(0.0) + stagger_delay;
+        format!(
+            "transform {move_duration:.3}s {move_easing} {transform_delay:.3}s, \
+             opacity {move_duration:.3}s {move_easing} {stagger_delay:.3}s, \
+             filter {move_duration:.3}s {move_easing} {stagger_delay:.3}s"
+        )
+    }
+}
+
 #[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
 fn list_item_elements(container: &web_sys::Element) -> Vec<web_sys::Element> {
     let children = container.children();
     (0..children.length())
         .filter_map(|index| children.item(index))
         .filter(|element| element.has_attribute("data-animato-list-item"))
-        .collect()
-}
-
-#[cfg(all(target_arch = "wasm32", any(feature = "csr", feature = "hydrate")))]
-fn collect_rects(elements: &[web_sys::Element]) -> HashMap<String, ItemRect> {
-    elements
-        .iter()
-        .filter_map(|element| {
-            let key = element.get_attribute("data-animato-key")?;
-            let rect = element.get_bounding_client_rect();
-            Some((
-                key,
-                ItemRect {
-                    left: rect.left(),
-                    top: rect.top(),
-                },
-            ))
-        })
         .collect()
 }
 
@@ -281,5 +351,20 @@ mod tests {
     fn stable_key_is_deterministic_and_distinguishes_values() {
         assert_eq!(stable_key(&"row-1"), stable_key(&"row-1"));
         assert_ne!(stable_key(&"row-1"), stable_key(&"row-2"));
+    }
+
+    #[test]
+    fn entering_rows_use_presence_timing_without_move_delay() {
+        let transition = item_transition(0.6, "linear", 0.3, 0.25, "ease-in", 0.02, 1, true);
+        assert!(transition.contains("transform 0.250s ease-in 0.020s"));
+        assert!(transition.contains("opacity 0.250s ease-in 0.020s"));
+        assert!(!transition.contains("0.320s"));
+    }
+
+    #[test]
+    fn existing_rows_delay_only_the_move_transform() {
+        let transition = item_transition(0.6, "linear", 0.3, 0.25, "ease-in", 0.02, 1, false);
+        assert!(transition.contains("transform 0.600s linear 0.320s"));
+        assert!(transition.contains("opacity 0.600s linear 0.020s"));
     }
 }

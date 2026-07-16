@@ -9,7 +9,7 @@ active.
 
 ```toml
 [dependencies]
-animato = { version = "1.6.0", features = ["yew-csr"] }
+animato = { version = "1.7.1", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -17,7 +17,7 @@ Router and agent examples use:
 
 ```toml
 yew-router = "0.20"
-animato = { version = "1.6.0", features = ["yew-csr", "yew-agent"] }
+animato = { version = "1.7.1", features = ["yew-csr", "yew-agent"] }
 ```
 
 ## Hooks
