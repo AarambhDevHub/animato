@@ -7,6 +7,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.7.1] — 2026-07-16 — Animated List Reliability
+
+### Added
+- `animato-leptos::AnimatedFor`: `move_delay` for deferring FLIP movement of existing rows.
+- `animato-leptos::AnimatedFor`: `gap` for explicit wrapper spacing and `item_class` for styling generated row wrappers and controlling stacking contexts.
+- Regression coverage for enter timing and delayed movement behavior.
+- Release notes at `.github/release-notes/1.7.1.md`.
+
+### Fixed
+- Initial `AnimatedFor` rows now execute their configured enter animation instead of appearing immediately.
+- Removed the hardcoded 10px list gap; spacing now defaults to zero and is opt-in through `gap`.
+- Entering rows now honor `PresenceAnimation::duration` and `PresenceAnimation::easing` independently from FLIP move timing.
+- Delayed movement is encoded directly in per-property transitions, preventing transition shorthand from discarding delay values.
+- Generated row wrappers can receive CSS classes, allowing hovered rows and tooltips to establish the intended stacking order.
+
+### Changed
+- Bumped all workspace crates and internal dependency requirements from `1.7.0` to `1.7.1`.
+- Updated README installation snippets, framework documentation, API references, architecture, roadmap, examples, release instructions, JavaScript version tests, and GitHub release automation.
+
+### Migration
+- No Rust API was removed.
+- Applications that relied on the previous implicit 10px list spacing should set `gap=10.0` or provide their own spacing.
+
+### Verification
+- `cargo fmt --check`
+- `cargo test -p animato-leptos`
+- `cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr`
+- `cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown`
+- Full workspace, clippy, docs, no-default-features, WASM, examples, coverage, fuzz, and publish dry-run gates remain enforced by `.github/workflows/publish.yml`.
+
 ## [1.7.0] — 2026-07-08 — Motion Macro
 
 ### Added
@@ -423,7 +453,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.7.1...HEAD
+[1.7.1]: https://github.com/AarambhDevHub/animato/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/AarambhDevHub/animato/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/AarambhDevHub/animato/compare/v1.5.1...v1.6.0
 [1.5.1]: https://github.com/AarambhDevHub/animato/compare/v1.5.0...v1.5.1

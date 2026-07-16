@@ -45,7 +45,7 @@ Enable the `macro` feature on the `animato` facade:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.0", features = ["macro"] }
+animato = { version = "1.7.1", features = ["macro"] }
 ```
 
 Then import the prelude for ergonomic access:

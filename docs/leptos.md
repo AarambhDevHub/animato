@@ -7,7 +7,7 @@ signal-backed animation hooks and browser-safe helpers.
 
 ```toml
 [dependencies]
-animato = { version = "1.2", features = ["leptos-csr"] }
+animato = { version = "1.7.1", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -46,6 +46,43 @@ fn Box() -> impl IntoView {
 | Gestures | `use_drag`, `use_gesture`, `use_pinch`, `use_swipe` |
 | CSS | `AnimatedStyle`, `css_tween`, `css_spring` |
 | SSR | `is_hydrating`, `use_client_only`, `SsrFallback` |
+
+## Animated Lists
+
+`AnimatedFor` applies enter animations to the initial render and to newly
+inserted rows, then uses FLIP transforms for keyed reordering. Version 1.7.1
+also exposes layout and stacking controls on the generated wrappers.
+
+```rust,ignore
+<AnimatedFor
+    each=items.into()
+    key=|item: &Item| item.id
+    children=|item: Item| view! { <article>{item.label}</article> }
+    enter=PresenceAnimation::slide_up()
+    move_duration=0.35
+    move_easing=Easing::EaseOutCubic
+    move_delay=0.20
+    stagger_delay=0.04
+    gap=12.0
+    item_class="relative z-0 hover:z-50"
+/>
+```
+
+| Prop | Behavior |
+|------|----------|
+| `enter` | Presence animation used for the first render and newly inserted rows. |
+| `exit` | Reserved exit animation configuration; existing API remains unchanged. |
+| `move_duration` | Duration, in seconds, of FLIP movement for existing rows. |
+| `move_easing` | Easing used by FLIP movement. |
+| `move_delay` | Additional delay before existing rows start moving; enter animations are not delayed. |
+| `stagger_delay` | Per-row delay added by index. |
+| `gap` | Gap between generated row wrappers in pixels; defaults to `0.0`. |
+| `item_class` | CSS class applied to every generated row wrapper, including stacking-context utilities. |
+
+The list no longer inserts an implicit 10px gap. Applications that relied on
+that spacing should set `gap=10.0` explicitly or provide spacing in their own
+layout CSS.
+
 
 ## SSR Behavior
 

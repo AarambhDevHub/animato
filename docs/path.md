@@ -4,7 +4,7 @@ Feature: `path`.
 
 ```toml
 [dependencies]
-animato = { version = "1.2", features = ["path"] }
+animato = { version = "1.7.1", features = ["path"] }
 ```
 
 ## Motion Path
