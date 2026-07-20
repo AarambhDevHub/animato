@@ -118,6 +118,7 @@ fn App() -> impl IntoView {
                         }
                     }
                     enter=PresenceAnimation::slide_up()
+                    exit=PresenceAnimation::slide_down()
                     move_duration=0.42
                     move_easing=Easing::EaseOutCubic
                     move_delay=0.08

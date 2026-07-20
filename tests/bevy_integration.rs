@@ -203,7 +203,7 @@ fn spring_scale_rotation_and_settled_message_are_applied() {
             .resource_mut::<bevy_time::Time>()
             .advance_by(Duration::from_secs_f32(1.0 / 60.0));
         app.update();
-        if app.world().resource::<Messages<SpringSettled>>().len() >= 1 {
+        if !app.world().resource::<Messages<SpringSettled>>().is_empty() {
             saw_settled_message = true;
             break;
         }

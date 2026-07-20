@@ -7,15 +7,15 @@ required for the upgrade.
 
 ```toml
 [dependencies]
-animato = "1.7.1"
+animato = "1.7.2"
 ```
 
 Focused crates:
 
 ```toml
-animato-core = "1.7.1"
-animato-tween = "1.7.1"
-animato-spring = "1.7.1"
+animato-core = "1.7.2"
+animato-tween = "1.7.2"
+animato-spring = "1.7.2"
 ```
 
 ## What Changed
@@ -25,6 +25,14 @@ animato-spring = "1.7.1"
 - Documentation has moved into a larger `docs/` tree.
 - CI and release checks include coverage and fuzzing.
 - Publish workflow validates the tag and performs dry-runs before publishing.
+
+## From v1.7.1
+
+No source changes are required. The existing Leptos `AnimatedFor::exit` prop is
+now active: a removed row remains mounted for its exit duration and stagger,
+then it is removed and the surviving rows run FLIP movement. Code that queried
+the DOM immediately after changing the source list should account for this
+intentional retained-exit interval.
 
 ## From v0.9.0
 

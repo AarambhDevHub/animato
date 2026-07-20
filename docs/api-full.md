@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.7.1 API surface by crate. For signatures,
+This file lists the stable v1.7.2 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.7.1"
+animato = "1.7.2"
 ```
 
 ## animato-core
@@ -328,7 +328,9 @@ Stable public items include `use_tween`, `use_spring`, `use_timeline`,
 
 `AnimatedFor` accepts `move_duration`, `move_easing`, `move_delay`,
 `stagger_delay`, `gap`, and `item_class` in addition to enter and exit
-presence configuration.
+presence configuration. In v1.7.2, removed keyed rows remain mounted until the
+configured exit duration and stagger complete; surviving rows then run their
+FLIP movement.
 
 Use [leptos.md](./leptos.md) for app setup and examples.
 

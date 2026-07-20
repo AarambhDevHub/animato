@@ -3,7 +3,7 @@
 //! First-class Leptos integration for Animato.
 //!
 //! The crate provides signal-backed animation hooks, scroll helpers,
-//! mount/unmount-style wrappers, FLIP list scaffolding, gesture bindings, CSS
+//! mount/unmount-style wrappers, retained enter/exit FLIP lists, gesture bindings, CSS
 //! style interpolation, and SSR-aware guards. Browser hooks start from Leptos
 //! signals and drive Animato's renderer-agnostic animation engines from an rAF
 //! loop; server-side hooks return static final values and never touch browser

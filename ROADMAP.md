@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.7.1`.
+This roadmap tracks every planned release from `v0.1.0` through `v1.7.2`.
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -41,6 +41,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.6.0` | DevTools | Timeline inspector, easing editor, spring visualizer, recorder, perf monitor | ✅ |
 | `v1.7.0` | Motion Macro | Declarative `animato!{}` macro DSL for tweens, springs, timelines, gestures, paths, colors, presets, and framework helpers | ✅ |
 | `v1.7.1` | Animated List Reliability | Leptos first-render enter animations, configurable spacing and wrapper classes, delayed FLIP movement | ✅ |
+| `v1.7.2` | Animated List Exit Lifecycle | Retained removed rows, configured exit animations, generation-safe cleanup, post-exit FLIP movement | ✅ |
 
 ---
 
@@ -1164,6 +1165,32 @@ the previous spacing intentionally.
 ---
 
 
+
+## v1.7.2 — Animated List Exit Lifecycle
+
+**Goal:** Resolve #52 by implementing the previously declared Leptos
+`AnimatedFor::exit` lifecycle without breaking the v1 API.
+
+### Deliverables
+
+* [x] Removed keyed rows remain mounted while the configured exit animation runs.
+* [x] `exit` defaults to `enter.reversed()` and custom exit duration/easing/styles are honored.
+* [x] Exit stagger is included in the retained-row lifetime.
+* [x] Surviving rows run FLIP movement only after the exiting row leaves layout.
+* [x] Exit generations prevent stale timers from deleting keys that were reinserted.
+* [x] Exiting wrappers disable pointer events until removal.
+* [x] Regression tests cover single and multiple removals, repeated reconciliation, reinsertion, timing, and transition generation.
+* [x] Leptos examples, API documentation, architecture, changelog, release notes, lockfiles, and version checks are updated.
+* [x] All workspace crates are versioned together at `1.7.2`.
+
+### Compatibility
+
+No public API was removed. Applications that already passed `exit=...` now get
+the behavior the property always promised. Applications that omit `exit`
+continue to receive the reverse of their enter animation.
+
+---
+
 ## Post-1.7 Ideas (Future / `v2.x+`)
 
 These are not committed — they are ideas to revisit in a future major release.
@@ -1185,10 +1212,10 @@ These are not committed — they are ideas to revisit in a future major release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.7.1 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
+The best way to contribute right now is to use the v1.7.2 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
 
 ---
 
-*Roadmap version: 1.7.1 — last updated July 16, 2026*
-*v1.7.1 Animated List Reliability shipped — future items remain uncommitted*
+*Roadmap version: 1.7.2 — last updated July 20, 2026*
+*v1.7.2 Animated List Exit Lifecycle shipped — future items remain uncommitted*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

@@ -7,6 +7,37 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.7.2] — 2026-07-20 — Animated List Exit Lifecycle
+
+### Added
+- Retained render-state tracking for `animato-leptos::AnimatedFor`, allowing removed keyed rows to remain mounted while their configured exit animation runs.
+- Generation-safe exit cleanup so a key that is removed, reinserted, and removed again cannot be deleted by an older timeout.
+- Regression tests for retained removals, repeated reconciliation, key revival, multiple simultaneous exits, exit timing, and presence transitions.
+- Release notes at `.github/release-notes/1.7.2.md`.
+
+### Fixed
+- `AnimatedFor::exit` is now executed instead of being resolved into an unused `_exit` value.
+- Removed rows no longer disappear immediately from Leptos `<For>` before their exit animation can start.
+- Surviving rows now begin their FLIP movement after exiting rows are actually removed from layout.
+- Exiting wrappers disable pointer events, preventing invisible or moving rows from intercepting input.
+
+### Changed
+- Bumped all workspace crates and internal dependency requirements from `1.7.1` to `1.7.2`.
+- Updated the Leptos example, README, API guide, architecture, roadmap, lockfiles, version tests, release documentation, and crate installation snippets.
+
+### Migration
+- No public Rust API was removed or renamed.
+- Code already passing `exit=...` now receives the intended behavior: removed rows stay mounted for the exit duration plus stagger before final removal.
+- When `exit` is omitted, it continues to default to `enter.reversed()`.
+
+### Verification
+- `cargo fmt --check`
+- `cargo test -p animato-leptos`
+- `cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr`
+- `cargo check -p animato-leptos --target wasm32-unknown-unknown --features hydrate`
+- `cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown`
+- Full workspace, clippy, docs, no-default-features, WASM, examples, coverage, fuzz, and publish dry-run gates remain enforced by `.github/workflows/publish.yml`.
+
 ## [1.7.1] — 2026-07-16 — Animated List Reliability
 
 ### Added
@@ -453,7 +484,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
-[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.7.1...HEAD
+[Unreleased]: https://github.com/AarambhDevHub/animato/compare/v1.7.2...HEAD
+[1.7.2]: https://github.com/AarambhDevHub/animato/compare/v1.7.1...v1.7.2
 [1.7.1]: https://github.com/AarambhDevHub/animato/compare/v1.7.0...v1.7.1
 [1.7.0]: https://github.com/AarambhDevHub/animato/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/AarambhDevHub/animato/compare/v1.5.1...v1.6.0
