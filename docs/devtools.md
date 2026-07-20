@@ -7,15 +7,15 @@ recording, and performance monitoring.
 
 ```toml
 [dependencies]
-animato = { version = "1.7.1", features = ["devtools"] }
+animato = { version = "1.7.2", features = ["devtools"] }
 ```
 
 Panel adapters are opt in:
 
 ```toml
-animato = { version = "1.7.1", features = ["devtools-web-panel"] }
-animato = { version = "1.7.1", features = ["devtools-egui-panel"] }
-animato = { version = "1.7.1", features = ["devtools-tui-panel"] }
+animato = { version = "1.7.2", features = ["devtools-web-panel"] }
+animato = { version = "1.7.2", features = ["devtools-egui-panel"] }
+animato = { version = "1.7.2", features = ["devtools-tui-panel"] }
 ```
 
 ## Timeline Inspector

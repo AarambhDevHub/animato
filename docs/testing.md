@@ -1,6 +1,6 @@
 # Testing
 
-This is the v1.6.0 release verification set.
+This is the v1.7.2 release verification set.
 
 ## Required Local Gates
 
@@ -12,7 +12,10 @@ cargo test --workspace --no-default-features
 cargo test -p animato --all-features --examples
 cargo doc --workspace --all-features --no-deps
 cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
+cargo test -p animato-leptos
 cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
+cargo check -p animato-leptos --target wasm32-unknown-unknown --features hydrate
+cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown
 cargo check -p animato-dioxus
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
@@ -67,6 +70,8 @@ cargo +nightly fuzz run svg_path_parser -- -max_total_time=60
 ```sh
 cargo check -p animato-wasm --target wasm32-unknown-unknown --features wasm-dom
 cargo check -p animato-leptos --target wasm32-unknown-unknown --features csr
+cargo check -p animato-leptos --target wasm32-unknown-unknown --features hydrate
+cargo check --manifest-path examples/leptos_animated_list/Cargo.toml --target wasm32-unknown-unknown
 cargo check -p animato-dioxus --target wasm32-unknown-unknown --features web
 cargo check -p animato-yew --target wasm32-unknown-unknown --features csr
 cargo check -p animato-js --target wasm32-unknown-unknown --all-features
@@ -80,6 +85,25 @@ cargo check --manifest-path examples/yew_agent_coordination/Cargo.toml --target 
 cd examples/wasm_counter
 wasm-pack build --target web
 ```
+
+
+## Leptos Animated List Browser Check
+
+Run the example with Trunk and verify the complete retained lifecycle:
+
+```sh
+cd examples/leptos_animated_list
+trunk serve --open
+```
+
+1. Initial rows execute the enter animation.
+2. Adding a row executes the configured enter animation.
+3. Removing a row keeps it visible through `exit` duration and stagger.
+4. The exiting row does not intercept pointer input.
+5. Surviving rows move only after the exiting row leaves layout.
+6. Rapidly removing, reinserting, and removing the same key does not allow an
+   older cleanup timer to delete the reinserted row.
+7. Reverse and rotate operations retain correct FLIP movement.
 
 ## JavaScript Package
 
@@ -104,7 +128,7 @@ npm run typecheck --prefix examples/js_devtools
 npm run build --prefix examples/js_devtools
 ```
 
-The v1.6.0 package budget is 150 KiB gzipped WASM for the full JavaScript
+The v1.7.2 package budget is 150 KiB gzipped WASM for the full JavaScript
 surface, including the DevTools exports.
 
 ## Related Docs

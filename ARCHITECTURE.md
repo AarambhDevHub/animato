@@ -238,7 +238,7 @@ animato/
 │   │       ├── agent.rs               ← AnimationAgent for message-based coordination
 │   │       └── css.rs                 ← AnimatedStyle, CSS property helpers
 │   │
-│   ├── animato-js/                       ← WASM-to-NPM bindings for JS frameworks (current v1.7.1)
+│   ├── animato-js/                       ← WASM-to-NPM bindings for JS frameworks (current v1.7.2)
 │   │   ├── Cargo.toml
 │   │   └── src/
 │   │       ├── lib.rs
@@ -341,7 +341,7 @@ members = [
 ]
 
 [workspace.package]
-version      = "1.7.1"
+version      = "1.7.2"
 edition      = "2024"
 license      = "MIT OR Apache-2.0"
 repository   = "https://github.com/AarambhDevHub/animato"
@@ -350,23 +350,23 @@ rust-version = "1.89"
 
 [workspace.dependencies]
 # internal crates — version pinned to workspace
-animato-core     = { path = "crates/animato-core",     version = "1.7.1" }
-animato-tween    = { path = "crates/animato-tween",    version = "1.7.1" }
-animato-timeline = { path = "crates/animato-timeline", version = "1.7.1" }
-animato-spring   = { path = "crates/animato-spring",   version = "1.7.1" }
-animato-path     = { path = "crates/animato-path",     version = "1.7.1" }
-animato-physics  = { path = "crates/animato-physics",  version = "1.7.1" }
-animato-color    = { path = "crates/animato-color",    version = "1.7.1" }
-animato-driver   = { path = "crates/animato-driver",   version = "1.7.1" }
-animato-gpu      = { path = "crates/animato-gpu",      version = "1.7.1" }
-animato-bevy     = { path = "crates/animato-bevy",     version = "1.7.1" }
-animato-wasm     = { path = "crates/animato-wasm",     version = "1.7.1" }
-animato-leptos   = { path = "crates/animato-leptos",   version = "1.7.1" }
-animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.7.1" }
-animato-yew      = { path = "crates/animato-yew",      version = "1.7.1" }
-animato-js       = { path = "crates/animato-js",       version = "1.7.1" }
-animato-devtools = { path = "crates/animato-devtools", version = "1.7.1" }
-animato-macro    = { path = "crates/animato-macro",    version = "1.7.1" }
+animato-core     = { path = "crates/animato-core",     version = "1.7.2" }
+animato-tween    = { path = "crates/animato-tween",    version = "1.7.2" }
+animato-timeline = { path = "crates/animato-timeline", version = "1.7.2" }
+animato-spring   = { path = "crates/animato-spring",   version = "1.7.2" }
+animato-path     = { path = "crates/animato-path",     version = "1.7.2" }
+animato-physics  = { path = "crates/animato-physics",  version = "1.7.2" }
+animato-color    = { path = "crates/animato-color",    version = "1.7.2" }
+animato-driver   = { path = "crates/animato-driver",   version = "1.7.2" }
+animato-gpu      = { path = "crates/animato-gpu",      version = "1.7.2" }
+animato-bevy     = { path = "crates/animato-bevy",     version = "1.7.2" }
+animato-wasm     = { path = "crates/animato-wasm",     version = "1.7.2" }
+animato-leptos   = { path = "crates/animato-leptos",   version = "1.7.2" }
+animato-dioxus   = { path = "crates/animato-dioxus",   version = "1.7.2" }
+animato-yew      = { path = "crates/animato-yew",      version = "1.7.2" }
+animato-js       = { path = "crates/animato-js",       version = "1.7.2" }
+animato-devtools = { path = "crates/animato-devtools", version = "1.7.2" }
+animato-macro    = { path = "crates/animato-macro",    version = "1.7.2" }
 
 syn         = { version = "2", features = ["full", "parsing", "extra-traits"] }
 quote       = { version = "1" }
@@ -1403,10 +1403,13 @@ pub fn AnimatedFor<T, K, V>(
     #[prop(optional, into)] item_class: Option<String>,
 ) -> impl IntoView
 ```
-Version `1.7.1` hardens this component's browser lifecycle: initial rows use
-the configured enter animation, existing rows may defer movement with
-`move_delay`, generated wrappers accept `item_class`, and list spacing is
-explicit through `gap` rather than a hardcoded container value.
+Version `1.7.2` completes this component's browser lifecycle. A retained
+render-state layer marks removed keys as exiting instead of allowing Leptos
+`For` to drop them immediately. Exit generations make delayed cleanup safe when
+a key is removed, reinserted, and removed again. Once the exit duration and
+stagger complete, the retained row is removed and the surviving rows run their
+FLIP movement. Initial enter animation, `move_delay`, `item_class`, and explicit
+`gap` behavior remain part of the same lifecycle.
 
 
 #### `src/gesture.rs`
@@ -1506,7 +1509,7 @@ pub fn SsrFallback(
 ```toml
 [package]
 name        = "animato-leptos"
-version     = "1.7.1"
+version     = "1.7.2"
 description = "Leptos integration for the Animato animation library — signal-backed hooks, scroll, presence, transitions, FLIP lists, gestures, and SSR."
 
 [features]
@@ -1663,7 +1666,7 @@ The `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `scroll.rs` mod
 ```toml
 [package]
 name        = "animato-dioxus"
-version     = "1.7.1"
+version     = "1.7.2"
 description = "Dioxus integration for the Animato animation library — cross-platform hooks, scroll, presence, transitions, FLIP lists, gestures, and native window animation."
 
 [features]
@@ -1710,7 +1713,7 @@ web-sys          = { workspace = true, features = ["Window", "Document", "Elemen
 
 **Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `yew`, `yew-router`
 
-**Version:** Started at `1.3.0`; current workspace release is `1.7.1`.
+**Version:** Started at `1.3.0`; current workspace release is `1.7.2`.
 
 #### Module breakdown
 
@@ -1787,7 +1790,7 @@ The `scroll.rs`, `presence.rs`, `transition.rs`, `list.rs`, `gesture.rs`, and `c
 ```toml
 [package]
 name        = "animato-yew"
-version     = "1.7.1"
+version     = "1.7.2"
 description = "Yew integration for the Animato animation library — hooks, agents, scroll, presence, transitions, FLIP lists, gestures, and CSS animation helpers."
 
 [features]
@@ -1829,7 +1832,7 @@ web-sys          = { workspace = true }
 
 **Depends on:** `animato-core`, `animato-tween`, `animato-spring`, `animato-timeline`, `animato-driver`, `animato-path`, `animato-physics`, `animato-wasm`, `wasm-bindgen`, `js-sys`, `web-sys`
 
-**Version:** `1.7.1`.
+**Version:** `1.7.2`.
 
 **Build command:** `bash scripts/build-js-package.sh`
 
@@ -1974,7 +1977,7 @@ console.log(availableEasings());
 ```toml
 [package]
 name        = "animato-js"
-version     = "1.7.1"
+version     = "1.7.2"
 description = "WASM bindings for the Animato animation library — use Animato in React, Svelte, Vue, and any JavaScript framework."
 
 [lib]
@@ -2165,7 +2168,7 @@ impl PerformanceMonitor {
 ```toml
 [package]
 name        = "animato-devtools"
-version     = "1.7.1"
+version     = "1.7.2"
 description = "Animation DevTools for Animato — timeline inspector, easing editor, spring visualizer, recorder, and performance monitor."
 
 [features]
@@ -3073,12 +3076,12 @@ fn on_done(mut messages: MessageReader<TweenCompleted>) {
 
 ```toml
 [dependencies]
-animato-core  = { version = "1.7.1", default-features = false }
-animato-tween = { version = "1.7.1", default-features = false }
-animato-spring = { version = "1.7.1", default-features = false }
-animato-path = { version = "1.7.1", default-features = false }
-animato-physics = { version = "1.7.1", default-features = false }
-animato-color = { version = "1.7.1", default-features = false }
+animato-core  = { version = "1.7.2", default-features = false }
+animato-tween = { version = "1.7.2", default-features = false }
+animato-spring = { version = "1.7.2", default-features = false }
+animato-path = { version = "1.7.2", default-features = false }
+animato-physics = { version = "1.7.2", default-features = false }
+animato-color = { version = "1.7.2", default-features = false }
 ```
 
 Available: `Easing`, `Tween<T>`, `Spring`, `SpringConfig`, fixed Bezier curves, `Inertia`, `GestureRecognizer`, `InLab<C>`, `InOklch<C>`, `InLinear<C>`, and all `Interpolate` blanket impls.
@@ -3201,5 +3204,5 @@ Every `lib.rs` must have a crate-level `//!` doc block with:
 
 ---
 
-*Document version: 1.7.1 — covers the shipped Animato workspace through the Leptos AnimatedFor reliability patch*
+*Document version: 1.7.2 — covers the shipped Animato workspace through the Leptos AnimatedFor exit-lifecycle patch*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

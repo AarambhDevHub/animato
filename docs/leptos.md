@@ -7,7 +7,7 @@ signal-backed animation hooks and browser-safe helpers.
 
 ```toml
 [dependencies]
-animato = { version = "1.7.1", features = ["leptos-csr"] }
+animato = { version = "1.7.2", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -49,9 +49,11 @@ fn Box() -> impl IntoView {
 
 ## Animated Lists
 
-`AnimatedFor` applies enter animations to the initial render and to newly
-inserted rows, then uses FLIP transforms for keyed reordering. Version 1.7.1
-also exposes layout and stacking controls on the generated wrappers.
+`AnimatedFor` applies enter animations to the initial render and newly
+inserted rows, retains removed rows while their exit animation runs, and then
+uses FLIP transforms to move the surviving keyed rows into place. Version 1.7.2
+implements the complete enter–exit–move lifecycle while preserving the layout
+and stacking controls introduced in v1.7.1.
 
 ```rust,ignore
 <AnimatedFor
@@ -59,6 +61,7 @@ also exposes layout and stacking controls on the generated wrappers.
     key=|item: &Item| item.id
     children=|item: Item| view! { <article>{item.label}</article> }
     enter=PresenceAnimation::slide_up()
+    exit=PresenceAnimation::slide_down()
     move_duration=0.35
     move_easing=Easing::EaseOutCubic
     move_delay=0.20
@@ -71,13 +74,18 @@ also exposes layout and stacking controls on the generated wrappers.
 | Prop | Behavior |
 |------|----------|
 | `enter` | Presence animation used for the first render and newly inserted rows. |
-| `exit` | Reserved exit animation configuration; existing API remains unchanged. |
+| `exit` | Presence animation used while removed rows remain mounted; defaults to `enter.reversed()`. |
 | `move_duration` | Duration, in seconds, of FLIP movement for existing rows. |
 | `move_easing` | Easing used by FLIP movement. |
-| `move_delay` | Additional delay before existing rows start moving; enter animations are not delayed. |
+| `move_delay` | Additional delay before surviving rows start their FLIP movement after an exiting row is removed. |
 | `stagger_delay` | Per-row delay added by index. |
 | `gap` | Gap between generated row wrappers in pixels; defaults to `0.0`. |
 | `item_class` | CSS class applied to every generated row wrapper, including stacking-context utilities. |
+
+Removed rows are kept in the rendered list through the exit duration plus
+their stagger delay. Pointer events are disabled during exit, and a generation
+check prevents an old removal timer from deleting a key that was reinserted.
+After removal, surviving rows are measured and animated to their new positions.
 
 The list no longer inserts an implicit 10px gap. Applications that relied on
 that spacing should set `gap=10.0` explicitly or provide spacing in their own

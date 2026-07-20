@@ -1115,7 +1115,6 @@ fn to_snake_case(s: &str) -> String {
 mod tests {
     use super::*;
     use proc_macro2::TokenStream;
-    use syn::parse_str;
 
     fn parse_input(src: &str) -> syn::Result<AnimatoInput> {
         let ts: TokenStream = src.parse().unwrap();

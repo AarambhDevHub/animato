@@ -45,7 +45,7 @@ fn hook_showcase() -> Html {
     );
 
     let state_summary = format!(
-        "{:.1}:{:.1}:{:.1}:{:.1}:{:.1}:{:.1}:{:.1}:{:?}:{:?}:{}:{}:{}:{}:{}:{}:{}:{}",
+        "{:.1}:{:.1}:{:.1}:{:.1}:{:.1}:{:.1}:{:.1}:{:?}:{:?}:{}:{}:{:?}:{}:{}:{}:{:?}:{}",
         *tween_value,
         *spring_value,
         *keyframe_value,
@@ -57,11 +57,11 @@ fn hook_showcase() -> Html {
         *swipe,
         *tween.progress(),
         *tween.is_complete(),
-        format!("{:?}", *tween.state()),
+        *tween.state(),
         *spring.is_settled(),
         *timeline.progress(),
         *timeline.is_complete(),
-        format!("{:?}", *timeline.state()),
+        *timeline.state(),
         *keyframes.progress(),
     );
 

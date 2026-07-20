@@ -1,6 +1,6 @@
 [package]
 name        = "animato-leptos"
-description = "Leptos integration for the Animato animation library: signal-backed hooks, scroll, presence, FLIP lists, gestures, CSS, and SSR guards."
+description = "Leptos integration for Animato: signal-backed hooks, scroll, presence, retained enter/exit FLIP lists, gestures, CSS, and SSR guards."
 readme.workspace  = true
 version.workspace     = true
 edition.workspace     = true

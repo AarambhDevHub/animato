@@ -10,7 +10,7 @@ Choose the Animato facade feature that matches the renderer in your app:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.1", features = ["dioxus-web"] }
+animato = { version = "1.7.2", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -18,7 +18,7 @@ Desktop apps use the desktop renderer and can opt into native handles:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.1", features = ["dioxus-desktop", "dioxus-native"] }
+animato = { version = "1.7.2", features = ["dioxus-desktop", "dioxus-native"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["desktop", "launch"] }
 ```
 
@@ -26,7 +26,7 @@ Router-driven page transitions add `dioxus-router`:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.1", features = ["dioxus-router"] }
+animato = { version = "1.7.2", features = ["dioxus-router"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "router"] }
 dioxus-router = { version = "0.7.9", default-features = false }
 ```

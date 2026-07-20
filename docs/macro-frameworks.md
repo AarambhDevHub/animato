@@ -22,7 +22,7 @@ Enable the feature on the facade:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.1", features = ["macro", "leptos"] }
+animato = { version = "1.7.2", features = ["macro", "leptos"] }
 ```
 
 ---
