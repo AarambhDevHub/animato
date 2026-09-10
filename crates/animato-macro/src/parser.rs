@@ -844,20 +844,18 @@ fn parse_label(input: ParseStream) -> syn::Result<String> {
 
 fn parse_at(input: ParseStream) -> syn::Result<AtSpec> {
     let relative;
-    let value;
-
-    if input.peek(Token![+]) {
+    let value = if input.peek(Token![+]) {
         input.parse::<Token![+]>()?;
         relative = true;
-        value = parse_float(input)?;
+        parse_float(input)?
     } else if input.peek(Token![-]) {
         input.parse::<Token![-]>()?;
         relative = true;
-        value = -parse_float(input)?;
+        -parse_float(input)?
     } else {
         relative = false;
-        value = parse_float(input)?;
-    }
+        parse_float(input)?
+    };
 
     if input.peek(Token![;]) {
         input.parse::<Token![;]>()?;
