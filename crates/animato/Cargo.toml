@@ -203,7 +203,7 @@ required-features = ["gpu"]
 [[test]]
 name = "advanced_engine"
 path = "../../tests/advanced_engine.rs"
-required-features = ["tween", "timeline", "spring", "driver"]
+required-features = ["std", "tween", "timeline", "spring", "driver"]
 
 [[test]]
 name = "devtools_facade"
