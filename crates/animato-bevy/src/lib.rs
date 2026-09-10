@@ -25,9 +25,13 @@
 //!     });
 //! ```
 
+#![no_std]
 #![deny(missing_docs)]
 #![deny(missing_debug_implementations)]
 
+extern crate alloc;
+
+use alloc::string::String;
 use animato_core::{Animatable, Update};
 use animato_spring::{Decompose, SpringN};
 use animato_tween::Tween;

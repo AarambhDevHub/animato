@@ -23,7 +23,7 @@ physics  = ["dep:animato-physics", "animato-physics/alloc"]
 color    = ["dep:animato-color", "dep:palette"]
 driver   = ["dep:animato-driver"]
 gpu      = ["dep:animato-gpu", "tween", "std"]
-bevy     = ["dep:animato-bevy", "tween", "spring", "std"]
+bevy     = ["dep:animato-bevy", "tween", "spring"]
 wasm     = ["dep:animato-wasm", "driver"]
 wasm-dom = ["wasm", "animato-wasm/wasm-dom"]
 leptos   = ["dep:animato-leptos"]
@@ -162,7 +162,7 @@ required-features = ["color", "tween"]
 [[test]]
 name = "bevy_integration"
 path = "../../tests/bevy_integration.rs"
-required-features = ["bevy"]
+required-features = ["bevy", "std"]
 
 [[test]]
 name = "wasm_raf_driver"

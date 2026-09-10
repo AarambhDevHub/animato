@@ -182,7 +182,7 @@ other target.
 | [`animato-color`](./crates/animato-color) | Lab, Oklch, and linear color interpolation | yes |
 | [`animato-driver`](./crates/animato-driver) | Animation driver, clocks, scroll driver | std |
 | [`animato-gpu`](./crates/animato-gpu) | Batched `Tween<f32>` evaluation with CPU fallback | std |
-| [`animato-bevy`](./crates/animato-bevy) | Bevy ECS components, systems, completion messages | std |
+| [`animato-bevy`](./crates/animato-bevy) | Bevy ECS components, systems, completion messages | alloc |
 | [`animato-wasm`](./crates/animato-wasm) | rAF driver and optional DOM helpers | wasm/std |
 | [`animato-leptos`](./crates/animato-leptos) | Leptos signal hooks, scroll, presence, lists, gestures, CSS, SSR | wasm/std |
 | [`animato-dioxus`](./crates/animato-dioxus) | Dioxus signals, motion hooks, scroll, presence, lists, gestures, native helpers | wasm/std |
@@ -251,6 +251,7 @@ cargo run --example physics_drag --features physics
 cargo run --example color_animation --features color
 cargo run --example gpu_particles --features gpu
 cargo run --example bevy_transform --features bevy
+cargo run --example bevy_transform --features bevy --no-default-features  # no_std
 cargo run --example tui_progress
 cargo run --example tui_spinner
 ```

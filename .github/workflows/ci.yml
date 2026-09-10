@@ -62,6 +62,7 @@ jobs:
             -p animato-path \
             -p animato-physics \
             -p animato-color \
+            -p animato-bevy \
             --no-default-features
 
   lint:
@@ -188,6 +189,7 @@ jobs:
           cargo build -p animato-path --target thumbv7m-none-eabi --no-default-features
           cargo build -p animato-physics --target thumbv7m-none-eabi --no-default-features
           cargo build -p animato-color --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato-bevy --target thumbv7m-none-eabi --no-default-features
 
   wasm:
     name: WASM integration compile
