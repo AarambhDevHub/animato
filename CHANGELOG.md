@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+- animato-bevy no longer requires `std`, it is `no_std` but does require `alloc`
+
 ## [1.7.2] — 2026-07-20 — Animated List Exit Lifecycle
 
 ### Added

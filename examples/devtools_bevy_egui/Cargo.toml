@@ -5,4 +5,4 @@ edition = "2024"
 publish = false
 
 [dependencies]
-animato = { path = "../../crates/animato", features = ["bevy", "devtools-egui-panel"] }
+animato = { path = "../../crates/animato", features = ["std", "bevy", "devtools-egui-panel"] }

@@ -28,6 +28,7 @@ cargo run --example physics_drag --features physics
 cargo run --example color_animation --features color
 cargo run --example gpu_particles --features gpu
 cargo run --example bevy_transform --features bevy
+cargo run --example bevy_transform --features bevy --no-default-features  # no_std
 ```
 
 ## WASM Example
