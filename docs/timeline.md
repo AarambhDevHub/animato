@@ -4,7 +4,7 @@ Feature: `timeline`.
 
 ```toml
 [dependencies]
-animato = "1.7.2"
+animato = "1.7.3"
 ```
 
 `Timeline` composes animations by absolute or relative start time. `Sequence`

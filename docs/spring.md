@@ -4,7 +4,7 @@ Feature: `spring`.
 
 ```toml
 [dependencies]
-animato = "1.7.2"
+animato = "1.7.3"
 ```
 
 Springs are physics-based animations that approach a target over time.

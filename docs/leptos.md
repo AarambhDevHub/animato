@@ -7,7 +7,7 @@ signal-backed animation hooks and browser-safe helpers.
 
 ```toml
 [dependencies]
-animato = { version = "1.7.2", features = ["leptos-csr"] }
+animato = { version = "1.7.3", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -51,7 +51,7 @@ fn Box() -> impl IntoView {
 
 `AnimatedFor` applies enter animations to the initial render and newly
 inserted rows, retains removed rows while their exit animation runs, and then
-uses FLIP transforms to move the surviving keyed rows into place. Version 1.7.2
+uses FLIP transforms to move the surviving keyed rows into place. Version 1.7.3
 implements the complete enter–exit–move lifecycle while preserving the layout
 and stacking controls introduced in v1.7.1.
 

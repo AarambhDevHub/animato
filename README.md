@@ -15,7 +15,7 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.7.2 API is stable. The current public crates cover easing, tweens,
+The v1.7.3 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
 first-class Leptos, Dioxus, Yew, JavaScript/WASM integration, and advanced
@@ -23,7 +23,7 @@ engine primitives such as velocity springs, waveforms, quaternion slerp,
 animation groups, stagger patterns, recording, runtime DevTools, and the
 declarative `animato!{}` Motion Macro DSL for ergonomic animation authoring.
 
-Version 1.7.2 completes the Leptos `AnimatedFor` lifecycle: removed rows stay
+Version 1.7.3 completes the Leptos `AnimatedFor` lifecycle: removed rows stay
 mounted for their configured exit animation, then surviving rows use FLIP to
 move into place. The first-render, spacing, move-delay, and wrapper-class fixes
 from v1.7.1 remain unchanged.
@@ -34,28 +34,28 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.7.2"
+animato = "1.7.3"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.2", features = ["path", "physics", "color"] }
+animato = { version = "1.7.3", features = ["path", "physics", "color"] }
 ```
 
 Enable the Motion Macro DSL for declarative animation authoring:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.2", features = ["macro"] }
+animato = { version = "1.7.3", features = ["macro"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.2", features = ["leptos-csr"] }
+animato = { version = "1.7.3", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -63,7 +63,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.2", features = ["dioxus-web"] }
+animato = { version = "1.7.3", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -71,7 +71,7 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.2", features = ["yew-csr"] }
+animato = { version = "1.7.3", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -89,16 +89,25 @@ const tween = new Tween(0, 320, 0.9);
 tween.setEasing("easeOutCubic");
 ```
 
-For `no_std`, depend on the focused crates directly:
+For `no_std`, the facade itself works with default features disabled —
+enable only the features the target needs (`tween`, `spring`, `physics`,
+and `color` are bare-metal safe; `timeline` and `path` still need `std`):
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.7.2", default-features = false }
-animato-tween   = { version = "1.7.2", default-features = false }
-animato-spring  = { version = "1.7.2", default-features = false }
-animato-path    = { version = "1.7.2", default-features = false }
-animato-physics = { version = "1.7.2", default-features = false }
-animato-color   = { version = "1.7.2", default-features = false }
+animato = { version = "1.7.3", default-features = false, features = ["tween", "spring"] }
+```
+
+For the smallest dependency graph, depend on the focused crates directly:
+
+```toml
+[dependencies]
+animato-core    = { version = "1.7.3", default-features = false }
+animato-tween   = { version = "1.7.3", default-features = false }
+animato-spring  = { version = "1.7.3", default-features = false }
+animato-path    = { version = "1.7.3", default-features = false }
+animato-physics = { version = "1.7.3", default-features = false }
+animato-color   = { version = "1.7.3", default-features = false }
 ```
 
 ## Quick Start
@@ -190,7 +199,7 @@ other target.
 | [`animato-js`](./crates/animato-js) | WASM-to-NPM bindings for JavaScript and framework examples | wasm |
 | [`animato-devtools`](./crates/animato-devtools) | Timeline inspector, easing editor, spring visualizer, recorder controls, perf monitor | std/wasm |
 | [`animato-macro`](./crates/animato-macro) | Declarative `animato!{}` Motion Macro DSL | compile-time |
-| [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | feature gated |
+| [`animato`](./crates/animato) | Facade crate re-exporting stable APIs | yes (core/tween/spring/physics/color), std for timeline/path |
 
 ## Feature Flags
 
