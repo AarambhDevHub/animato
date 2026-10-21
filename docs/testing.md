@@ -1,6 +1,6 @@
 # Testing
 
-This is the v1.7.2 release verification set.
+This is the v1.7.3 release verification set.
 
 ## Required Local Gates
 
@@ -128,7 +128,7 @@ npm run typecheck --prefix examples/js_devtools
 npm run build --prefix examples/js_devtools
 ```
 
-The v1.7.2 package budget is 150 KiB gzipped WASM for the full JavaScript
+The v1.7.3 package budget is 150 KiB gzipped WASM for the full JavaScript
 surface, including the DevTools exports.
 
 ## Related Docs

@@ -62,15 +62,24 @@
 //!
 //! ## `no_std` Usage
 //!
-//! For `no_std` targets, depend on the sub-crates directly:
+//! The facade itself is `no_std`-capable: depend on `animato` with
+//! `default-features = false` and enable only the features the target needs.
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.7.2", default-features = false }
-//! animato-tween  = { version = "1.7.2", default-features = false }
-//! animato-spring = { version = "1.7.2", default-features = false }
-//! animato-physics = { version = "1.7.2", default-features = false }
-//! animato-color = { version = "1.7.2", default-features = false }
+//! animato = { version = "1.7.3", default-features = false }
+//! ```
+//!
+//! For the smallest possible dependency graph, the sub-crates also work
+//! directly:
+//!
+//! ```toml
+//! [dependencies]
+//! animato-core   = { version = "1.7.3", default-features = false }
+//! animato-tween  = { version = "1.7.3", default-features = false }
+//! animato-spring = { version = "1.7.3", default-features = false }
+//! animato-physics = { version = "1.7.3", default-features = false }
+//! animato-color = { version = "1.7.3", default-features = false }
 //! ```
 //!
 //! ## Feature Flags
@@ -97,6 +106,8 @@
 //! | `macro` | Declarative `animato!{}` Motion Macro DSL |
 //! | `tokio` | [`Timeline::wait()`] async completion waiting |
 //! | `serde` | `Serialize`/`Deserialize` on all public types |
+
+#![cfg_attr(not(feature = "std"), no_std)]
 
 // ── Core — always present ────────────────────────────────────────────────────
 pub use animato_core::{

@@ -31,6 +31,32 @@ ignore = [
 
     # rand 0.7: unsound with custom logger using rand::rng()
     "RUSTSEC-2026-0097",
+
+    # quinn-proto 0.11.14 (via Bevy asset/Dioxus desktop chains): unbounded
+    # pending connection-id retirements (2026-0339), zero-length DATAGRAM
+    # frames (2026-0342), peer minimum ACK delay panic (2026-0340),
+    # zero-length STREAM frames panic (2026-0338). Animato only pulls these
+    # through dev-dependency demonstration integrations, never as shipped
+    # network code. Upstream should bump Bevy/Dioxus until quinn-proto >= 0.11.15.
+    "RUSTSEC-2026-0339",
+    "RUSTSEC-2026-0342",
+    "RUSTSEC-2026-0340",
+    "RUSTSEC-2026-0338",
+
+    # rustls 0.23.40 (same transitive chains): brotli cert decompression
+    # allocation (2026-0348), ServerHello downgrade (2026-0349),
+    # Debug impl exposing TLS secrets (2026-0346), TLS 1.3 encryption-level
+    # boundaries (2026-0285). Dev-dependency trees only.
+    "RUSTSEC-2026-0348",
+    "RUSTSEC-2026-0349",
+    "RUSTSEC-2026-0346",
+    "RUSTSEC-2026-0285",
+
+    # rustls-webpki (2026-0382), webpki-roots (2026-0381), webbrowser
+    # (2026-0257): same transitive/dev-dependency chains.
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0257",
 ]
 
 # Yanked crates (enumset 1.1.12) are transitive deps we cannot control.

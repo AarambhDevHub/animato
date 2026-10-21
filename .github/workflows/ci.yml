@@ -182,6 +182,8 @@ jobs:
 
       - name: Build no_std crates
         run: |
+          cargo build -p animato --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato --target thumbv7m-none-eabi --no-default-features --features tween,spring
           cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
           cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
           cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features
@@ -534,4 +536,15 @@ jobs:
             --ignore RUSTSEC-2026-0190 \
             --ignore RUSTSEC-2024-0429 \
             --ignore RUSTSEC-2026-0186 \
-            --ignore RUSTSEC-2026-0097
+            --ignore RUSTSEC-2026-0097 \
+            --ignore RUSTSEC-2026-0339 \
+            --ignore RUSTSEC-2026-0342 \
+            --ignore RUSTSEC-2026-0340 \
+            --ignore RUSTSEC-2026-0338 \
+            --ignore RUSTSEC-2026-0348 \
+            --ignore RUSTSEC-2026-0349 \
+            --ignore RUSTSEC-2026-0346 \
+            --ignore RUSTSEC-2026-0285 \
+            --ignore RUSTSEC-2026-0382 \
+            --ignore RUSTSEC-2026-0257 \
+            --ignore RUSTSEC-2026-0381

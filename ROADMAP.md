@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.7.2`.
+This roadmap tracks every planned release from `v0.1.0` through `v1.7.3`.
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -42,6 +42,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.7.0` | Motion Macro | Declarative `animato!{}` macro DSL for tweens, springs, timelines, gestures, paths, colors, presets, and framework helpers | ✅ |
 | `v1.7.1` | Animated List Reliability | Leptos first-render enter animations, configurable spacing and wrapper classes, delayed FLIP movement | ✅ |
 | `v1.7.2` | Animated List Exit Lifecycle | Retained removed rows, configured exit animations, generation-safe cleanup, post-exit FLIP movement | ✅ |
+| `v1.7.3` | Facade `no_std` Fix | The `animato` facade compiles for bare metal with default features disabled (`tween`/`spring`/`physics`/`color`); bare-metal CI lanes now cover the facade | ✅ |
 
 ---
 
@@ -1191,6 +1192,31 @@ continue to receive the reverse of their enter animation.
 
 ---
 
+## v1.7.3 — Facade `no_std` Fix
+
+**Goal:** Resolve [scenix #21](https://github.com/AarambhDevHub/scenix/issues/21)
+by making the `animato` facade `no_std`-capable so `no_std`-only targets
+compile without forcing consumers onto the sub-crates.
+
+### Deliverables
+
+* [x] The facade `lib.rs` declares `#![cfg_attr(not(feature = "std"), no_std)]`, matching the sub-crates.
+* [x] `animato --no-default-features` compiles for `thumbv7m-none-eabi`.
+* [x] `animato --no-default-features --features tween,spring` compiles for `thumbv7m-none-eabi` (the scenix profile).
+* [x] `animato --no-default-features --features tween,spring,physics,color` compiles for `thumbv7m-none-eabi`.
+* [x] `timeline`/`path` remain `std`-only; documented honestly in README, the facade docs, and `docs/no-std.md`.
+* [x] ci.yml and publish.yml bare-metal lanes compile the facade for `thumbv7m-none-eabi`.
+* [x] CHANGELOG, release notes, architecture, roadmap, lockfiles, and version strings updated.
+* [x] All workspace crates are versioned together at `1.7.3`.
+
+### Compatibility
+
+No public API changed. Applications depending on the facade under default
+features are untouched. `no_std` consumers who previously depended on the
+sub-crates directly can now use the facade instead.
+
+---
+
 ## Post-1.7 Ideas (Future / `v2.x+`)
 
 These are not committed — they are ideas to revisit in a future major release.
@@ -1212,10 +1238,10 @@ These are not committed — they are ideas to revisit in a future major release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.7.2 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
+The best way to contribute right now is to use the v1.7.3 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
 
 ---
 
-*Roadmap version: 1.7.2 — last updated July 20, 2026*
-*v1.7.2 Animated List Exit Lifecycle shipped — future items remain uncommitted*
+*Roadmap version: 1.7.3 — last updated October 21, 2026*
+*v1.7.3 Facade `no_std` Fix shipped — future items remain uncommitted*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

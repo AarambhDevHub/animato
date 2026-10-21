@@ -7,15 +7,15 @@ required for the upgrade.
 
 ```toml
 [dependencies]
-animato = "1.7.2"
+animato = "1.7.3"
 ```
 
 Focused crates:
 
 ```toml
-animato-core = "1.7.2"
-animato-tween = "1.7.2"
-animato-spring = "1.7.2"
+animato-core = "1.7.3"
+animato-tween = "1.7.3"
+animato-spring = "1.7.3"
 ```
 
 ## What Changed

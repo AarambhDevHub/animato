@@ -164,6 +164,8 @@ jobs:
 
       - name: Build no_std crates for bare metal
         run: |
+          cargo build -p animato --target thumbv7m-none-eabi --no-default-features
+          cargo build -p animato --target thumbv7m-none-eabi --no-default-features --features tween,spring
           cargo build -p animato-core --target thumbv7m-none-eabi --no-default-features
           cargo build -p animato-tween --target thumbv7m-none-eabi --no-default-features
           cargo build -p animato-spring --target thumbv7m-none-eabi --no-default-features

@@ -7,6 +7,56 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.7.3] — 2026-10-21 — Facade `no_std` Fix
+
+### Fixed
+- The `animato` facade is now `no_std`-capable: its `lib.rs` declares
+  `#![cfg_attr(not(feature = "std"), no_std)]`, matching the sub-crates.
+  With `std` disabled and `tween`/`spring` enabled the facade previously
+  failed on `no_std`-only targets with
+  `error[E0463]: can't find crate for \`std\`` because the facade always
+  compiled as a `std` crate (the prelude needs it). Found through
+  [scenix #21](https://github.com/AarambhDevHub/scenix/issues/21):
+  `scenix-animato` embeds this facade and hit exactly that failure while
+  claiming conditional `no_std` support of its own.
+
+### Changed
+- Bumped all workspace crates and internal dependency requirements from
+  `1.7.2` to `1.7.3`.
+- Updated the facade `no_std` docs, the README's `no_std` section, the
+  `docs/no-std.md` guide, the architecture layout, and the ROADMAP.
+- `ci.yml` and `publish.yml` now compile the facade itself for
+  `thumbv7m-none-eabi` in their bare-metal lanes (core-only, and with
+  `tween`/`spring` enabled), so the facade can no longer silently require
+  `std`.
+
+### Verified `no_std` surface
+
+- `animato --no-default-features` (core only) compiles for
+  `thumbv7m-none-eabi`.
+- `animato --no-default-features --features tween,spring` compiles for
+  `thumbv7m-none-eabi` (the scenix profile).
+- `animato --no-default-features --features tween,spring,physics,color`
+  compiles for `thumbv7m-none-eabi`.
+- `timeline` and `path` still require `std` (their internal dependency
+  trees enable `animato-core/std` on `thumbv7m-none-eabi`); this is
+  unchanged from 1.7.2.
+
+### Migration
+- No public API was removed or renamed.
+- Any code depending on the facade under default features is untouched;
+  `no_std` consumers who previously had to use the sub-crates directly
+  can now use the `animato` facade instead.
+
+### Verification
+- `cargo fmt --check`
+- `cargo check -p animato --no-default-features --target thumbv7m-none-eabi`
+- `cargo check -p animato --no-default-features --features tween,spring --target thumbv7m-none-eabi`
+- Full workspace, clippy, docs, no-default-features, WASM, examples,
+  coverage, fuzz, and publish dry-run gates remain enforced by
+  `.github/workflows/publish.yml`.
+- Release notes at `.github/release-notes/1.7.3.md`.
+
 ## [1.7.2] — 2026-07-20 — Animated List Exit Lifecycle
 
 ### Added
