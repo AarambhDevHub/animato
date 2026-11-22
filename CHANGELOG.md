@@ -7,6 +7,63 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.7.4] — 2026-11-22 — Dioxus Desktop Animation Loop Fix
+
+### Fixed
+- `animato-dioxus` no longer freezes the window on desktop/mobile
+  ([#57](https://github.com/AarambhDevHub/animato/issues/57)): the native
+  branch of `spawn_animation_loop` called `std::thread::sleep` inside an
+  async block without a single `.await`, so the future's first poll never
+  returned and blocked the Dioxus executor and UI thread. Every hook was
+  affected (`use_tween`, `use_spring`, `use_timeline`, `use_keyframes`,
+  plus `use_motion` and `use_drag`). Frames now advance by awaiting a
+  runtime-agnostic `futures_timer::Delay` between ticks. The dioxus 0.7.9
+  source shows dioxus-desktop polls the VirtualDom with a plain tao waker
+  outside any tokio context, so `tokio::time::sleep` (the initial
+  suggestion) would have panicked at runtime; `futures-timer` works under
+  any executor.
+- Animation loops park while the engine is idle instead of ticking forever.
+  Each hook previously passed a closure that returned `true` unconditionally,
+  so completed tweens and settled springs re-rendered ~60×/s forever
+  (`Signal::set` always notifies subscribers). Finished and paused engines
+  now park the loop until a handle method reactivates them.
+- `use_tween`, `use_spring`, `use_timeline`, `use_keyframes`, `use_motion`,
+  and `use_drag` create the engine and control handle once inside `use_hook`.
+  Previously every render built a fresh engine plus `Arc<Mutex<…>>` while
+  only the first render's loop was running; `play()`, `seek()`,
+  `set_target()`, and friends called from later renders silently drove an
+  orphaned engine.
+
+### Added
+- `TweenHandle::is_playing()` and `TimelineHandle::is_playing()` report
+  whether the engine is actively advancing.
+- A std-only `LoopWaker` parking primitive (permit + waker, no extra
+  dependencies) that resumes a parked loop on `notify()`. Web targets use a
+  resumption thunk: the requestAnimationFrame loop stops requesting frames
+  while idle and restarts from handle methods.
+
+### Changed
+- Bumped all workspace crates and internal dependency requirements from
+  `1.7.3` to `1.7.4`.
+- `animato-dioxus` gained a `futures-timer` dependency on native targets
+  only; the wasm32 build keeps the rAF loop and gains no new dependencies.
+
+### Migration
+- No public API was removed or renamed; the two `is_playing()` methods are
+  additive.
+- Behavior change (intended): animations stop re-rendering once they complete
+  or are paused. Code that relied on polling a finished animation should
+  drive playback through the handle methods, which restart the loop.
+
+### Verification
+- `cargo fmt --check`
+- `cargo clippy --workspace --all-features -- -D warnings`
+- `cargo test --workspace`, `cargo test --workspace --all-features`,
+  `cargo test -p animato --all-features --examples`
+- no_std bare-metal lanes, wasm32 checks, dioxus example checks, docs, and
+  benches remain enforced by `.github/workflows/ci.yml`.
+- Release notes at `.github/release-notes/1.7.4.md`.
+
 ## [1.7.3] — 2026-10-21 — Facade `no_std` Fix
 
 ### Fixed

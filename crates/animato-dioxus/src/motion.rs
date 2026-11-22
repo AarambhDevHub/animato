@@ -3,7 +3,7 @@
 use animato_core::{Easing, Update};
 use animato_spring::{Decompose, SpringConfig, SpringN};
 use animato_tween::{KeyframeTrack, Tween};
-use dioxus::prelude::{Signal, use_signal};
+use dioxus::prelude::{Signal, use_hook, use_signal};
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
@@ -35,6 +35,7 @@ enum ActiveMotion<T: Decompose + Send + Sync + Clone + 'static> {
 pub struct MotionHandle<T: Decompose + Send + Sync + Clone + 'static> {
     value: Signal<T>,
     active: Arc<Mutex<ActiveMotion<T>>>,
+    waker: crate::LoopWaker,
 }
 
 impl<T: Decompose + Send + Sync + Clone + 'static> fmt::Debug for MotionHandle<T> {
@@ -71,6 +72,7 @@ impl<T: Decompose + Send + Sync + Clone + 'static> MotionHandle<T> {
             }
             MotionConfig::Spring(config) => self.spring_to(target, config),
         }
+        self.waker.notify();
     }
 
     /// Spring to a target.
@@ -80,6 +82,7 @@ impl<T: Decompose + Send + Sync + Clone + 'static> MotionHandle<T> {
         crate::with_lock(&self.active, |active| {
             *active = ActiveMotion::Spring(spring)
         });
+        self.waker.notify();
     }
 
     /// Play a keyframe track.
@@ -87,6 +90,7 @@ impl<T: Decompose + Send + Sync + Clone + 'static> MotionHandle<T> {
         crate::with_lock(&self.active, |active| {
             *active = ActiveMotion::Keyframes(track)
         });
+        self.waker.notify();
     }
 
     /// Stop the active animation without changing the current value.
@@ -145,16 +149,18 @@ where
     T: Decompose + Send + Sync + Clone + 'static,
 {
     let value = use_signal(move || initial);
-    let handle = MotionHandle {
+
+    // The handle is created once per component; later renders reuse it.
+    let handle = use_hook(move || MotionHandle {
         value,
         active: Arc::new(Mutex::new(ActiveMotion::Idle)),
-    };
-
-    let loop_handle = handle.clone();
-    crate::spawn_animation_loop(move |dt| {
-        loop_handle.tick(dt);
-        true
+        waker: crate::LoopWaker::default(),
     });
+
+    // The loop exits while no motion is active; `animate_to` and friends wake
+    // it again.
+    let loop_handle = handle.clone();
+    crate::spawn_animation_loop(handle.waker.clone(), move |dt| loop_handle.tick(dt));
 
     handle
 }

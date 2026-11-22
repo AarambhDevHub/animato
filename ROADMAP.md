@@ -3,7 +3,7 @@
 > *Italian: animato — animated, lively, with life and movement.*
 > A professional-grade, renderer-agnostic animation library for Rust.
 
-This roadmap tracks every planned release from `v0.1.0` through `v1.7.3`.
+This roadmap tracks every planned release from `v0.1.0` through `v1.7.4`.
 Each milestone is a working, published crate — not a draft. Nothing ships without tests, docs, and benchmarks.
 
 ---
@@ -43,6 +43,7 @@ Each milestone is a working, published crate — not a draft. Nothing ships with
 | `v1.7.1` | Animated List Reliability | Leptos first-render enter animations, configurable spacing and wrapper classes, delayed FLIP movement | ✅ |
 | `v1.7.2` | Animated List Exit Lifecycle | Retained removed rows, configured exit animations, generation-safe cleanup, post-exit FLIP movement | ✅ |
 | `v1.7.3` | Facade `no_std` Fix | The `animato` facade compiles for bare metal with default features disabled (`tween`/`spring`/`physics`/`color`); bare-metal CI lanes now cover the facade | ✅ |
+| `v1.7.4` | Dioxus Desktop Loop Fix | Dioxus hooks no longer freeze the window: async frame pacing, idle-parking loops, single engine per component (#57) | ✅ |
 
 ---
 
@@ -1217,6 +1218,33 @@ sub-crates directly can now use the facade instead.
 
 ---
 
+## v1.7.4 — Dioxus Desktop Loop Fix
+
+**Goal:** Resolve [#57](https://github.com/AarambhDevHub/animato/issues/57):
+on dioxus-desktop every animato-dioxus hook froze the window because the
+native animation loop blocked the UI thread, never stopped re-rendering after
+completion, and rebuilt orphaned engines on every render.
+
+### Deliverables
+
+* [x] `spawn_animation_loop`'s native branch awaits a runtime-agnostic `futures_timer::Delay` between frames instead of blocking with `std::thread::sleep` (dioxus-desktop polls the VirtualDom outside any tokio context, so `tokio::time::sleep` would panic).
+* [x] Loop closures return the engine's real active state; idle loops park on a std-only `LoopWaker` (permit + waker) instead of spinning forever.
+* [x] Handle methods (`play`, `resume`, `reset`, `seek`, `reverse`, `set_target`, `animate_to`, `spring_to`, `keyframes`, drag release inertia) wake parked loops.
+* [x] `use_tween`, `use_spring`, `use_timeline`, `use_keyframes`, `use_motion`, and `use_drag` create the engine and control handle once inside `use_hook`.
+* [x] Web rAF loop parks the same way (stops requesting frames while idle).
+* [x] `TweenHandle::is_playing()` and `TimelineHandle::is_playing()` added.
+* [x] Tests: loop-waker permit/wake semantics, `is_playing` tracking, engine reuse across re-renders.
+* [x] CHANGELOG, release notes, README, architecture, roadmap, lockfiles, and version strings updated to `1.7.4`.
+
+### Compatibility
+
+No public API was removed or renamed; the two `is_playing()` methods are
+additive. Behavior change (intended): animations stop re-rendering once they
+complete — controls should drive playback through the handle methods, which
+restart the loop.
+
+---
+
 ## Post-1.7 Ideas (Future / `v2.x+`)
 
 These are not committed — they are ideas to revisit in a future major release.
@@ -1238,10 +1266,10 @@ These are not committed — they are ideas to revisit in a future major release.
 
 See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for how to set up the workspace, run tests, and submit pull requests.
 
-The best way to contribute right now is to use the v1.7.3 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
+The best way to contribute right now is to use the v1.7.4 stable API, experiment with the `animato!{}` Motion Macro DSL, and open focused issues for bugs, documentation gaps, or feature proposals.
 
 ---
 
-*Roadmap version: 1.7.3 — last updated October 21, 2026*
-*v1.7.3 Facade `no_std` Fix shipped — future items remain uncommitted*
+*Roadmap version: 1.7.4 — last updated November 22, 2026*
+*v1.7.4 Dioxus Desktop Loop Fix shipped — future items remain uncommitted*
 *Project: Aarambh Dev Hub — github.com/AarambhDevHub/animato*

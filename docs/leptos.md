@@ -7,7 +7,7 @@ signal-backed animation hooks and browser-safe helpers.
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", features = ["leptos-csr"] }
+animato = { version = "1.7.4", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 

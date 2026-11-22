@@ -1,6 +1,6 @@
 # Full API Map
 
-This file lists the stable v1.7.3 API surface by crate. For signatures,
+This file lists the stable v1.7.4 API surface by crate. For signatures,
 generic bounds, and exhaustive docs, use `cargo doc --workspace --all-features`
 or [docs.rs/animato](https://docs.rs/animato).
 
@@ -8,7 +8,7 @@ Install the facade:
 
 ```toml
 [dependencies]
-animato = "1.7.3"
+animato = "1.7.4"
 ```
 
 ## animato-core

@@ -42,6 +42,12 @@ animato-color    = { workspace = true, optional = true }
 dioxus           = { workspace = true }
 dioxus-router    = { workspace = true, optional = true }
 
+# Runtime-agnostic async frame timer for the native animation loop. Dioxus
+# desktop/mobile poll the VirtualDom outside any tokio context, so a
+# runtime-bound timer like tokio::time would panic there.
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+futures-timer = { workspace = true }
+
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = { workspace = true, optional = true }
 web-sys      = { workspace = true, optional = true, features = [
