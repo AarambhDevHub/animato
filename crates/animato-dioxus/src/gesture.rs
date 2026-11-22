@@ -2,7 +2,7 @@
 
 use animato_core::Update;
 use animato_physics::{DragState, InertiaConfig, InertiaN, PointerData};
-use dioxus::prelude::{Signal, use_signal};
+use dioxus::prelude::{Signal, use_hook, use_signal};
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
@@ -45,6 +45,7 @@ pub struct DragHandle {
     inertia: Arc<Mutex<Option<InertiaN<[f32; 2]>>>>,
     position: Signal<[f32; 2]>,
     config: DragConfig,
+    waker: crate::LoopWaker,
 }
 
 impl fmt::Debug for DragHandle {
@@ -90,7 +91,12 @@ impl DragHandle {
             crate::set_signal(self.position, state.position());
             inertia
         });
+        let has_inertia = inertia.is_some();
         crate::with_lock(&self.inertia, |slot| *slot = inertia);
+        // Release inertia animates over time, so wake the parked loop.
+        if has_inertia {
+            self.waker.notify();
+        }
     }
 
     /// Replace the active drag constraints and clamp the current position.
@@ -136,25 +142,33 @@ impl DragHandle {
 pub fn use_drag<T: 'static>(target: T, config: DragConfig) -> (Signal<[f32; 2]>, DragHandle) {
     let _ = target;
     let initial = [0.0, 0.0];
-    let mut state = DragState::new(initial).axis(config.axis);
-    if let Some(constraints) = config.constraints {
-        state = state.constraints(constraints);
-    }
-    state = state.inertia_config(config.inertia_config.clone());
+
+    // The drag state is created once per component; later renders reuse it.
+    let state = use_hook({
+        let config = config.clone();
+        move || {
+            let mut state = DragState::new(initial).axis(config.axis);
+            if let Some(constraints) = config.constraints {
+                state = state.constraints(constraints);
+            }
+            let state = state.inertia_config(config.inertia_config.clone());
+            Arc::new(Mutex::new(state))
+        }
+    });
 
     let position = use_signal(|| initial);
-    let handle = DragHandle {
-        state: Arc::new(Mutex::new(state)),
+
+    let handle = use_hook(move || DragHandle {
+        state: Arc::clone(&state),
         inertia: Arc::new(Mutex::new(None)),
         position,
         config,
-    };
-
-    let loop_handle = handle.clone();
-    crate::spawn_animation_loop(move |dt| {
-        loop_handle.tick(dt);
-        true
+        waker: crate::LoopWaker::default(),
     });
+
+    // The loop exits while no release inertia is running; `pointer_up` wakes it.
+    let loop_handle = handle.clone();
+    crate::spawn_animation_loop(handle.waker.clone(), move |dt| loop_handle.tick(dt));
 
     (position, handle)
 }

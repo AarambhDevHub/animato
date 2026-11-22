@@ -38,12 +38,12 @@ animato
 ## Tag
 
 ```sh
-git tag v1.7.3
-git push origin v1.7.3
+git tag v1.7.4
+git push origin v1.7.4
 ```
 
-The publish workflow validates that `v1.7.3` matches the workspace package
-version `1.7.3`.
+The publish workflow validates that `v1.7.4` matches the workspace package
+version `1.7.4`.
 
 The NPM publish workflow also validates the tag, builds `@aarambhdevhub/animato-core`, checks
 the package size budget, skips already-published versions, and publishes with

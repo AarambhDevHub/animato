@@ -67,7 +67,7 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato = { version = "1.7.3", default-features = false }
+//! animato = { version = "1.7.4", default-features = false }
 //! ```
 //!
 //! For the smallest possible dependency graph, the sub-crates also work
@@ -75,11 +75,11 @@
 //!
 //! ```toml
 //! [dependencies]
-//! animato-core   = { version = "1.7.3", default-features = false }
-//! animato-tween  = { version = "1.7.3", default-features = false }
-//! animato-spring = { version = "1.7.3", default-features = false }
-//! animato-physics = { version = "1.7.3", default-features = false }
-//! animato-color = { version = "1.7.3", default-features = false }
+//! animato-core   = { version = "1.7.4", default-features = false }
+//! animato-tween  = { version = "1.7.4", default-features = false }
+//! animato-spring = { version = "1.7.4", default-features = false }
+//! animato-physics = { version = "1.7.4", default-features = false }
+//! animato-color = { version = "1.7.4", default-features = false }
 //! ```
 //!
 //! ## Feature Flags

@@ -9,19 +9,19 @@ compile for bare metal. `timeline` and `path` still require `std`.
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", default-features = false, features = ["tween", "spring"] }
+animato = { version = "1.7.4", default-features = false, features = ["tween", "spring"] }
 ```
 
 ## Focused Crates
 
 ```toml
 [dependencies]
-animato-core = { version = "1.7.3", default-features = false }
-animato-tween = { version = "1.7.3", default-features = false }
-animato-spring = { version = "1.7.3", default-features = false }
-animato-path = { version = "1.7.3", default-features = false }
-animato-physics = { version = "1.7.3", default-features = false }
-animato-color = { version = "1.7.3", default-features = false }
+animato-core = { version = "1.7.4", default-features = false }
+animato-tween = { version = "1.7.4", default-features = false }
+animato-spring = { version = "1.7.4", default-features = false }
+animato-path = { version = "1.7.4", default-features = false }
+animato-physics = { version = "1.7.4", default-features = false }
+animato-color = { version = "1.7.4", default-features = false }
 ```
 
 ## Available Without Allocation
@@ -45,8 +45,8 @@ animato-color = { version = "1.7.3", default-features = false }
 Enable crate-specific `alloc` features where needed:
 
 ```toml
-animato-spring = { version = "1.7.3", default-features = false, features = ["alloc"] }
-animato-path = { version = "1.7.3", default-features = false, features = ["alloc"] }
+animato-spring = { version = "1.7.4", default-features = false, features = ["alloc"] }
+animato-path = { version = "1.7.4", default-features = false, features = ["alloc"] }
 ```
 
 ## Bare-Metal Check

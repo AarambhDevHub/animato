@@ -3,8 +3,8 @@
 use animato_core::{Animatable, Update};
 use animato_spring::{Decompose, SpringConfig, SpringN};
 use animato_timeline::{Timeline, TimelineState};
-use animato_tween::{KeyframeTrack, Tween, TweenBuilder};
-use dioxus::prelude::{Signal, use_signal};
+use animato_tween::{KeyframeTrack, Tween, TweenBuilder, TweenState};
+use dioxus::prelude::{Signal, use_hook, use_signal};
 use std::fmt;
 use std::sync::{Arc, Mutex};
 
@@ -15,6 +15,7 @@ pub struct TweenHandle<T: Animatable + Send + Sync + 'static> {
     value: Signal<T>,
     progress: Signal<f32>,
     complete: Signal<bool>,
+    waker: crate::LoopWaker,
 }
 
 impl<T: Animatable + Send + Sync + 'static> fmt::Debug for TweenHandle<T> {
@@ -33,6 +34,7 @@ impl<T: Animatable + Send + Sync + 'static> TweenHandle<T> {
             tween.resume();
             self.sync(tween);
         });
+        self.waker.notify();
     }
 
     /// Pause playback.
@@ -43,6 +45,7 @@ impl<T: Animatable + Send + Sync + 'static> TweenHandle<T> {
     /// Resume playback.
     pub fn resume(&self) {
         crate::with_lock(&self.tween, Tween::resume);
+        self.waker.notify();
     }
 
     /// Reset the tween to the beginning.
@@ -51,6 +54,7 @@ impl<T: Animatable + Send + Sync + 'static> TweenHandle<T> {
             tween.reset();
             self.sync(tween);
         });
+        self.waker.notify();
     }
 
     /// Reverse direction while preserving the current visual progress.
@@ -59,6 +63,7 @@ impl<T: Animatable + Send + Sync + 'static> TweenHandle<T> {
             tween.reverse();
             self.sync(tween);
         });
+        self.waker.notify();
     }
 
     /// Seek to normalized progress in `[0.0, 1.0]`.
@@ -67,6 +72,7 @@ impl<T: Animatable + Send + Sync + 'static> TweenHandle<T> {
             tween.seek(progress);
             self.sync(tween);
         });
+        self.waker.notify();
     }
 
     /// Set the playback time scale. Non-finite values become `1.0`.
@@ -89,6 +95,14 @@ impl<T: Animatable + Send + Sync + 'static> TweenHandle<T> {
     /// Raw normalized progress signal.
     pub fn progress(&self) -> Signal<f32> {
         self.progress
+    }
+
+    /// Returns `true` while the tween is actively advancing (running or
+    /// draining its delay), `false` when paused or complete.
+    pub fn is_playing(&self) -> bool {
+        crate::with_lock(&self.tween, |tween| {
+            matches!(tween.state(), TweenState::Idle | TweenState::Running)
+        })
     }
 
     /// Deterministically advance the tween by `dt` seconds.
@@ -116,31 +130,35 @@ pub fn use_tween<T>(
 where
     T: Animatable + Send + Sync + 'static,
 {
-    let tween = config(Tween::new(from, to)).build();
+    // The engine is created once per component; later renders reuse it.
+    let tween = use_hook(move || Arc::new(Mutex::new(config(Tween::new(from, to)).build())));
+
     let value = use_signal({
-        let initial = tween.value();
+        let initial = crate::with_lock(&tween, |tween| tween.value());
         move || initial
     });
     let progress = use_signal({
-        let initial = tween.progress();
+        let initial = crate::with_lock(&tween, |tween| tween.progress());
         move || initial
     });
     let complete = use_signal({
-        let initial = tween.is_complete();
+        let initial = crate::with_lock(&tween, |tween| tween.is_complete());
         move || initial
     });
 
-    let handle = TweenHandle {
-        tween: Arc::new(Mutex::new(tween)),
+    let handle = use_hook(move || TweenHandle {
+        tween: Arc::clone(&tween),
         value,
         progress,
         complete,
-    };
+        waker: crate::LoopWaker::default(),
+    });
 
+    // The loop exits when the tween finishes or pauses and is restarted from
+    // the handle methods, so the component re-renders only while animating.
     let loop_handle = handle.clone();
-    crate::spawn_animation_loop(move |dt| {
-        loop_handle.tick(dt);
-        true
+    crate::spawn_animation_loop(handle.waker.clone(), move |dt| {
+        loop_handle.is_playing() && loop_handle.tick(dt)
     });
 
     (value, handle)
@@ -152,6 +170,7 @@ pub struct SpringHandle<T: Decompose + Send + Sync + Clone + 'static> {
     spring: Arc<Mutex<SpringN<T>>>,
     value: Signal<T>,
     settled: Signal<bool>,
+    waker: crate::LoopWaker,
 }
 
 impl<T: Decompose + Send + Sync + Clone + 'static> fmt::Debug for SpringHandle<T> {
@@ -167,6 +186,7 @@ impl<T: Decompose + Send + Sync + Clone + 'static> SpringHandle<T> {
             spring.set_target(target);
             crate::set_signal(self.settled, spring.is_settled());
         });
+        self.waker.notify();
     }
 
     /// Snap instantly to a value.
@@ -207,20 +227,25 @@ pub fn use_spring<T>(initial: T, config: SpringConfig) -> (Signal<T>, SpringHand
 where
     T: Decompose + Send + Sync + Clone + 'static,
 {
-    let spring = SpringN::new(config, initial.clone());
+    // The engine is created once per component; later renders reuse it.
+    let spring = use_hook({
+        let initial = initial.clone();
+        move || Arc::new(Mutex::new(SpringN::new(config, initial)))
+    });
+
     let value = use_signal(move || initial);
     let settled = use_signal(|| true);
-    let handle = SpringHandle {
-        spring: Arc::new(Mutex::new(spring)),
+
+    let handle = use_hook(move || SpringHandle {
+        spring: Arc::clone(&spring),
         value,
         settled,
-    };
-
-    let loop_handle = handle.clone();
-    crate::spawn_animation_loop(move |dt| {
-        loop_handle.tick(dt);
-        true
+        waker: crate::LoopWaker::default(),
     });
+
+    // The loop exits once the spring settles; `set_target` wakes it again.
+    let loop_handle = handle.clone();
+    crate::spawn_animation_loop(handle.waker.clone(), move |dt| loop_handle.tick(dt));
 
     (value, handle)
 }
@@ -232,6 +257,7 @@ pub struct TimelineHandle {
     progress: Signal<f32>,
     complete: Signal<bool>,
     state: Signal<TimelineState>,
+    waker: crate::LoopWaker,
 }
 
 impl fmt::Debug for TimelineHandle {
@@ -247,6 +273,7 @@ impl TimelineHandle {
             timeline.play();
             self.sync(timeline);
         });
+        self.waker.notify();
     }
 
     /// Pause playback.
@@ -263,6 +290,7 @@ impl TimelineHandle {
             timeline.resume();
             self.sync(timeline);
         });
+        self.waker.notify();
     }
 
     /// Reset to the beginning.
@@ -271,6 +299,7 @@ impl TimelineHandle {
             timeline.reset();
             self.sync(timeline);
         });
+        self.waker.notify();
     }
 
     /// Seek by normalized progress.
@@ -279,6 +308,7 @@ impl TimelineHandle {
             timeline.seek(progress);
             self.sync(timeline);
         });
+        self.waker.notify();
     }
 
     /// Change the time scale multiplier.
@@ -304,6 +334,13 @@ impl TimelineHandle {
         self.state
     }
 
+    /// Returns `true` while the timeline is playing.
+    pub fn is_playing(&self) -> bool {
+        crate::with_lock(&self.timeline, |timeline| {
+            timeline.state() == TimelineState::Playing
+        })
+    }
+
     /// Deterministically advance by `dt` seconds.
     pub fn tick(&self, dt: f32) -> bool {
         crate::with_lock(&self.timeline, |timeline| {
@@ -322,32 +359,39 @@ impl TimelineHandle {
 
 /// Create a signal-backed timeline hook.
 pub fn use_timeline(builder: impl FnOnce(Timeline) -> Timeline) -> TimelineHandle {
-    let mut timeline = builder(Timeline::new());
-    timeline.play();
+    // The engine is created once per component and starts playing immediately.
+    let timeline = use_hook(move || {
+        let mut timeline = builder(Timeline::new());
+        timeline.play();
+        Arc::new(Mutex::new(timeline))
+    });
 
     let progress = use_signal({
-        let initial = timeline.progress();
+        let initial = crate::with_lock(&timeline, |timeline| timeline.progress());
         move || initial
     });
     let complete = use_signal({
-        let initial = timeline.is_complete();
+        let initial = crate::with_lock(&timeline, |timeline| timeline.is_complete());
         move || initial
     });
     let state = use_signal({
-        let initial = timeline.state();
+        let initial = crate::with_lock(&timeline, |timeline| timeline.state());
         move || initial
     });
-    let handle = TimelineHandle {
-        timeline: Arc::new(Mutex::new(timeline)),
+
+    let handle = use_hook(move || TimelineHandle {
+        timeline: Arc::clone(&timeline),
         progress,
         complete,
         state,
-    };
+        waker: crate::LoopWaker::default(),
+    });
 
+    // The loop exits when playback completes or pauses and is restarted from
+    // the handle methods.
     let loop_handle = handle.clone();
-    crate::spawn_animation_loop(move |dt| {
-        loop_handle.tick(dt);
-        true
+    crate::spawn_animation_loop(handle.waker.clone(), move |dt| {
+        loop_handle.is_playing() && loop_handle.tick(dt)
     });
 
     handle
@@ -362,6 +406,7 @@ pub struct KeyframeHandle<T: Animatable + Send + Sync + 'static> {
     complete: Signal<bool>,
     paused: Arc<Mutex<bool>>,
     time_scale: Arc<Mutex<f32>>,
+    waker: crate::LoopWaker,
 }
 
 impl<T: Animatable + Send + Sync + 'static> fmt::Debug for KeyframeHandle<T> {
@@ -384,6 +429,7 @@ impl<T: Animatable + Send + Sync + 'static> KeyframeHandle<T> {
     /// Resume playback.
     pub fn resume(&self) {
         crate::with_lock(&self.paused, |paused| *paused = false);
+        self.waker.notify();
     }
 
     /// Reset to the beginning.
@@ -392,6 +438,7 @@ impl<T: Animatable + Send + Sync + 'static> KeyframeHandle<T> {
             track.reset();
             self.sync(track);
         });
+        self.waker.notify();
     }
 
     /// Change playback time scale.
@@ -414,6 +461,14 @@ impl<T: Animatable + Send + Sync + 'static> KeyframeHandle<T> {
     /// Completion signal.
     pub fn is_complete(&self) -> Signal<bool> {
         self.complete
+    }
+
+    /// Returns `true` while the track is advancing, `false` when paused or complete.
+    fn is_playing(&self) -> bool {
+        if crate::with_lock(&self.paused, |paused| *paused) {
+            return false;
+        }
+        crate::with_lock(&self.track, |track| !track.is_complete())
     }
 
     /// Deterministically advance by `dt` seconds.
@@ -450,29 +505,36 @@ pub fn use_keyframes<T>(
 where
     T: Animatable + Send + Sync + 'static,
 {
-    let track = builder(KeyframeTrack::new());
-    let initial = track
-        .value()
-        .expect("use_keyframes requires at least one keyframe");
-    let progress_value = track.progress();
-    let complete_value = track.is_complete();
+    // The engine is created once per component; later renders reuse it.
+    let track = use_hook(move || Arc::new(Mutex::new(builder(KeyframeTrack::new()))));
+
+    let initial = crate::with_lock(&track, |track| {
+        track
+            .value()
+            .expect("use_keyframes requires at least one keyframe")
+    });
+    let progress_value = crate::with_lock(&track, |track| track.progress());
+    let complete_value = crate::with_lock(&track, |track| track.is_complete());
 
     let value = use_signal(move || initial);
     let progress = use_signal(move || progress_value);
     let complete = use_signal(move || complete_value);
-    let handle = KeyframeHandle {
-        track: Arc::new(Mutex::new(track)),
+
+    let handle = use_hook(move || KeyframeHandle {
+        track: Arc::clone(&track),
         value,
         progress,
         complete,
         paused: Arc::new(Mutex::new(false)),
         time_scale: Arc::new(Mutex::new(1.0)),
-    };
+        waker: crate::LoopWaker::default(),
+    });
 
+    // The loop exits when the track completes or pauses and is restarted from
+    // the handle methods.
     let loop_handle = handle.clone();
-    crate::spawn_animation_loop(move |dt| {
-        loop_handle.tick(dt);
-        true
+    crate::spawn_animation_loop(handle.waker.clone(), move |dt| {
+        loop_handle.is_playing() && loop_handle.tick(dt)
     });
 
     (value, handle)
@@ -628,6 +690,50 @@ mod tests {
     }
 
     #[test]
+    fn tween_hook_is_playing_tracks_state() {
+        let (_dom, _value, handle) = mount_tween();
+
+        assert!(handle.is_playing());
+
+        handle.pause();
+        assert!(!handle.is_playing());
+
+        handle.resume();
+        assert!(handle.is_playing());
+
+        // `seek` keeps the state `Running`; the next tick completes the tween.
+        handle.seek(1.0);
+        assert!(!handle.tick(0.0));
+        assert!(!handle.is_playing());
+
+        handle.play();
+        assert!(handle.is_playing());
+    }
+
+    #[test]
+    fn tween_hook_reuses_engine_across_re_renders() {
+        let (mut dom, value, handle) = mount_tween();
+
+        assert!(handle.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 2.5, epsilon = 0.001);
+
+        // Force a re-render; the hook must hand back the same engine instead
+        // of building a fresh tween that nothing is animating.
+        TWEEN_CAPTURE.with(|slot| *slot.borrow_mut() = None);
+        dom.mark_all_dirty();
+        dom.render_immediate_to_vec();
+        let (_, rerendered) = TWEEN_CAPTURE.with(|slot| {
+            slot.borrow()
+                .as_ref()
+                .cloned()
+                .expect("tween hook re-captured")
+        });
+
+        assert!(rerendered.tick(0.25));
+        assert_relative_eq!(crate::read_signal(value), 5.0, epsilon = 0.001);
+    }
+
+    #[test]
     fn spring_hook_handle_tracks_target_and_snap() {
         let (_dom, value, handle) = mount_spring();
 
@@ -676,6 +782,25 @@ mod tests {
 
         handle.play();
         assert_eq!(crate::read_signal(handle.state()), TimelineState::Playing);
+    }
+
+    #[test]
+    fn timeline_hook_is_playing_tracks_state() {
+        let (_dom, handle) = mount_timeline();
+
+        assert!(handle.is_playing());
+
+        handle.pause();
+        assert!(!handle.is_playing());
+
+        handle.resume();
+        assert!(handle.is_playing());
+
+        handle.seek(1.0);
+        assert!(!handle.is_playing());
+
+        handle.play();
+        assert!(handle.is_playing());
     }
 
     #[test]

@@ -15,13 +15,20 @@ Animato is a stable, renderer-agnostic animation toolkit for Rust. It computes
 animated values and leaves rendering to your app, engine, terminal UI, browser,
 or embedded target.
 
-The v1.7.3 API is stable. The current public crates cover easing, tweens,
+The v1.7.4 API is stable. The current public crates cover easing, tweens,
 timelines, springs, motion paths, input physics, perceptual color interpolation,
 drivers, GPU batch evaluation, Bevy integration, WASM/browser helpers, and
 first-class Leptos, Dioxus, Yew, JavaScript/WASM integration, and advanced
 engine primitives such as velocity springs, waveforms, quaternion slerp,
 animation groups, stagger patterns, recording, runtime DevTools, and the
 declarative `animato!{}` Motion Macro DSL for ergonomic animation authoring.
+
+Version 1.7.4 fixes the Dioxus desktop animation loop reported in
+[#57](https://github.com/AarambhDevHub/animato/issues/57): frames now await a
+runtime-agnostic async timer instead of blocking the UI thread with
+`std::thread::sleep`, animation loops park as soon as a tween finishes or a
+spring settles (no more ~60 re-renders per second forever), and every hook
+creates its engine and control handle exactly once per component.
 
 Version 1.7.3 completes the Leptos `AnimatedFor` lifecycle: removed rows stay
 mounted for their configured exit animation, then surviving rows use FLIP to
@@ -34,28 +41,28 @@ Most applications use the facade crate:
 
 ```toml
 [dependencies]
-animato = "1.7.3"
+animato = "1.7.4"
 ```
 
 Enable only the integrations you need:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", features = ["path", "physics", "color"] }
+animato = { version = "1.7.4", features = ["path", "physics", "color"] }
 ```
 
 Enable the Motion Macro DSL for declarative animation authoring:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", features = ["macro"] }
+animato = { version = "1.7.4", features = ["macro"] }
 ```
 
 Leptos applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", features = ["leptos-csr"] }
+animato = { version = "1.7.4", features = ["leptos-csr"] }
 leptos = { version = "0.8.19", features = ["csr"] }
 ```
 
@@ -63,7 +70,7 @@ Dioxus applications enable the facade feature plus the renderer they ship:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", features = ["dioxus-web"] }
+animato = { version = "1.7.4", features = ["dioxus-web"] }
 dioxus = { version = "0.7.9", default-features = false, features = ["web", "launch"] }
 ```
 
@@ -71,7 +78,7 @@ Yew applications enable the facade feature plus the app rendering mode:
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", features = ["yew-csr"] }
+animato = { version = "1.7.4", features = ["yew-csr"] }
 yew = { version = "0.23", features = ["csr"] }
 ```
 
@@ -95,19 +102,19 @@ and `color` are bare-metal safe; `timeline` and `path` still need `std`):
 
 ```toml
 [dependencies]
-animato = { version = "1.7.3", default-features = false, features = ["tween", "spring"] }
+animato = { version = "1.7.4", default-features = false, features = ["tween", "spring"] }
 ```
 
 For the smallest dependency graph, depend on the focused crates directly:
 
 ```toml
 [dependencies]
-animato-core    = { version = "1.7.3", default-features = false }
-animato-tween   = { version = "1.7.3", default-features = false }
-animato-spring  = { version = "1.7.3", default-features = false }
-animato-path    = { version = "1.7.3", default-features = false }
-animato-physics = { version = "1.7.3", default-features = false }
-animato-color   = { version = "1.7.3", default-features = false }
+animato-core    = { version = "1.7.4", default-features = false }
+animato-tween   = { version = "1.7.4", default-features = false }
+animato-spring  = { version = "1.7.4", default-features = false }
+animato-path    = { version = "1.7.4", default-features = false }
+animato-physics = { version = "1.7.4", default-features = false }
+animato-color   = { version = "1.7.4", default-features = false }
 ```
 
 ## Quick Start

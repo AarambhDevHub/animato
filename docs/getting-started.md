@@ -7,7 +7,7 @@ loop. It uses only the default facade features.
 
 ```toml
 [dependencies]
-animato = "1.7.3"
+animato = "1.7.4"
 ```
 
 ## First Tween

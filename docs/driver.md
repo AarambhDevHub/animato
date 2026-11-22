@@ -4,7 +4,7 @@ Feature: `driver`.
 
 ```toml
 [dependencies]
-animato = "1.7.3"
+animato = "1.7.4"
 ```
 
 ## AnimationDriver
